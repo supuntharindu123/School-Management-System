@@ -49,7 +49,10 @@ namespace Backend.Services
 
             return new LoginRes
             {
-                token = _token.GenerateToken(user)
+                token = _token.GenerateToken(user),
+                username=user.Username,
+                email=user.Email,
+                role = user.Role,
             }; 
 
 

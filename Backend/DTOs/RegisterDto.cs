@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Backend.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Backend.DTOs
 {
@@ -18,6 +19,6 @@ namespace Backend.DTOs
         [Required]
         public string? Password { get; set; }
         [Required]
-        public string? Role { get; set; }
+        public UserRole Role { get; set; }
     }
 }
