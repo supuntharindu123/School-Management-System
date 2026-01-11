@@ -20,7 +20,7 @@ namespace Backend.Repositories
         }
 
         public async Task<User?> UserByEmail(string email)
-        {
+        { 
             return await _context.Users
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);

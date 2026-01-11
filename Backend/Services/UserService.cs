@@ -13,23 +13,25 @@ namespace Backend.Services
         private readonly IUserRepo _repo;
         private readonly IMapper _mapper;
         private readonly TokenGenerator _token;
-        public UserService(IUserRepo repo, IMapper mapper, TokenGenerator token) { 
+        private readonly Passwordhash _hasher;
+        public UserService(IUserRepo repo, IMapper mapper, TokenGenerator token, Passwordhash hasher) { 
             _repo = repo;
             _mapper = mapper;
             _token = token;
+            _hasher = hasher;
         }
-        public async Task AddUserToRepo(RegisterDto dto)
+        public async Task<User> AddUserToRepo(RegisterDto dto)
         {
             if (await _repo.UserByEmail(dto.Email!)!=null) {
                 throw new Exception("Email already exists");
             }
 
-            var user=_mapper.Map<User>(dto);
-
-            var hashpwd = new PasswordHasher<User>();
-            user.Password = hashpwd.HashPassword(user, dto.Password!);
+            var user = _mapper.Map<User>(dto);
+            user.Password = _hasher.Hash(dto.Password!, user);
 
             await _repo.AddUser(user);
+
+            return user;
         }
 
         public async Task<LoginRes> LoginByEmail(LoginDto dto)
@@ -39,10 +41,9 @@ namespace Backend.Services
                 throw new Exception("User Not found");
             }
 
-            var hasher=new PasswordHasher<User>();
-            var result = hasher.VerifyHashedPassword(user, user.Password!, dto.Password!);
+            var result = _hasher.Verifypwd(dto.Password!, user.Password!, user);
 
-            if(result == PasswordVerificationResult.Failed)
+            if(!result)
             {
                 throw new Exception("Password Is Incorrect!");
             }

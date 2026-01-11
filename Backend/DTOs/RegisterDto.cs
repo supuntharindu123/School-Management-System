@@ -12,7 +12,7 @@ namespace Backend.DTOs
         [MaxLength(100)]
         [EmailAddress]
         public string? Email { get; set; }
-        [Required]
+        [Required]  
         [MaxLength(15)]
         [Phone]
         public string? PhoneNumber { get; set; }

@@ -28,6 +28,10 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 builder.Services.AddScoped<IUserRepo, UserRepo>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<TokenGenerator>();
+builder.Services.AddScoped<Passwordhash>();
+builder.Services.AddScoped<ITeacherRepo,TeacherRepo>();
+builder.Services.AddScoped<ITeacherService,TeacherService>();
+
 
 //authentications
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
