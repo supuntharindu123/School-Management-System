@@ -11,5 +11,15 @@ namespace Backend.Data
         public DbSet<Teacher> Teachers { get; set; }
 
         public DbSet<Student> Students { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Teacher>()
+                .HasOne(t => t.user)
+                .WithOne(u=>u.teacher)
+                .HasForeignKey<Teacher>(t => t.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+        }
     }
 }

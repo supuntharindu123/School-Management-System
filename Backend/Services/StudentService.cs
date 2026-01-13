@@ -72,9 +72,7 @@ namespace Backend.Services
             {
                 throw new Exception("Student Not Found");
             }
-
-            await _repo.DeleteStudent(student);
-            await _userService.DeleteUser(student.UserId);
+            await _userRepo.DeleteUser(student.user);
         }
 
         public async Task UpdateStudent(int id,StudentUpdateDto dto)

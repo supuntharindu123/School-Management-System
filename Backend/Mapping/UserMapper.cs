@@ -30,9 +30,15 @@ namespace Backend.Mapping
                 .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.user!.PhoneNumber))
                 .ForMember(destination => destination.Role, option => option.MapFrom(src => src.user!.Role));
 
-           
-
             CreateMap<StudentUpdateDto, Student>();
+
+            CreateMap<Teacher, TeacherRes>()
+                .ForMember(destination => destination.Username, option => option.MapFrom(src => src.user!.Username))
+                .ForMember(destination => destination.Email, option => option.MapFrom(src => src.user!.Email))
+                .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.user!.PhoneNumber))
+                .ForMember(destination => destination.Role, option => option.MapFrom(src => src.user!.Role));
+
+            CreateMap<TeacherUpdateDto, Teacher>();
 
 
 

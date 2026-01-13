@@ -19,7 +19,7 @@ namespace Backend.Models
         public string ? City { get; set; }
         [Required]
         public string ? Gender {  get; set; }
-
-
+        [Required]
+        public User? user {  get; set; }
     }
 }

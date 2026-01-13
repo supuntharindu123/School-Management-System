@@ -22,5 +22,26 @@ namespace Backend.Controllers
             return Ok("Teacher Registration Successfully !");
 
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetStudentAll()
+        {
+            var results = await _service.GetAllTeachers();
+            return Ok(results);
+        }
+
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteStudent(int id)
+        {
+            await _service.DeleteTeacher(id);
+            return Ok("Teacher Delete Successfully !");
+        }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateStudent(int id, TeacherUpdateDto dto)
+        {
+            await _service.UpdateTeacher(id, dto);
+            return Ok("Teacher Update Successfully !");
+        }
     }
 }
