@@ -25,5 +25,18 @@ namespace Backend.Repositories
             .AsNoTracking()
             .FirstOrDefaultAsync(u => u.Email == email);
         }
+
+        public async Task<User?> UserById(int id)
+        {
+            return await _context.Users
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id);
+        }
+
+        public async Task DeleteUser(User user)
+        {
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+        }
     }
 }

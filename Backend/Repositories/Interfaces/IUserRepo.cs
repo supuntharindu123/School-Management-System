@@ -6,6 +6,11 @@ namespace Backend.Repositories.Interfaces
     {
         public Task<User?> UserByEmail(string email);
         public Task AddUser(User user);
-        
+
+        public Task<User?> UserById(int id);
+
+        public Task DeleteUser(User user);
+
+
     }
 }

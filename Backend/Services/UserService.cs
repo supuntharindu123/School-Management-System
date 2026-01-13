@@ -37,13 +37,14 @@ namespace Backend.Services
         public async Task<LoginRes> LoginByEmail(LoginDto dto)
         {
             var user = await _repo.UserByEmail(dto.Email!);
-            if (user == null) {
+            if (user == null)
+            {
                 throw new Exception("User Not found");
             }
 
             var result = _hasher.Verifypwd(dto.Password!, user.Password!, user);
 
-            if(!result)
+            if (!result)
             {
                 throw new Exception("Password Is Incorrect!");
             }
@@ -51,12 +52,33 @@ namespace Backend.Services
             return new LoginRes
             {
                 token = _token.GenerateToken(user),
-                username=user.Username,
-                email=user.Email,
+                username = user.Username,
+                email = user.Email,
                 role = user.Role,
-            }; 
-
-
+            };
         }
+
+
+        public async Task<User> UserByID(int id) {
+            var user=await _repo.UserById(id);
+            if (user == null) {
+                throw new Exception("User NotFound");
+            }
+
+            return user;
+        }
+
+
+        public async Task DeleteUser(int id)
+        {
+            var user = await _repo.UserById(id);
+            if (user == null)
+            {
+                throw new Exception("User Not Found");
+            }
+            await _repo.DeleteUser(user);
+        }
+
+
     }
 }

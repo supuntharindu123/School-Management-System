@@ -18,6 +18,22 @@ namespace Backend.Mapping
             CreateMap<TeacherCreateDto, Teacher>()
                 .ForMember(destination => destination.UserId, option => option.Ignore());
 
+            CreateMap<StudentCreateDto, RegisterDto>()
+                .ForMember(destination => destination.Role, option => option.MapFrom(src => UserRole.Student));
+
+            CreateMap<StudentCreateDto, Student>()
+                .ForMember(destination => destination.UserId, option => option.Ignore());
+
+            CreateMap<Student, StudentRes>()
+                .ForMember(destination => destination.Username, option => option.MapFrom(src => src.user!.Username))
+                .ForMember(destination => destination.Email, option => option.MapFrom(src => src.user!.Email))
+                .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.user!.PhoneNumber))
+                .ForMember(destination => destination.Role, option => option.MapFrom(src => src.user!.Role));
+
+           
+
+            CreateMap<StudentUpdateDto, Student>();
+
 
 
         }

@@ -7,5 +7,9 @@ namespace Backend.Services.Interfaces
     {
         public Task<User> AddUserToRepo(RegisterDto dto);
         public Task<LoginRes> LoginByEmail(LoginDto dto);
+
+        public Task<User> UserByID(int id);
+
+        public Task DeleteUser(int id);
     }
 }

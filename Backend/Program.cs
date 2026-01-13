@@ -31,6 +31,9 @@ builder.Services.AddScoped<TokenGenerator>();
 builder.Services.AddScoped<Passwordhash>();
 builder.Services.AddScoped<ITeacherRepo,TeacherRepo>();
 builder.Services.AddScoped<ITeacherService,TeacherService>();
+builder.Services.AddScoped<IStudentRepo, StudentRepo>();
+builder.Services.AddScoped<IStudentService,StudentService>();
+
 
 
 //authentications

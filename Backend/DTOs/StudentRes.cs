@@ -1,31 +1,21 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Backend.Models;
+using System.ComponentModel.DataAnnotations;
 
 namespace Backend.DTOs
 {
-    public class StudentCreateDto
+    public class StudentRes
     {
-        [Required]
+        public int Id { get; set; }
+        public int UserId {  get; set; }
         public string? Username { get; set; }
-        [Required]
-        [EmailAddress]
         public string? Email { get; set; }
-        [Required]
-        [Phone]
         public string? PhoneNumber { get; set; }
-        [Required]
-        public string? Password { get; set; }
-        [Required]
         public string? FullName { get; set; }
-        [Required]
-        [DataType(DataType.Date)]
         public DateOnly BirthDay { get; set; }
-        [Required]
         public string? Address { get; set; }
-        [Required]
         public string? City { get; set; }
-        [Required]
         public string? Gender { get; set; }
-        [Required]
         public string? CurrentGrade { get; set; }
+        public UserRole Role { get; set; }
     }
 }
