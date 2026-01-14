@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import logo from "../assets/school-logo.svg";
+import Button from "./CommonElements/Button";
 
 export default function LoginForm({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -17,11 +19,16 @@ export default function LoginForm({ onLogin }) {
       role="region"
       aria-labelledby="login-title"
     >
+      <img
+        src={logo}
+        alt="School Management System logo"
+        className="mx-auto h-12 w-auto"
+      />
       <h1
         id="login-title"
-        className="text-3xl font-bold text-neutral-900 text-center"
+        className="mt-3 text-3xl font-bold text-neutral-900 text-center"
       >
-        Welcome back
+        School Management System
       </h1>
       <p className="mt-1 text-sm text-neutral-600 text-center">
         Sign in to continue
@@ -82,12 +89,25 @@ export default function LoginForm({ onLogin }) {
 
         {/* Actions */}
         <div className="flex w-full">
-          <button
-            type="submit"
-            className="inline-flex items-center justify-center rounded-lg bg-teal-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 w-full"
+          <Button
+            type={"submit"}
+            onClick={handleSubmit}
+            label="Sign in"
+            bgcolor={"w-full bg-teal-600"}
+          />
+        </div>
+
+        {/* Below actions */}
+        <div className="mt-4 space-y-2 text-center">
+          <a
+            href="/forgot-password"
+            className="text-sm font-medium text-teal-600 hover:text-teal-700"
           >
-            Sign in
-          </button>
+            Forgot password?
+          </a>
+          <p className="text-xs text-neutral-600">
+            Need access? Contact your administrator.
+          </p>
         </div>
       </form>
     </section>

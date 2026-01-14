@@ -1,4 +1,5 @@
 import React from "react";
+import Button from "./CommonElements/Button";
 
 export default function AdminDashboard() {
   return (
@@ -34,15 +35,9 @@ export default function AdminDashboard() {
       <section className="mt-6 rounded-xl border border-gray-200 bg-white p-4">
         <h2 className="text-sm font-medium text-neutral-800">Quick Actions</h2>
         <div className="mt-3 flex flex-wrap gap-3">
-          <button className="rounded-lg bg-teal-600 px-4 py-2 text-sm text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600">
-            Add Student
-          </button>
-          <button className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600">
-            Create Class
-          </button>
-          <button className="rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600">
-            Generate Report
-          </button>
+          <Button label={"Add Student"} />
+          <Button label={"Add Student"} bgcolor={""} />
+          <Button label={"Add Student"} />
         </div>
       </section>
 

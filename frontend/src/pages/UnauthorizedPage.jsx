@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import LinkComponent from "../components/CommonElements/Link";
 
 export default function UnauthorizedPage() {
   return (
@@ -10,18 +11,13 @@ export default function UnauthorizedPage() {
           You don’t have permission to access this page.
         </p>
         <div className="mt-6 flex flex-col gap-3">
-          <Link
-            to="/"
-            className="inline-flex justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600"
-          >
+          <LinkComponent to="/" variant="primary">
             Go to Login
-          </Link>
-          <Link
-            to="/admin"
-            className="inline-flex justify-center rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
-          >
+          </LinkComponent>
+
+          <LinkComponent to="/admin" variant="secondary">
             Go to Admin
-          </Link>
+          </LinkComponent>
         </div>
       </section>
     </main>

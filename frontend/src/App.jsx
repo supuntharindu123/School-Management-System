@@ -1,8 +1,9 @@
 import React from "react";
-import Route from "./routes/route.jsx";
+
+import RouteConfig from "./routes/route.jsx";
 
 function App() {
-  return <Route />;
+  return <RouteConfig />;
 }
 
 export default App;

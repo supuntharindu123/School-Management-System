@@ -1,121 +1,87 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
+import logo from "../assets/school-logo.svg";
 
-export default function NavBar() {
-  const [open, setOpen] = useState(false);
-  const navItems = [
-    { label: "Dashboard", to: "/dashboard" },
-    { label: "Admin", to: "/admin" },
-    { label: "Students", to: "#" },
-    { label: "Teachers", to: "#" },
-    { label: "Classes", to: "#" },
-    { label: "Reports", to: "#" },
-  ];
-
+export default function NavBar({ onToggleSidebar }) {
   return (
-    <nav className="fixed inset-x-0 top-0 z-50 bg-gray-300 border-b border-gray-200">
-      <div className="mx-auto max-w-7xl px-4">
-        <div className="flex h-16 items-center justify-between">
-          {/* Brand */}
-          <a
-            href="/"
-            className="flex items-center gap-2 font-semibold text-neutral-900"
+    <nav className="fixed top-0 inset-x-0 z-50 h-16 bg-gray-300 border-b border-gray-200">
+      <div className="mx-auto  h-full px-4 flex items-center justify-between">
+        {/* LEFT SIDE */}
+        <div className="flex items-center gap-3">
+          {/* Sidebar toggle */}
+          <button
+            onClick={onToggleSidebar}
+            aria-label="Toggle sidebar"
+            className="rounded-md p-2 text-gray-800 hover:text-teal-600 "
           >
-            <span
-              className="inline-block h-3 w-3 rounded-full bg-teal-600"
-              aria-hidden="true"
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-7 w-7"
+            >
+              <path d="M3.75 6.75h16.5a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0 0 1.5Zm0 6h16.5a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0 0 1.5Zm0 6h16.5a.75.75 0 0 0 0-1.5H3.75a.75.75 0 0 0 0 1.5Z" />
+            </svg>
+          </button>
+
+          {/* Brand */}
+          <Link
+            to="/"
+            className="flex items-center gap-2 font-semibold text-gray-900"
+          >
+            <img
+              src={logo}
+              alt="School Management System logo"
+              className="h-8 w-auto"
             />
-            <span>School Management System</span>
-          </a>
-
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-6">
-            {navItems.map((item) => (
-              <Link
-                key={item.label}
-                to={item.to}
-                className="text-sm text-neutral-800 hover:text-teal-600 font-semibold"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-
-          {/* Actions */}
-          <div className="flex items-center gap-2">
-            {/* Notification button */}
-            <button
-              type="button"
-              aria-label="Open notifications"
-              className="relative rounded-full border border-gray-200 bg-white p-2 text-neutral-800 hover:text-teal-600 hover:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="h-5 w-5"
-                fill="currentColor"
-              >
-                <path d="M12 22a2 2 0 0 0 2-2h-4a2 2 0 0 0 2 2Zm7-6V11a7 7 0 1 0-14 0v5l-2 2v1h18v-1l-2-2Z" />
-              </svg>
-              <span
-                aria-hidden="true"
-                className="absolute -top-0.5 -right-0.5 inline-flex h-2.5 w-2.5 rounded-full bg-teal-600 ring-2 ring-white"
-              />
-            </button>
-
-            {/* Profile button */}
-            <button
-              type="button"
-              aria-label="Open profile menu"
-              className="rounded-full border border-gray-200 bg-white p-2 text-neutral-800 hover:text-teal-600 hover:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                className="h-5 w-5"
-                fill="currentColor"
-              >
-                <circle cx="12" cy="8" r="4" />
-                <path d="M4 20c0-4 4-7 8-7s8 3 8 7" />
-              </svg>
-            </button>
-
-            {/* Mobile toggle */}
-            <button
-              type="button"
-              aria-label="Toggle navigation"
-              onClick={() => setOpen((v) => !v)}
-              className="md:hidden rounded-lg border border-gray-200 bg-white p-2 text-neutral-800 hover:text-teal-600 hover:border-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
-            >
-              <svg
-                viewBox="0 0 24 24"
-                className="h-5 w-5"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path d="M4 7h16M4 12h16M4 17h16" />
-              </svg>
-            </button>
-          </div>
+            <span className="hidden sm:block text-lg">
+              School Management System
+            </span>
+          </Link>
         </div>
 
-        {/* Mobile menu */}
-        {open && (
-          <div className="md:hidden py-2">
-            <div className="flex flex-col gap-2">
-              {navItems.map((item) => (
-                <Link
-                  key={item.label}
-                  to={item.to}
-                  className="rounded px-2 py-1 text-sm text-neutral-800 hover:text-teal-600"
-                >
-                  {item.label}
-                </Link>
-              ))}
+        {/* RIGHT SIDE */}
+        <div className="flex items-center gap-3">
+          {/* Notifications */}
+          <button
+            type="button"
+            aria-label="Notifications"
+            className="relative inline-flex items-center justify-center h-9 w-9 rounded-full border border-gray-200 bg-white text-gray-800 hover:border-teal-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="currentColor"
+              className="h-5 w-5"
+            >
+              <path d="M12 2.25a4.5 4.5 0 0 0-4.5 4.5v1.17c0 .546-.217 1.07-.603 1.456L5.03 11.243A2.25 2.25 0 0 0 4.5 12.84V15a.75.75 0 0 0 .75.75h13.5A.75.75 0 0 0 19.5 15v-2.16c0-.597-.237-1.17-.659-1.593l-1.866-1.866a2.25 2.25 0 0 1-.603-1.456V6.75A4.5 4.5 0 0 0 12 2.25Z" />
+              <path d="M8.25 16.5a3.75 3.75 0 0 0 7.5 0h-7.5Z" />
+            </svg>
+
+            {/* Badge */}
+            <span className="absolute -top-1 -right-1 inline-flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-teal-600 px-1 text-[10px] font-semibold text-white">
+              3
+            </span>
+          </button>
+
+          {/* Profile */}
+          <button
+            type="button"
+            aria-label="Profile"
+            className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white pl-1 pr-3 py-1.5 text-sm text-gray-800 hover:border-teal-600 hover:text-teal-600 focus:outline-none focus:ring-2 focus:ring-teal-600"
+          >
+            <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white text-xs font-semibold">
+              AD
+            </span>
+
+            <div className="hidden sm:flex flex-col leading-tight text-left">
+              <span className="text-sm font-semibold text-gray-800">
+                Admin User
+              </span>
+              <span className="text-xs text-gray-500">Administrator</span>
             </div>
-          </div>
-        )}
+          </button>
+        </div>
       </div>
     </nav>
   );
