@@ -40,6 +40,39 @@ namespace Backend.Mapping
 
             CreateMap<TeacherUpdateDto, Teacher>();
 
+            CreateMap<PromotionDto, StudentAcademicHistory>()
+               .ForMember(destination => destination.StartDate, option => option.MapFrom(src => DateTime.UtcNow))
+               .ForMember(destination => destination.EndDate, option => option.Ignore())
+               .ForMember(destination => destination.student, option => option.Ignore());
+
+
+            CreateMap<PromotionDto, Student>()
+               .ForMember(destination => destination.CurrentClassID, option => option.MapFrom(src => src.ClassId))
+               .ForMember(destination => destination.CurrentYearID, option => option.MapFrom(src => src.YearId))
+               .ForMember(destination => destination.CurrentGradeID, option => option.MapFrom(src => src.GradeId))
+               .ForMember(destination => destination.Id, opt => opt.Ignore())
+               .ForMember(destination => destination.UserId, opt => opt.Ignore())
+               .ForMember(destination => destination.StudentIDNumber, opt => opt.Ignore())
+               .ForMember(destination => destination.FullName, opt => opt.Ignore())
+               .ForMember(destination => destination.BirthDay, opt => opt.Ignore())
+               .ForMember(destination => destination.Address, opt => opt.Ignore())
+               .ForMember(destination => destination.City, opt => opt.Ignore())
+               .ForMember(destination => destination.Gender, opt => opt.Ignore())
+               .ForMember(destination => destination.GuardianName, opt => opt.Ignore())
+               .ForMember(destination => destination.GuardianRelation, opt => opt.Ignore())
+               .ForMember(destination => destination.GuardianDate, opt => opt.Ignore())
+               .ForMember(destination => destination.ResignDate, opt => opt.Ignore())
+               .ForMember(destination => destination.user, opt => opt.Ignore())
+               .ForMember(destination => destination.AcademicHistory, opt => opt.Ignore());
+               
+            CreateMap<StudentCreateDto, StudentAcademicHistory>()
+               .ForMember(destination => destination.GradeId, opt => opt.MapFrom(src => src.CurrentGradeID))
+               .ForMember(destination => destination.ClassId, opt => opt.MapFrom(src => src.CurrentClassID))
+               .ForMember(destination => destination.YearId, opt => opt.MapFrom(src => src.CurrentYearID))
+               .ForMember(destination => destination.StartDate, opt => opt.MapFrom(src => DateTime.UtcNow))
+               .ForMember(destination => destination.Status, opt => opt.MapFrom(src => "Promoted")) 
+               .ForMember(destination => destination.StudentID, opt => opt.Ignore())
+               .ForMember(destination => destination.student, opt => opt.Ignore());
 
 
         }

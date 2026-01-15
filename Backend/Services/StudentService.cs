@@ -10,15 +10,17 @@ namespace Backend.Services
     {
         private readonly IStudentRepo _repo;
         private readonly IUserRepo _userRepo;
+        private readonly IStudentHistoryRepo _historyrepo;
         private readonly IUserService _userService;
         private readonly IMapper _mapper;
 
-        public StudentService(IStudentRepo repo, IUserService userService, IMapper mapper, IUserRepo userRepo)
+        public StudentService(IStudentRepo repo, IUserService userService, IMapper mapper, IUserRepo userRepo, IStudentHistoryRepo historyrepo)
         {
             _repo = repo;
             _userRepo = userRepo;
             _userService = userService;
             _mapper = mapper;
+            _historyrepo = historyrepo;
         }
 
 
@@ -30,9 +32,16 @@ namespace Backend.Services
 
             var student = _mapper.Map<Student>(dto);
 
+            var studenthistory = _mapper.Map<StudentAcademicHistory>(dto);
+
             student.UserId = user.Id;
             student.user = user;
             await _repo.AddStudent(student);
+
+            studenthistory.StudentID=student.Id;
+            studenthistory.student = student;
+
+            await _historyrepo.AddStudentHistory(studenthistory);
         }
 
         public async Task<List<StudentRes>> AllStudents()

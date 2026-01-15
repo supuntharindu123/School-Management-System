@@ -1,6 +1,7 @@
 ﻿using Backend.Data;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace Backend.Repositories
 {
@@ -12,9 +13,11 @@ namespace Backend.Repositories
             _context = context;
         }
 
-        public Task CreateClass(Class clz)
+        public async Task CreateClass(Class clz)
         {
-            throw new NotImplementedException();
+             _context.Classes.Add(clz);
+            await _context.SaveChangesAsync();
+
         }
 
         public Task DeleteClass(Class clz)
@@ -22,19 +25,25 @@ namespace Backend.Repositories
             throw new NotImplementedException();
         }
 
-        public Task<Class> GetClass(int id)
+        public async Task<Class?> GetClass(int id)
         {
-            throw new NotImplementedException();
+            return await _context.Classes.AsNoTracking().Include(c=>c.Grade).FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public Task<List<Class>> GetClassByGrade(int gradeId)
+        public async Task<List<Class>> GetClassByGrade(int gradeId)
         {
-            throw new NotImplementedException();
+            return await _context.Classes.Include(c=>c.Grade).Where(c=>c.GradeId == gradeId).ToListAsync();
         }
 
         public Task UpdateClass(Class clz)
         {
             throw new NotImplementedException();
+        }
+
+        public async Task<bool> ClassNameExists(string className)
+        {
+            return await _context.Classes
+                .AnyAsync(c => c.ClassName == className);
         }
     }
 }

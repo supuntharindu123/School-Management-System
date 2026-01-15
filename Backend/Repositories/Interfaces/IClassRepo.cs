@@ -9,8 +9,10 @@ namespace Backend.Repositories.Interfaces
 
         public Task UpdateClass(Class clz);
 
-        public Task<Class> GetClass(int id);
+        public Task<Class?> GetClass(int id);
 
         public Task<List<Class>> GetClassByGrade(int gradeId);
+
+        public Task<bool> ClassNameExists(string className);
     }
 }

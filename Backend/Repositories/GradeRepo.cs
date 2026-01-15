@@ -17,6 +17,11 @@ namespace Backend.Repositories
             throw new NotImplementedException();
         }
 
+        public async Task<List<Grade>> GetGrades()
+        {
+            return await _context.Grades.ToListAsync();
+        }
+
         public async Task<Grade?> GradeById(int id)
         {
             return await _context.Grades.AsTracking().FirstOrDefaultAsync(g => g.Id == id);

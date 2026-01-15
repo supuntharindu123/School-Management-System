@@ -6,5 +6,7 @@ namespace Backend.Repositories.Interfaces
     {
         public Task AddGrade(Grade grade);
         public Task<Grade?> GradeById(int id);
+
+        public Task<List<Grade>> GetGrades();
     }
 }

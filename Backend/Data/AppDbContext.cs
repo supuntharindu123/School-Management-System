@@ -15,8 +15,11 @@ namespace Backend.Data
         public DbSet<AcademicYear> AcademicYears { get; set; }
         public DbSet<Class> Classes { get; set; }
 
+        public DbSet<StudentAcademicHistory> History0fStudents { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+
             modelBuilder.Entity<Teacher>()
                 .HasOne(t => t.user)
                 .WithOne(u=>u.teacher)

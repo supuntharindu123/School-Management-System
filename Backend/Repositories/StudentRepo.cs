@@ -28,7 +28,7 @@ namespace Backend.Repositories
         public async Task<Student?> GetStudentById(int id)
         {
             return await _context.Students
-                .AsNoTracking()
+                .AsNoTracking().Include(s=>s.user)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

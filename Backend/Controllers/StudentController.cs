@@ -42,5 +42,10 @@ namespace Backend.Controllers
             await _service.UpdateStudent(id, dto);
             return Ok("Student Update Successfully !");
         }
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetStudent(int id) {
+            var student=await _service.StudentById(id);
+            return Ok(student);
+        }
     }
 }

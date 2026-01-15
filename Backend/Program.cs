@@ -33,7 +33,14 @@ builder.Services.AddScoped<ITeacherRepo,TeacherRepo>();
 builder.Services.AddScoped<ITeacherService,TeacherService>();
 builder.Services.AddScoped<IStudentRepo, StudentRepo>();
 builder.Services.AddScoped<IStudentService,StudentService>();
-
+builder.Services.AddScoped<IStudentHistoryRepo, StudentHistoryRepo>();
+builder.Services.AddScoped<IPromotionServices, PromotionService>();
+builder.Services.AddScoped<IGradeRepo, GradeRepo>();
+builder.Services.AddScoped<IGradeService, GradeService>();
+builder.Services.AddScoped<IYearRepo, YearRepo>();
+builder.Services.AddScoped<IYearService, YearService>();
+builder.Services.AddScoped<IClassRepo, ClassRepo>();
+builder.Services.AddScoped<IClassService, ClassService>();
 
 
 //authentications

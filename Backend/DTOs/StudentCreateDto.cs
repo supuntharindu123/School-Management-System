@@ -26,6 +26,20 @@ namespace Backend.DTOs
         [Required]
         public string? Gender { get; set; }
         [Required]
-        public string? CurrentGrade { get; set; }
+        public int CurrentGradeID { get; set; }
+
+        [Required]
+        public string? StudentIDNumber { get; set; }
+
+        [Required]
+        public int CurrentClassID { get; set; }
+        [Required]
+        public int CurrentYearID { get; set; }
+        [Required]
+        public string? GuardianName { get; set; }
+
+        public string? GuardianRelation { get; set; }
+        [Required]
+        public DateOnly GuardianDate { get; set; }
     }
 }
