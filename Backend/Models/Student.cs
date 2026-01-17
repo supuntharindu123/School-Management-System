@@ -37,7 +37,14 @@ namespace Backend.Models
         public DateOnly? ResignDate { get; set; }
 
         public string? Status { get; set; } = "Active";
-        public User? user { get; set; }
+        public User? User { get; set; }
+
+        public Grade? Grade {  get; set; }
+        public AcademicYear? AcademicYear { get; set; }
+
+        public Class? Class { get; set; }
+
+
 
         public ICollection<StudentAcademicHistory>? AcademicHistory { get; set; } = new List<StudentAcademicHistory>();
     }

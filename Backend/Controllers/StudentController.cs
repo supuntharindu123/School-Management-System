@@ -47,5 +47,19 @@ namespace Backend.Controllers
             var student=await _service.StudentById(id);
             return Ok(student);
         }
+
+        [HttpGet("exportStudents")]
+        public async Task<IActionResult> ExportToExcelStudents()
+        {
+            var students = await _service.AllStudents();
+
+            var filebytes = _service.ExportToExcel(students);
+
+            return File(
+                filebytes,
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Students.xlsx"
+                );
+        }
     }
 }

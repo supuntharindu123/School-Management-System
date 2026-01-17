@@ -3,6 +3,9 @@ import { getToken } from "./tokenservice";
 
 const api = axios.create({
   baseURL: "https://localhost:7262/api",
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
 api.interceptors.request.use((config) => {

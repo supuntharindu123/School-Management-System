@@ -7,6 +7,7 @@ namespace Backend.DTOs
     {
         public int Id { get; set; }
         public int UserId {  get; set; }
+        public string? StudentIDNumber { get; set; }
         public string? Username { get; set; }
         public string? Email { get; set; }
         public string? PhoneNumber { get; set; }
@@ -23,5 +24,9 @@ namespace Backend.DTOs
         public DateOnly GuardianDate { get; set; }
         public DateOnly? ResignDate { get; set; }
         public UserRole Role { get; set; }
+
+        public string? Grade { get; set; }
+        public string? Class { get; set; }
+        public string? AcademicYear { get; set; }
     }
 }

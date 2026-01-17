@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { GetStudentById } from "../../features/adminFeatures/students/studentApi";
+import EditStudentDialog from "../../components/EditStudentDialog";
+import DeleteStudentDialog from "../../components/DeleteStudentDialog";
 
 export default function StudentProfilePage() {
   const { id } = useParams();
   const [tab, setTab] = useState("personal");
+  const [details, setDetails] = useState({});
+  const [openEdit, setOpenEdit] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+  const [openDelete, setOpenDelete] = useState(false);
 
   const tabs = [
     { key: "personal", label: "Personal Information" },
@@ -12,32 +19,20 @@ export default function StudentProfilePage() {
     { key: "exams", label: "Exam Results Summary" },
   ];
 
-  const student = {
-    name: "Alice Johnson",
-    admissionNo: "ADM001",
-    grade: "8",
-    class: "A",
-    year: "2025-2026",
-    dob: "2012-04-11",
-    gender: "Female",
-    address: "123 Elm Street, Springfield",
-    contact: "(555) 123-4567",
+  const fetchStudent = async () => {
+    try {
+      const res = await GetStudentById(id);
+      setDetails(res);
+    } catch (err) {
+      console.error("Failed to load student", err);
+    }
   };
 
-  const guardians = [
-    {
-      relation: "Father",
-      name: "Mark Johnson",
-      phone: "(555) 987-6543",
-      email: "mark.j@example.com",
-    },
-    {
-      relation: "Mother",
-      name: "Sarah Johnson",
-      phone: "(555) 678-1234",
-      email: "sarah.j@example.com",
-    },
-  ];
+  useEffect(() => {
+    fetchStudent();
+  }, [id]);
+
+  console.log("Student details:", details);
 
   const attendance = {
     presentDays: 132,
@@ -59,8 +54,36 @@ export default function StudentProfilePage() {
     { exam: "Quiz 3", subject: "Algebra", score: 17, grade: "A" },
   ];
 
+  const onEdit = (row) => {
+    setSelectedStudent(row);
+    setOpenEdit(true);
+  };
+  const onDelete = (row) => {
+    setSelectedStudent(row);
+    setOpenDelete(true);
+  };
+
   return (
     <div>
+      <EditStudentDialog
+        open={openEdit}
+        onClose={() => setOpenEdit(false)}
+        student={selectedStudent}
+        onSaved={() => {
+          setOpenEdit(false);
+          fetchStudent();
+        }}
+      />
+      <DeleteStudentDialog
+        open={openDelete}
+        onClose={() => setOpenDelete(false)}
+        student={selectedStudent || details}
+        onDeleted={() => {
+          setOpenDelete(false);
+          // After deleting, go back to list
+          window.location.href = "/students";
+        }}
+      />
       {/* Header */}
       <header className="mb-4 flex items-center justify-between">
         <div>
@@ -68,8 +91,8 @@ export default function StudentProfilePage() {
             Student Profile
           </h1>
           <p className="text-sm text-neutral-700">
-            Admission No: {student.admissionNo} • Grade {student.grade}-
-            {student.class} • {student.year}
+            Student ID: {details.studentIDNumber} • Grade {details.grade}-
+            {details.class} • {details.academicYear}
           </p>
         </div>
         <div className="flex gap-2">
@@ -79,8 +102,17 @@ export default function StudentProfilePage() {
           >
             Back to List
           </Link>
-          <button className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700">
+          <button
+            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+            onClick={() => onEdit(details)}
+          >
             Edit Profile
+          </button>
+          <button
+            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+            onClick={() => onDelete(details)}
+          >
+            Delete
           </button>
         </div>
       </header>
@@ -88,17 +120,19 @@ export default function StudentProfilePage() {
       {/* Summary card */}
       <section className="rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex items-center gap-4">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-teal-500 to-teal-700 text-white text-lg font-semibold">
-            {student.name
-              .split(" ")
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-white text-lg font-semibold">
+            {details?.fullName
+              ?.split(" ")
               .map((n) => n[0])
-              .join("")}
+              .join("") || ""}
           </span>
           <div>
             <p className="text-lg font-semibold text-neutral-900">
-              {student.name}
+              {details.fullName}
             </p>
-            <p className="text-sm text-neutral-700">ID: {id}</p>
+            <p className="text-sm text-neutral-700">
+              ID: {details.studentIDNumber}
+            </p>
           </div>
         </div>
       </section>
@@ -143,12 +177,17 @@ export default function StudentProfilePage() {
                 Personal Information
               </h2>
               <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Field label="Full Name" value={student.name} />
-                <Field label="Admission No" value={student.admissionNo} />
-                <Field label="Date of Birth" value={student.dob} />
-                <Field label="Gender" value={student.gender} />
-                <Field label="Contact" value={student.contact} />
-                <Field label="Address" value={student.address} full />
+                <Field label="Full Name" value={details.fullName} />
+                <Field label="Admission No" value={details.id} />
+                <Field label="Date of Birth" value={details.birthDay} />
+                <Field label="Gender" value={details.gender} />
+                <Field label="Contact" value={details.phoneNumber} />
+                <Field label="Email" value={details.email} />
+                <Field label="Address" value={details.address} />
+                <Field label="City" value={details.city} />
+                <Field label="Grade" value={details.grade} />
+                <Field label="Class" value={details.class} />
+                <Field label="GuardianDate" value={details.guardianDate} />
               </div>
             </section>
           )}
@@ -165,19 +204,14 @@ export default function StudentProfilePage() {
                 Guardian Details
               </h2>
               <ul className="mt-3 space-y-3">
-                {guardians.map((g, idx) => (
-                  <li
-                    key={idx}
-                    className="rounded-lg border border-gray-200 p-3"
-                  >
-                    <p className="font-medium text-neutral-900">
-                      {g.relation}: {g.name}
-                    </p>
-                    <p className="text-sm text-neutral-700">
-                      Phone: {g.phone} • Email: {g.email}
-                    </p>
-                  </li>
-                ))}
+                <li className="rounded-lg border border-gray-200 p-3">
+                  <p className="font-medium text-neutral-900">
+                    {details.guardianRelation}: {details.guardianName}
+                  </p>
+                  <p className="text-sm text-neutral-700">
+                    Phone: {} • Email: {}
+                  </p>
+                </li>
               </ul>
             </section>
           )}

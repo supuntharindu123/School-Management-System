@@ -1,5 +1,5 @@
 import React from "react";
-import AdminDashboard from "../components/AdminDashboard.jsx";
+import AdminDashboard from "../../components/AdminDashboard.jsx";
 
 export default function AdminDashboardPage() {
   return (

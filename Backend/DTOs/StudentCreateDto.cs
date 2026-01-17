@@ -29,9 +29,6 @@ namespace Backend.DTOs
         public int CurrentGradeID { get; set; }
 
         [Required]
-        public string? StudentIDNumber { get; set; }
-
-        [Required]
         public int CurrentClassID { get; set; }
         [Required]
         public int CurrentYearID { get; set; }

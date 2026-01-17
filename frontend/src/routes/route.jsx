@@ -2,16 +2,17 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LoginPage from "../pages/LoginPage";
-import AdminDashboardPage from "../pages/AdminDashboardPage";
+import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
 import TeacherDashboardPage from "../pages/TeacherDashboardPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import NotFoundPage from "../pages/NotFoundPage";
-import StudentListPage from "../pages/StudentListPage";
-import StudentProfilePage from "../pages/StudentProfilePage";
-import GradeManagementPage from "../pages/GradeManagementPage";
-import ClassManagementPage from "../pages/ClassManagementPage";
-import SubjectManagementPage from "../pages/SubjectManagementPage";
-import TeacherListPage from "../pages/TeacherListPage";
+import StudentListPage from "../pages/admin/StudentListPage";
+import StudentProfilePage from "../pages/admin/StudentProfilePage";
+import GradeManagementPage from "../pages/admin/GradeManagementPage";
+import ClassManagementPage from "../pages/admin/ClassManagementPage";
+import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
+import TeacherListPage from "../pages/admin/TeacherListPage";
+import AddStudentPage from "../pages/admin/AddStudentPage";
 
 import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
@@ -30,6 +31,7 @@ export default function RouteConfig() {
           <Route element={<AppLayout />}>
             <Route path="/teacher" element={<TeacherDashboardPage />} />
             <Route path="/students" element={<StudentListPage />} />
+            <Route path="/students/add" element={<AddStudentPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/grades" element={<GradeManagementPage />} />
             <Route path="/classes" element={<ClassManagementPage />} />

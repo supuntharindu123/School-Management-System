@@ -26,6 +26,21 @@ namespace Backend.Data
                 .HasForeignKey<Teacher>(t => t.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Student>()
+                .HasOne(t => t.Grade)
+                .WithMany()
+                .HasForeignKey(s => s.CurrentGradeID);
+
+            modelBuilder.Entity<Student>()
+                .HasOne(t => t.Class)
+                .WithMany()
+                .HasForeignKey(s => s.CurrentClassID);
+
+            modelBuilder.Entity<Student>()
+                .HasOne(t => t.AcademicYear)
+                .WithMany()
+                .HasForeignKey(s => s.CurrentYearID);
+
         }
     }
 }

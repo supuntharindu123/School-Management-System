@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import Button from "../components/CommonElements/Button";
+import Button from "../../components/CommonElements/Button";
 
 export default function TeacherListPage() {
   const [year, setYear] = useState("2025-2026");

@@ -13,5 +13,7 @@ namespace Backend.Repositories.Interfaces
         public Task DeleteStudent(Student student);
 
         public Task UpdateStudent(Student student);
+
+        public Task<string> generateID();
     }
 }

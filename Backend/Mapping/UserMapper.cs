@@ -25,10 +25,13 @@ namespace Backend.Mapping
                 .ForMember(destination => destination.UserId, option => option.Ignore());
 
             CreateMap<Student, StudentRes>()
-                .ForMember(destination => destination.Username, option => option.MapFrom(src => src.user!.Username))
-                .ForMember(destination => destination.Email, option => option.MapFrom(src => src.user!.Email))
-                .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.user!.PhoneNumber))
-                .ForMember(destination => destination.Role, option => option.MapFrom(src => src.user!.Role));
+                .ForMember(destination => destination.Username, option => option.MapFrom(src => src.User!.Username))
+                .ForMember(destination => destination.Email, option => option.MapFrom(src => src.User!.Email))
+                .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.User!.PhoneNumber))
+                .ForMember(destination => destination.Role, option => option.MapFrom(src => src.User!.Role))
+                .ForMember(destination => destination.Grade, option => option.MapFrom(src => src.Grade!.GradeName))
+                .ForMember(destination => destination.AcademicYear, option => option.MapFrom(src => src.AcademicYear!.Year))
+                .ForMember(destination => destination.Class, option => option.MapFrom(src => src.Class!.ClassName));
 
             CreateMap<StudentUpdateDto, Student>();
 
@@ -62,7 +65,7 @@ namespace Backend.Mapping
                .ForMember(destination => destination.GuardianRelation, opt => opt.Ignore())
                .ForMember(destination => destination.GuardianDate, opt => opt.Ignore())
                .ForMember(destination => destination.ResignDate, opt => opt.Ignore())
-               .ForMember(destination => destination.user, opt => opt.Ignore())
+               .ForMember(destination => destination.User, opt => opt.Ignore())
                .ForMember(destination => destination.AcademicHistory, opt => opt.Ignore());
                
             CreateMap<StudentCreateDto, StudentAcademicHistory>()
@@ -73,8 +76,6 @@ namespace Backend.Mapping
                .ForMember(destination => destination.Status, opt => opt.MapFrom(src => "Promoted")) 
                .ForMember(destination => destination.StudentID, opt => opt.Ignore())
                .ForMember(destination => destination.student, opt => opt.Ignore());
-
-
         }
     }
 }

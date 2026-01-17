@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import Button from "../components/CommonElements/Button";
+import Button from "../../components/CommonElements/Button";
 
 export default function GradeManagementPage() {
   const initialGrades = Array.from({ length: 13 }, (_, i) => ({

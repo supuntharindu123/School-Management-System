@@ -12,5 +12,8 @@ namespace Backend.Services.Interfaces
         public Task DeleteStudent(int id);
 
         public Task UpdateStudent(int id,StudentUpdateDto dto);
+
+        public byte[] ExportToExcel(List<StudentRes> studentRes);
+
     }
 }
