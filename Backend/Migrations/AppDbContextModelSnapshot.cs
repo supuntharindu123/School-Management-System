@@ -46,18 +46,64 @@ namespace Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("ClassName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("ClassNameID")
+                        .HasColumnType("int");
 
                     b.Property<int>("GradeId")
                         .HasColumnType("int");
 
+                    b.Property<string>("Name")
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("ClassNameID");
 
                     b.HasIndex("GradeId");
 
                     b.ToTable("Classes");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassName", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("ClassNames");
+                });
+
+            modelBuilder.Entity("Backend.Models.Exam", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Exams");
                 });
 
             modelBuilder.Entity("Backend.Models.Grade", b =>
@@ -68,13 +114,43 @@ namespace Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("GradeName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("GradeName")
+                        .HasColumnType("int");
 
                     b.HasKey("Id");
 
                     b.ToTable("Grades");
+                });
+
+            modelBuilder.Entity("Backend.Models.Marks", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExamId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Score")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeacherSubjectClassId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("TeacherSubjectClassId");
+
+                    b.ToTable("Marks");
                 });
 
             modelBuilder.Entity("Backend.Models.Student", b =>
@@ -96,13 +172,7 @@ namespace Backend.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("CurrentClassID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentGradeID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("CurrentYearID")
+                    b.Property<int>("ClassId")
                         .HasColumnType("int");
 
                     b.Property<string>("FullName")
@@ -138,11 +208,7 @@ namespace Backend.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("CurrentClassID");
-
-                    b.HasIndex("CurrentGradeID");
-
-                    b.HasIndex("CurrentYearID");
+                    b.HasIndex("ClassId");
 
                     b.HasIndex("UserId")
                         .IsUnique();
@@ -164,26 +230,98 @@ namespace Backend.Migrations
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<int>("GradeId")
-                        .HasColumnType("int");
-
                     b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("StudentID")
-                        .HasColumnType("int");
-
-                    b.Property<int>("YearId")
+                    b.Property<int>("StudentId")
                         .HasColumnType("int");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("StudentID");
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("StudentId");
 
                     b.ToTable("History0fStudents");
+                });
+
+            modelBuilder.Entity("Backend.Models.StudentAttendances", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<bool>("IsPresent")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Reason")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("StudentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StudentId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("StudentAttendances");
+                });
+
+            modelBuilder.Entity("Backend.Models.Subject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ModuleCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SubjectName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("Subjects");
+                });
+
+            modelBuilder.Entity("Backend.Models.SubjectGrade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("GradeID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GradeID");
+
+                    b.HasIndex("SubjectId");
+
+                    b.ToTable("SubjectGrades");
                 });
 
             modelBuilder.Entity("Backend.Models.Teacher", b =>
@@ -222,6 +360,102 @@ namespace Backend.Migrations
                         .IsUnique();
 
                     b.ToTable("Teachers");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherClassAssign", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Role")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TeacherClassAssign");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherSubjectClass", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ClassId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TeacherId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ClassId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.HasIndex("TeacherId");
+
+                    b.ToTable("TeacherSubjectClasses");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherSubjectTask", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("EndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTime>("StartDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("TeacherSubjectClassId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TeacherSubjectClassId");
+
+                    b.ToTable("TeacherSubjectTasks");
                 });
 
             modelBuilder.Entity("Backend.Models.User", b =>
@@ -264,82 +498,259 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Class", b =>
                 {
-                    b.HasOne("Backend.Models.Grade", "Grade")
-                        .WithMany()
-                        .HasForeignKey("GradeId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                    b.HasOne("Backend.Models.ClassName", "ClassName")
+                        .WithMany("Classes")
+                        .HasForeignKey("ClassNameID")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.Grade", "Grade")
+                        .WithMany("Classes")
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ClassName");
+
                     b.Navigation("Grade");
+                });
+
+            modelBuilder.Entity("Backend.Models.Marks", b =>
+                {
+                    b.HasOne("Backend.Models.Exam", "Exam")
+                        .WithMany("Marks")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithMany("Marks")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.TeacherSubjectClass", "TeacherSubjectClasses")
+                        .WithMany("Marks")
+                        .HasForeignKey("TeacherSubjectClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Student");
+
+                    b.Navigation("TeacherSubjectClasses");
                 });
 
             modelBuilder.Entity("Backend.Models.Student", b =>
                 {
                     b.HasOne("Backend.Models.Class", "Class")
-                        .WithMany()
-                        .HasForeignKey("CurrentClassID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Models.Grade", "Grade")
-                        .WithMany()
-                        .HasForeignKey("CurrentGradeID")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Models.AcademicYear", "AcademicYear")
-                        .WithMany()
-                        .HasForeignKey("CurrentYearID")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .WithMany("Students")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("Backend.Models.User", "User")
-                        .WithOne("student")
+                        .WithOne("Student")
                         .HasForeignKey("Backend.Models.Student", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("AcademicYear");
-
                     b.Navigation("Class");
-
-                    b.Navigation("Grade");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Backend.Models.StudentAcademicHistory", b =>
                 {
-                    b.HasOne("Backend.Models.Student", "student")
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany("StudentsHistory")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Student", "Student")
                         .WithMany("AcademicHistory")
-                        .HasForeignKey("StudentID")
+                        .HasForeignKey("StudentId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("student");
+                    b.Navigation("Class");
+
+                    b.Navigation("Student");
+                });
+
+            modelBuilder.Entity("Backend.Models.StudentAttendances", b =>
+                {
+                    b.HasOne("Backend.Models.Student", "Student")
+                        .WithMany("StudentAttendances")
+                        .HasForeignKey("StudentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Teacher", "Teacher")
+                        .WithMany("StudentAttendances")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Student");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Backend.Models.SubjectGrade", b =>
+                {
+                    b.HasOne("Backend.Models.Grade", "Grade")
+                        .WithMany("SubjectGrade")
+                        .HasForeignKey("GradeID")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Subject", "Subject")
+                        .WithMany("SubjectGrade")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Grade");
+
+                    b.Navigation("Subject");
                 });
 
             modelBuilder.Entity("Backend.Models.Teacher", b =>
                 {
-                    b.HasOne("Backend.Models.User", "user")
-                        .WithOne("teacher")
+                    b.HasOne("Backend.Models.User", "User")
+                        .WithOne("Teacher")
                         .HasForeignKey("Backend.Models.Teacher", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("user");
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherClassAssign", b =>
+                {
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany("TeacherClassAssign")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Teacher", "Teacher")
+                        .WithMany("AssignTasks")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherSubjectClass", b =>
+                {
+                    b.HasOne("Backend.Models.Class", "Class")
+                        .WithMany("TeacherSubjectClass")
+                        .HasForeignKey("ClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Subject", "Subject")
+                        .WithMany("TeacherSubjectClass")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Teacher", "Teacher")
+                        .WithMany("TeacherSubjectClass")
+                        .HasForeignKey("TeacherId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Class");
+
+                    b.Navigation("Subject");
+
+                    b.Navigation("Teacher");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherSubjectTask", b =>
+                {
+                    b.HasOne("Backend.Models.TeacherSubjectClass", "TeacherSubjectClass")
+                        .WithMany("TeacherSubjectTask")
+                        .HasForeignKey("TeacherSubjectClassId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("TeacherSubjectClass");
+                });
+
+            modelBuilder.Entity("Backend.Models.Class", b =>
+                {
+                    b.Navigation("Students");
+
+                    b.Navigation("StudentsHistory");
+
+                    b.Navigation("TeacherClassAssign");
+
+                    b.Navigation("TeacherSubjectClass");
+                });
+
+            modelBuilder.Entity("Backend.Models.ClassName", b =>
+                {
+                    b.Navigation("Classes");
+                });
+
+            modelBuilder.Entity("Backend.Models.Exam", b =>
+                {
+                    b.Navigation("Marks");
+                });
+
+            modelBuilder.Entity("Backend.Models.Grade", b =>
+                {
+                    b.Navigation("Classes");
+
+                    b.Navigation("SubjectGrade");
                 });
 
             modelBuilder.Entity("Backend.Models.Student", b =>
                 {
                     b.Navigation("AcademicHistory");
+
+                    b.Navigation("Marks");
+
+                    b.Navigation("StudentAttendances");
+                });
+
+            modelBuilder.Entity("Backend.Models.Subject", b =>
+                {
+                    b.Navigation("SubjectGrade");
+
+                    b.Navigation("TeacherSubjectClass");
+                });
+
+            modelBuilder.Entity("Backend.Models.Teacher", b =>
+                {
+                    b.Navigation("AssignTasks");
+
+                    b.Navigation("StudentAttendances");
+
+                    b.Navigation("TeacherSubjectClass");
+                });
+
+            modelBuilder.Entity("Backend.Models.TeacherSubjectClass", b =>
+                {
+                    b.Navigation("Marks");
+
+                    b.Navigation("TeacherSubjectTask");
                 });
 
             modelBuilder.Entity("Backend.Models.User", b =>
                 {
-                    b.Navigation("student");
+                    b.Navigation("Student");
 
-                    b.Navigation("teacher");
+                    b.Navigation("Teacher");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,10 +1,11 @@
-﻿using Backend.Models;
+﻿using Backend.Helper;
+using Backend.Models;
 
 namespace Backend.Services.Interfaces
 {
     public interface IGradeService
     {
-        public Task<List<Grade>> GetAllGrades();
-        public Task<Grade> GetGrade(int id);
+        public Task<Result<IEnumerable<Grade>>> GetAllGrades();
+        public Task<Result<Grade>> GetGrade(int id);
     }
 }

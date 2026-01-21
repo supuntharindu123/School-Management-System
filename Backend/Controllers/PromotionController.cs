@@ -17,8 +17,14 @@ namespace Backend.Controllers
         [HttpPost]
         public async Task<IActionResult> Promotion(PromotionList dto)
         {
-            await _promotionServices.PromotionStudents(dto);
-            return Ok("Teacher Registration Successfully !");
+            var res=await _promotionServices.PromotionStudents(dto);
+
+            if(!res.IsSuccess)
+            {
+                return BadRequest(res);
+            }
+
+            return Ok("Student Promotion Successfully !");
         }
     }
 }

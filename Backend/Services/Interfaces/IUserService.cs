@@ -1,15 +1,16 @@
 ﻿using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 
 namespace Backend.Services.Interfaces
 {
     public interface IUserService
     {
-        public Task<User> AddUserToRepo(RegisterDto dto);
-        public Task<LoginRes> LoginByEmail(LoginDto dto);
+        public Task<Result<User>> AddUserToRepo(RegisterDto dto);
+        public Task<Result<LoginRes>> LoginByEmail(LoginDto dto);
 
-        public Task<User> UserByID(int id);
+        public Task<Result<User>> UserByID(int id);
 
-        public Task DeleteUser(int id);
+        public Task<Result> DeleteUser(int id);
     }
 }

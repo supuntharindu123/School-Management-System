@@ -20,10 +20,10 @@ namespace Backend.Services
             _token = token;
             _hasher = hasher;
         }
-        public async Task<User> AddUserToRepo(RegisterDto dto)
+        public async Task<Result<User>> AddUserToRepo(RegisterDto dto)
         {
             if (await _repo.UserByEmail(dto.Email!)!=null) {
-                throw new Exception("Email already exists");
+                return Result<User>.Failure("Email Already Exists!");
             }
 
             var user = _mapper.Map<User>(dto);
@@ -31,52 +31,54 @@ namespace Backend.Services
 
             await _repo.AddUser(user);
 
-            return user;
+            return Result<User>.Success(user);
         }
 
-        public async Task<LoginRes> LoginByEmail(LoginDto dto)
+        public async Task<Result<LoginRes>> LoginByEmail(LoginDto dto)
         {
             var user = await _repo.UserByEmail(dto.Email!);
             if (user == null)
             {
-                throw new Exception("User Not found");
+                return Result<LoginRes>.Failure("User Not Found!");
             }
 
             var result = _hasher.Verifypwd(dto.Password!, user.Password!, user);
 
             if (!result)
             {
-                throw new Exception("Password Is Incorrect!");
+                return Result<LoginRes>.Failure("Password is incorrect!");
             }
 
-            return new LoginRes
+            return Result<LoginRes>.Success(new LoginRes
             {
                 token = _token.GenerateToken(user),
                 username = user.Username,
                 email = user.Email,
                 role = user.Role,
-            };
+            }); 
         }
 
 
-        public async Task<User> UserByID(int id) {
+        public async Task<Result<User>> UserByID(int id) {
             var user=await _repo.UserById(id);
             if (user == null) {
-                throw new Exception("User NotFound");
+                return Result<User>.Failure("User Not Found");
             }
 
-            return user;
+            return Result<User>.Success(user);
         }
 
 
-        public async Task DeleteUser(int id)
+        public async Task<Result> DeleteUser(int id)
         {
             var user = await _repo.UserById(id);
             if (user == null)
             {
-                throw new Exception("User Not Found");
+                return Result.Failure("User Not Found");
             }
             await _repo.DeleteUser(user);
+
+            return Result.Success();
         }
 
 

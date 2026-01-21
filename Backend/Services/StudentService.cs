@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -13,19 +14,21 @@ namespace Backend.Services
         private readonly IUserRepo _userRepo;
         private readonly IStudentHistoryRepo _historyrepo;
         private readonly IUserService _userService;
+        private readonly IClassRepo _classRepo;
         private readonly IMapper _mapper;
 
-        public StudentService(IStudentRepo repo, IUserService userService, IMapper mapper, IUserRepo userRepo, IStudentHistoryRepo historyrepo)
+        public StudentService(IStudentRepo repo, IUserService userService, IMapper mapper, IUserRepo userRepo, IStudentHistoryRepo historyrepo, IClassRepo classRepo)
         {
             _repo = repo;
             _userRepo = userRepo;
             _userService = userService;
             _mapper = mapper;
             _historyrepo = historyrepo;
+            _classRepo = classRepo;
         }
 
 
-        public async Task CreateStudent(StudentCreateDto dto)
+        public async Task<Result> CreateStudent(StudentCreateDto dto)
         {
             var regdto=_mapper.Map<RegisterDto>(dto);
 
@@ -35,46 +38,52 @@ namespace Backend.Services
 
             var studenthistory = _mapper.Map<StudentAcademicHistory>(dto);
 
-            student.UserId = user.Id;
-            student.User = user;
+            var clz = await _classRepo.GetClassByIDs(dto.GradeId, dto.ClassNameId);
+            student.UserId = user.Data.Id;
+            student.User = user.Data;
+            student.ClassId=clz.Id;
+
             await _repo.AddStudent(student);
 
-            studenthistory.StudentID=student.Id;
-            studenthistory.student = student;
+            studenthistory.StudentId =student.Id;
+            studenthistory.Student = student;
+            studenthistory.ClassId = clz.Id;
 
             await _historyrepo.AddStudentHistory(studenthistory);
+
+            return Result.Success();
         }
 
-        public async Task<List<StudentRes>> AllStudents()
+        public async Task<Result<IEnumerable<StudentRes>>> AllStudents()
         {
             var students=await _repo.GetAllStudents();
 
             if (!students.Any())
             {
-                throw new Exception("No students found.");
+                return Result<IEnumerable<StudentRes>>.Failure("Students Not Found");
             }
 
             var result=_mapper.Map<List<StudentRes>>(students);
 
-            return result;
+            return Result<IEnumerable<StudentRes>>.Success(result);
 
         }
 
-        public async Task<StudentRes> StudentById(int id)
+        public async Task<Result<StudentRes>> StudentById(int id)
         {
             var result = await _repo.GetStudentById(id);
 
             if (result == null)
             {
-                throw new Exception("Student Not Found");
+                return Result<StudentRes>.Failure("Student Not Found");
             }
 
             var student= _mapper.Map<StudentRes>(result);
 
-            return student;
+            return Result<StudentRes>.Success(student);
         }
 
-        public async Task DeleteStudent(int id)
+        public async Task<Result> DeleteStudent(int id)
         {
             var student = await _repo.GetStudentById(id);
 
@@ -83,20 +92,24 @@ namespace Backend.Services
                 throw new Exception("Student Not Found");
             }
             await _userRepo.DeleteUser(student.User);
+
+            return Result.Success();
         }
 
-        public async Task UpdateStudent(int id,StudentUpdateDto dto)
+        public async Task<Result> UpdateStudent(int id,StudentUpdateDto dto)
         {
             var student = await _repo.GetStudentById(id);
 
             if (student == null)
             {
-                throw new Exception("Student Not Found");
+                return Result.Failure("Student Not Found");
             }
 
             _mapper.Map(dto, student);
 
             await _repo.UpdateStudent(student);
+
+            return Result.Success();
         }
 
    
@@ -115,8 +128,6 @@ namespace Backend.Services
             sheet.Cells[1, 6].Value = "Birthday";
             sheet.Cells[1, 7].Value = "Grade";
             sheet.Cells[1, 8].Value = "Class";
-            sheet.Cells[1, 9].Value = "Academic Year";
-            sheet.Cells[1, 10].Value = "Address";
 
             int row = 2;
 
@@ -128,10 +139,8 @@ namespace Backend.Services
                 sheet.Cells[row, 4].Value = s.PhoneNumber;
                 sheet.Cells[row, 5].Value = s.Gender;
                 sheet.Cells[row, 6].Value = s.BirthDay.ToString("yyyy-MM-dd");
-                sheet.Cells[row, 7].Value = s.Grade;
-                sheet.Cells[row, 8].Value = s.Class;
-                sheet.Cells[row, 9].Value = s.AcademicYear;
-                sheet.Cells[row, 10].Value = s.Address;
+                sheet.Cells[row, 7].Value = s.CurrentClass;
+                sheet.Cells[row, 8].Value = s.Address;
 
                 row++;
             }

@@ -7,6 +7,9 @@ namespace Backend.Models
         public int Id { get; set; }
 
         [Required]
-        public string? GradeName { get; set; }
+        public int? GradeName { get; set; }
+
+        public ICollection<SubjectGrade>? SubjectGrade {  get; set; }
+        public ICollection<Class>? Classes { get; set; }
     }
 }

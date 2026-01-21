@@ -8,5 +8,6 @@ namespace Backend.Models
 
         [Required]
         public int Year { get; set; }
+
     }
 }

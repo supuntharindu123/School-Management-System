@@ -23,13 +23,14 @@ namespace Backend.Repositories
 
         public async Task<List<Student>> GetAllStudents()
         {
-            return await _context.Students.Include(s=>s.User).Include(s=>s.Grade).Include(s => s.AcademicYear).Include(s => s.Class).ToListAsync();
+            return await _context.Students.Include(s=>s.User).Include(s => s.Class).ToListAsync();
         }
+
 
         public async Task<Student?> GetStudentById(int id)
         {
             return await _context.Students
-                .AsNoTracking().Include(s=>s.User)
+                .AsNoTracking().Include(s=>s.User).Include(c=>c.Class)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

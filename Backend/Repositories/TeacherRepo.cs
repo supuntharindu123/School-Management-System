@@ -28,13 +28,13 @@ namespace Backend.Repositories
 
         public async Task<Teacher?> GetTeacherById(int id)
         {
-            return await _context.Teachers.Include(t=>t.user).FirstOrDefaultAsync(t=>t.Id == id);
+            return await _context.Teachers.Include(t=>t.User).Include(t=>t.AssignTasks).FirstOrDefaultAsync(t=>t.Id == id);
         }
 
         public async Task<List<Teacher>> GetTeachers()
         {
 
-            return await _context.Teachers.Include(t => t.user).ToListAsync();
+            return await _context.Teachers.Include(t => t.User).Include(t => t.AssignTasks).ToListAsync();
         }
 
         public async Task UpdateTeacher(Teacher teacher)

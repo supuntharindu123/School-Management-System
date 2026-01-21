@@ -1,11 +1,12 @@
-﻿using Backend.Models;
+﻿using Backend.Helper;
+using Backend.Models;
 
 namespace Backend.Services.Interfaces
 {
     public interface IYearService
     {
-        public Task<AcademicYear?> GetYear(int id);
+        public Task<Result<AcademicYear?>> GetYear(int id);
 
-        public Task<List<AcademicYear>> GetAcademicYears();
+        public Task<Result<IEnumerable<AcademicYear>>> GetAcademicYears();
     }
 }

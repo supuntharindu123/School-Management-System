@@ -13,6 +13,8 @@ namespace Backend.Repositories.Interfaces
 
         public Task<List<Class>> GetClassByGrade(int gradeId);
 
-        public Task<bool> ClassNameExists(string className);
+        public Task<Class?> GetClassByIDs(int gradeId, int classNameId);
+
+        public Task<string> NameOfClass(int gradeId, int classNameId);
     }
 }

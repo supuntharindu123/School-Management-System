@@ -16,17 +16,12 @@ namespace Backend.DTOs
         public string? Address { get; set; }
         public string? City { get; set; }
         public string? Gender { get; set; }
-        public int CurrentGradeID { get; set; }
-        public int CurrentClassID { get; set; }
-        public int CurrentYearID { get; set; }
+        public string? CurrentClass { get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianRelation { get; set; }
         public DateOnly GuardianDate { get; set; }
         public DateOnly? ResignDate { get; set; }
         public UserRole Role { get; set; }
 
-        public string? Grade { get; set; }
-        public string? Class { get; set; }
-        public string? AcademicYear { get; set; }
     }
 }

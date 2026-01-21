@@ -19,7 +19,11 @@ namespace Backend.Controllers
         [HttpPost("add")]
         public async Task<IActionResult> CreateStudent(StudentCreateDto dto)
         {
-            await _service.CreateStudent(dto);
+            var res=await _service.CreateStudent(dto);
+            if(!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
             return Ok("Student Registration Successfully !");
         }
 
@@ -27,31 +31,55 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetStudentAll()
         {
             var results=await _service.AllStudents();
-            return Ok(results);
+            if (!results.IsSuccess)
+            {
+                return NotFound(results.Error);
+            }
+            return Ok(results.Data);
         }
 
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteStudent(int id) { 
-            await _service.DeleteStudent(id);
+            var res=await _service.DeleteStudent(id);
+            if(!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
             return Ok("Student Delete Successfully !");
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateStudent(int id, StudentUpdateDto dto)
         {
-            await _service.UpdateStudent(id, dto);
+            var res = await _service.UpdateStudent(id, dto);
+            if(!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
             return Ok("Student Update Successfully !");
         }
+
         [HttpGet("{id}")]
         public async Task<IActionResult> GetStudent(int id) {
             var student=await _service.StudentById(id);
-            return Ok(student);
+            if (!student.IsSuccess)
+            {
+                return NotFound(student.Error);
+            }
+            return Ok(student.Data);
         }
 
         [HttpGet("exportStudents")]
         public async Task<IActionResult> ExportToExcelStudents()
         {
-            var students = await _service.AllStudents();
+            var res = await _service.AllStudents();
+
+            if (!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+
+            var students = res.Data.ToList();
 
             var filebytes = _service.ExportToExcel(students);
 

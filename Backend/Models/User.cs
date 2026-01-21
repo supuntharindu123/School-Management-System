@@ -28,9 +28,9 @@ namespace Backend.Models
 
         public DateTime CreateAt {  get; set; }
 
-        public Teacher? teacher { get; set; }
+        public Teacher? Teacher { get; set; }
 
-        public Student? student { get; set; }
+        public Student? Student { get; set; }
 
     }
 }

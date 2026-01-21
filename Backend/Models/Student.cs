@@ -22,11 +22,7 @@ namespace Backend.Models
         public string? Gender {  get; set; }
 
         [Required]
-        public int? CurrentGradeID { get; set; }
-        [Required]
-        public int? CurrentClassID { get; set; }
-        [Required]
-        public int? CurrentYearID { get; set; }
+        public int ClassId { get; set; }
         [Required]
         public string? GuardianName { get; set; }
 
@@ -39,13 +35,13 @@ namespace Backend.Models
         public string? Status { get; set; } = "Active";
         public User? User { get; set; }
 
-        public Grade? Grade {  get; set; }
-        public AcademicYear? AcademicYear { get; set; }
-
         public Class? Class { get; set; }
 
+        public ICollection<StudentAcademicHistory>? AcademicHistory { get; set; }
 
+        public ICollection<StudentAttendances>? StudentAttendances { get; set; }
 
-        public ICollection<StudentAcademicHistory>? AcademicHistory { get; set; } = new List<StudentAcademicHistory>();
+        public ICollection<Marks>? Marks { get; set; }
+
     }
 }

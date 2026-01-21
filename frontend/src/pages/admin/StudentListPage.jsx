@@ -82,7 +82,6 @@ export default function StudentListPage() {
         open={openAdd}
         onClose={() => setOpenAdd(false)}
         onAdded={() => {
-          // refresh list after a successful addition
           dispatch(GetAllStudents());
         }}
       />

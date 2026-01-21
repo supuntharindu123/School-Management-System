@@ -12,7 +12,11 @@ namespace Backend.Models
         [Required]
         public string ? SubjectName {  get; set; }
 
-        [Required]
-        public string? GradeId {  get; set; }
+        public ICollection<SubjectGrade>? SubjectGrade {  get; set; }
+
+        public ICollection<TeacherSubjectClass>? TeacherSubjectClass {  get; set; }
+
+
+
     }
 }

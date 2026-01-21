@@ -18,14 +18,22 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetGrade(int id)
         {
             var grade=await _service.GetGrade(id);
-            return Ok(grade);
+            if (!grade.IsSuccess)
+            {
+                return NotFound(grade.Error);
+            }
+            return Ok(grade.Data);
         }
 
         [HttpGet]
         public async Task<IActionResult> GetGrades()
         {
             var grades = await _service.GetAllGrades();
-            return Ok(grades);
+            if (!grades.IsSuccess)
+            {
+                return NotFound(grades.Error);
+            }
+            return Ok(grades.Data);
         }
 
     }

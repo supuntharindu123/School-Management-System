@@ -1,17 +1,18 @@
 ﻿using Backend.DTOs;
+using Backend.Helper;
 
 namespace Backend.Services.Interfaces
 {
     public interface ITeacherService
     {
-        public Task CreateTeacher(TeacherCreateDto dto);
+        public Task<Result> CreateTeacher(TeacherCreateDto dto);
 
-        public Task UpdateTeacher(int id,TeacherUpdateDto dto);
+        public Task<Result> UpdateTeacher(int id,TeacherUpdateDto dto);
 
-        public Task DeleteTeacher(int id);
+        public Task<Result> DeleteTeacher(int id);
 
-        public Task<List<TeacherRes>> GetAllTeachers();
+        public Task<Result<IEnumerable<TeacherRes>>> GetAllTeachers();
 
-        public Task<TeacherRes> GetTeacher(int id);
+        public Task<Result<TeacherRes>> GetTeacher(int id);
     }
 }

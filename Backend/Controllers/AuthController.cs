@@ -19,15 +19,23 @@ namespace Backend.Controllers
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
-            await _service.AddUserToRepo(dto);
-            return Ok("User Registration Successfully!");
+            var res=await _service.AddUserToRepo(dto);
+            if (!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+            return Ok(res.Data);
         }
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)
         {
             var token = await _service.LoginByEmail(dto);
-            return Ok(token);
+            if (!token.IsSuccess)
+            {
+                return BadRequest(token.Error);
+            }
+            return Ok(token.Data);
         }
     }
 }

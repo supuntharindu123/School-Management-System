@@ -15,24 +15,26 @@ namespace Backend.Repositories
 
         public async Task CreateClass(Class clz)
         {
+            clz.Name = await NameOfClass(clz.GradeId, clz.ClassNameID);
              _context.Classes.Add(clz);
             await _context.SaveChangesAsync();
 
         }
 
-        public Task DeleteClass(Class clz)
+        public async Task DeleteClass(Class clz)
         {
-            throw new NotImplementedException();
+           _context.Classes.Remove(clz);
+            await _context.SaveChangesAsync();
         }
 
         public async Task<Class?> GetClass(int id)
         {
-            return await _context.Classes.AsNoTracking().Include(c=>c.Grade).FirstOrDefaultAsync(c => c.Id == id);
+            return await _context.Classes.AsNoTracking().Include(c=>c.Grade).Include(c=>c.ClassName).FirstOrDefaultAsync(c => c.Id == id);
         }
 
         public async Task<List<Class>> GetClassByGrade(int gradeId)
         {
-            return await _context.Classes.Include(c=>c.Grade).Where(c=>c.GradeId == gradeId).ToListAsync();
+            return await _context.Classes.Include(c=>c.Grade).Include(c => c.ClassName).Where(c=>c.GradeId == gradeId).ToListAsync();
         }
 
         public Task UpdateClass(Class clz)
@@ -40,10 +42,19 @@ namespace Backend.Repositories
             throw new NotImplementedException();
         }
 
-        public async Task<bool> ClassNameExists(string className)
+        public async Task<Class?> GetClassByIDs(int gradeId, int classNameId)
         {
-            return await _context.Classes
-                .AnyAsync(c => c.ClassName == className);
+            return await _context.Classes.AsNoTracking()
+                .FirstOrDefaultAsync(c=>c.GradeId==gradeId && c.ClassNameID==classNameId);
+        }
+
+        public async Task<string> NameOfClass(int gradeId, int classNameId)
+        {
+            var grade=await _context.Grades.FirstOrDefaultAsync(g=>g.Id == gradeId);
+
+            var name = await _context.ClassNames.FirstOrDefaultAsync(c => c.Id == classNameId);
+
+            return ("Grade"+grade!.GradeName + "-" + name!.Name);
         }
     }
 }

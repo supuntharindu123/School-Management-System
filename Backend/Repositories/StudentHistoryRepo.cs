@@ -21,9 +21,9 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<StudentAcademicHistory?> GetById(int studentid, int yearid)
+        public async Task<StudentAcademicHistory?> GetById(int studentid)
         {
-            return await _context.History0fStudents.FirstOrDefaultAsync(s => s.StudentID == studentid && s.YearId ==yearid && s.EndDate == null);
+            return await _context.History0fStudents.FirstOrDefaultAsync(s => s.StudentId == studentid && s.EndDate == null);
         }
 
         public async Task UpdateStudentHistory(StudentAcademicHistory dto) {

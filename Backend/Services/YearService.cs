@@ -1,4 +1,5 @@
-﻿using Backend.Models;
+﻿using Backend.Helper;
+using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
 
@@ -12,14 +13,14 @@ namespace Backend.Services
         {
             _repo = repo; 
         }
-        public async Task<List<AcademicYear>> GetAcademicYears()
+        public async Task<Result<IEnumerable<AcademicYear>>> GetAcademicYears()
         {
-            return await _repo.GetYearList();
+            return Result<IEnumerable<AcademicYear>>.Success(await _repo.GetYearList());
         }
 
-        public async Task<AcademicYear?> GetYear(int id)
+        public async Task<Result<AcademicYear?>> GetYear(int id)
         {
-            return await _repo.GetYearById(id);
+            return Result<AcademicYear?>.Success(await _repo.GetYearById(id));
         }
     }
 }

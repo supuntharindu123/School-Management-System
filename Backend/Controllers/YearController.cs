@@ -17,14 +17,14 @@ namespace Backend.Controllers
         public async Task<IActionResult> GetYears()
         {
             var years=await _service.GetAcademicYears();
-            return Ok(years);
+            return Ok(years.Data);
         }
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetYear(int id)
         {
             var year = await _service.GetYear(id);
-            return Ok(year);
+            return Ok(year.Data);
         }
 
     }

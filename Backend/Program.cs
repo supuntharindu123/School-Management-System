@@ -46,6 +46,10 @@ builder.Services.AddScoped<IYearRepo, YearRepo>();
 builder.Services.AddScoped<IYearService, YearService>();
 builder.Services.AddScoped<IClassRepo, ClassRepo>();
 builder.Services.AddScoped<IClassService, ClassService>();
+builder.Services.AddScoped<ITeacherAssignmentRepo,TeacherAssignmentRepo>();
+builder.Services.AddScoped<ITeacherAssignmentService,TeacherAssignmentService>();
+builder.Services.AddScoped<ISubjectRepo,SubjectRepo>();
+builder.Services.AddScoped<ISubjectService, SubjectService>();
 
 
 //authentications
@@ -94,8 +98,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     
 }
-
-
 
 app.UseHttpsRedirection();
 app.UseCors("AllowReactApp");

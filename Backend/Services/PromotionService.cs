@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using Backend.Data;
 using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -13,71 +14,76 @@ namespace Backend.Services
         private readonly IMapper _mapper;
         private readonly IStudentHistoryRepo _historyRepo;
         private readonly IStudentRepo _studentRepo;
+        private readonly IClassRepo _classRepo;
 
-        public PromotionService(AppDbContext context,IMapper mapper, IStudentHistoryRepo historyrepo, IStudentRepo studentrepo)
+        public PromotionService(AppDbContext context, IMapper mapper, IStudentHistoryRepo historyrepo, IStudentRepo studentrepo, IClassRepo classRepo)
         {
             _context = context;
             _mapper = mapper;
             _historyRepo = historyrepo;
             _studentRepo = studentrepo;
+            _classRepo = classRepo;
         }
-        public async Task PromotionStudents(PromotionList dto)
+        public async Task<Result> PromotionStudents(PromotionList dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                foreach(var promo in dto.Promotions)
+                foreach (var promo in dto.Promotions)
                 {
                     var student = await _studentRepo.GetStudentById(promo.StudentId);
 
                     if (student == null)
                     {
-                        throw new Exception("Student Not Found");
+                        return Result.Failure("Student Not Found");
                     }
 
-                    var studenthistory = await _historyRepo.GetById(promo.StudentId, promo.OldYearId);
 
-                    if( studenthistory == null)
+                    var studenthistory = await _historyRepo.GetById(promo.StudentId);
+
+                    if (studenthistory == null)
                     {
-                        throw new Exception("Student History Not Found");
+                        return Result.Failure("Student Not Found");
                     }
 
                     studenthistory.EndDate = DateTime.UtcNow;
                     studenthistory.Status = promo.Status;
 
-                    if(promo.Status== "Promoted" || promo.Status == "Repeat")
+                    if (promo.Status == "Promoted" || promo.Status == "Repeat")
                     {
-                        var newstudenthistory = _mapper.Map<StudentAcademicHistory>(promo);
-                        //newstudenthistory.student=student;
+                        var newHistory = _mapper.Map<StudentAcademicHistory>(promo);
 
-                        await _historyRepo.AddStudentHistory(newstudenthistory);
+                        var classEntity = await _classRepo.GetClassByIDs(promo.GradeId, promo.ClassNameId);
 
-                        student.CurrentGradeID = promo.GradeId;
-                        student.CurrentYearID = promo.YearId;
-                        student.CurrentClassID = promo.ClassId;
-                        
+                        newHistory.ClassId = classEntity.Id;
+
+                        await _historyRepo.AddStudentHistory(newHistory);
+
+                        student.ClassId = classEntity.Id;
+                        student.Class = null;
                     }
                     else
                     {
                         student.Status = promo.Status;
-                        student.CurrentGradeID = null;
-                        student.CurrentYearID = null;
-                        student.CurrentClassID = null;
-                        
                     }
+
                     await _studentRepo.UpdateStudent(student);
                     await _historyRepo.UpdateStudentHistory(studenthistory);
 
+                    
                 }
+
                 await transaction.CommitAsync();
+                return Result.Success();
             }
-            catch
+            catch(Exception ex)
             {
                 await transaction.RollbackAsync();
-                throw;
+                return Result.Failure("An unexpected error occurred while promoting the student"+ex);
             }
-
         }
+
     }
+
 }

@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -19,65 +20,73 @@ namespace Backend.Services
             _userRepo = userrepo;
         }
 
-        public async Task CreateTeacher(TeacherCreateDto dto)
+        public async Task<Result> CreateTeacher(TeacherCreateDto dto)
         {
             var regdto=_mapper.Map<RegisterDto>(dto);
             var users=await _userService.AddUserToRepo(regdto);
 
 
             var teacherdto = _mapper.Map<Teacher>(dto);
-            teacherdto.UserId = users.Id;
-            teacherdto.user = users;
+            teacherdto.UserId = users.Data.Id;
+            teacherdto.User = users.Data;
             await _repo.AddTeacher(teacherdto);
+
+            return Result.Success();
         }
 
-        public async Task DeleteTeacher(int id)
+        public async Task<Result> DeleteTeacher(int id)
         {
             
             var teacher=await _repo.GetTeacherById(id);
 
             if (teacher == null)
             {
-                throw new Exception("Teacher Not Found");
+                return Result.Failure("Teacher Not Found");
             }
           
-            await _userRepo.DeleteUser(teacher.user);
+            await _userRepo.DeleteUser(teacher.User);
+
+            return Result.Success();
         }
 
-        public async Task<List<TeacherRes>> GetAllTeachers()
+        public async Task<Result<IEnumerable<TeacherRes>>> GetAllTeachers()
         {
             var results=await _repo.GetTeachers();
             if(results == null)
             {
-                throw new Exception("Teachers Not Found");
+                return Result<IEnumerable<TeacherRes>>.Failure("Teachers Not Found");
             }
             var teachers = _mapper.Map<List<TeacherRes>>(results);
-            return teachers;
+
+            return Result<IEnumerable<TeacherRes>>.Success(teachers);
         }
 
-        public async Task<TeacherRes> GetTeacher(int id)
+        public async Task<Result<TeacherRes>> GetTeacher(int id)
         {
             var result = await _repo.GetTeacherById(id);
             if (result == null)
             {
-                throw new Exception("Teacher Not Found");
+                return Result< TeacherRes>.Failure("Teacher Not Found");
              }
             var teacher=_mapper.Map<TeacherRes>(result);
 
-            return teacher;
+            return Result<TeacherRes>.Success(teacher);
         }
 
-        public async Task UpdateTeacher(int id, TeacherUpdateDto dto)
+        public async Task<Result> UpdateTeacher(int id, TeacherUpdateDto dto)
         {
             var teacher=await _repo.GetTeacherById(id);
+
             if(teacher == null)
             {
-                throw new Exception("Teacher Not Found");
+                return Result.Failure("Teacher Not Found");
             }
 
             _mapper.Map(dto, teacher);
 
             await _repo.UpdateTeacher(teacher);
+
+            return Result.Success();
         }
     }
 }

@@ -4,8 +4,6 @@ namespace Backend.DTOs
 {
     public class StudentUpdateDto
     {
-      
-        public string? FullName { get; set; }
     
         public string? Address { get; set; }
         
@@ -14,6 +12,7 @@ namespace Backend.DTOs
         public string? Gender { get; set; }
       
         public string? GuardianName { get; set; }
+
         public string? GuardianRelation { get; set; }
     }
 }
