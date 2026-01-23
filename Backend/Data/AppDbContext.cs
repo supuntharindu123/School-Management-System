@@ -31,8 +31,6 @@ namespace Backend.Data
 
         public DbSet<TeacherSubjectClass> TeacherSubjectClasses { get; set; }
 
-        public DbSet<TeacherSubjectTask> TeacherSubjectTasks { get; set; }
-
         public DbSet<SubjectGrade> SubjectGrades {  get; set; }
 
         public DbSet<Marks> Marks { get; set; }
@@ -141,11 +139,6 @@ namespace Backend.Data
                 .HasForeignKey (ts=>ts.TeacherId)
                 .OnDelete (DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<TeacherSubjectTask>()
-                .HasOne(tst=>tst.TeacherSubjectClass)
-                .WithMany(tsc=>tsc.TeacherSubjectTask)
-                .HasForeignKey(tst=>tst.TeacherSubjectClassId)
-                .OnDelete (DeleteBehavior.Restrict);
 
             modelBuilder.Entity<StudentAttendances>()
                 .HasOne(sa=>sa.Student)
@@ -175,6 +168,18 @@ namespace Backend.Data
                 .HasOne(m=>m.TeacherSubjectClasses)
                 .WithMany(ts=>ts.Marks)
                 .HasForeignKey(m=>m.TeacherSubjectClassId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Exam>()
+                .HasOne(e=>e.AcademicYear)
+                .WithMany(a=>a.Exams)
+                .HasForeignKey(e=>e.AcademicYearId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Exam>()
+                .HasOne(e=>e.Grade)
+                .WithMany(g=>g.Exams)
+                .HasForeignKey(e=>e.GradeId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

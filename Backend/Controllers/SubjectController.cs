@@ -10,10 +10,12 @@ namespace Backend.Controllers
     public class SubjectController : ControllerBase
     {
         private readonly ISubjectService _services;
+        private readonly ISubjectGradeService _subjectGradeService;
 
-        public SubjectController(ISubjectService services)
+        public SubjectController(ISubjectService services, ISubjectGradeService subjectGradeService)
         {
             _services = services;
+            _subjectGradeService = subjectGradeService;
         }
 
         [HttpPost]
@@ -82,6 +84,59 @@ namespace Backend.Controllers
 
             return NoContent();
 
+        }
+
+        [HttpPost("/grade")]
+        public async Task<IActionResult> AddSubjectGrade(SubjectGrade subjectGrade)
+        {
+            var res=await _subjectGradeService.Add(subjectGrade);
+
+            if(!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+
+            return Ok("Subject assigned to grade successfully");
+        }
+
+        [HttpGet("/grade/{id}")]
+        public async Task<IActionResult> GetSubjectGradeById(int id)
+        {
+            var res = await _subjectGradeService.GetById(id);
+
+            if (!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+
+            return Ok(res.Data);
+        }
+
+        [HttpGet("/grade/grade/{id}")]
+        public async Task<IActionResult> GetSubjectGradeByGradeId(int id)
+        {
+            var res = await _subjectGradeService.GetByGrade(id);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+        }
+
+
+        [HttpDelete("/grade/{id}")]
+        public async Task<IActionResult> RemoveSubjectGrade(int id)
+        {
+            var res = await _subjectGradeService.Remove(id);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return NoContent();
         }
     }
 }

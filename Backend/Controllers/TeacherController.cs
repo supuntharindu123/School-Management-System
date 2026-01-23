@@ -1,4 +1,5 @@
 ﻿using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
@@ -13,9 +14,12 @@ namespace Backend.Controllers
     {
         private readonly ITeacherService _service;
         private readonly ITeacherAssignmentService _assignmentService;
-        public TeacherController(ITeacherService service, ITeacherAssignmentService assignmentService) {
+        private readonly ITeacherAssignSubjectService _assignSubjectService;
+        public TeacherController(ITeacherService service, ITeacherAssignmentService assignmentService, ITeacherAssignSubjectService assignSubjectService = null)
+        {
             _service = service;
             _assignmentService = assignmentService;
+            _assignSubjectService = assignSubjectService;
         }
 
         [HttpPost("add")]
@@ -113,5 +117,85 @@ namespace Backend.Controllers
             }
             return Ok(tasks.Data);
         }
+
+        [HttpPost("subject/assign")]
+        public async Task<IActionResult> AssignSubject(AssignTeacherSubjectDto teacherSubjectClass)
+        {
+            var res=await _assignSubjectService.AssignSubject(teacherSubjectClass);
+            if (!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+
+            return Ok("Teacher assign subject is successfully!");
+        }
+
+        [HttpGet("subject/assign")]
+        public async Task<IActionResult> GetAll()
+        {
+            var res=await _assignSubjectService.GetAll();
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+        }
+
+        [HttpGet("subject/teacher/{id}")]
+        public async Task<IActionResult> GetByTeacher(int id)
+        {
+            var res = await _assignSubjectService.GetByTeacher(id);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+
+        }
+
+        [HttpDelete("subject/assign/{id}")]
+        public async Task<IActionResult> RemovePermission(int id)
+        {
+            var res=await _assignSubjectService.RemovePermission(id);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return NoContent();
+
+        }
+
+        [HttpPut("subject/assign/{id}")]
+        public async Task<IActionResult> Update(int id, AssignTeacherSubjectDto teacherSubjectClass)
+        {
+            var res=await _assignSubjectService.Update(id, teacherSubjectClass);
+
+            if (!res.IsSuccess)
+            {
+                return BadRequest(res.Error);
+            }
+
+            return NoContent();
+        }
+
+        [HttpGet("subject/assign/{id}")]
+        public async Task<IActionResult> GetById(int id)
+        {
+            var res = await _assignSubjectService.GetById(id);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+        }
+
     }
 }

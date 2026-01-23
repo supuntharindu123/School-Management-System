@@ -1,5 +1,5 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { GetStudents } from "./studentApi";
+import { GetStudents } from "./studentService";
 
 // Fetch all students
 export const GetAllStudents = createAsyncThunk(
@@ -10,10 +10,10 @@ export const GetAllStudents = createAsyncThunk(
       return res;
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data || err?.message || "Failed to load students"
+        err?.response?.data || err?.message || "Failed to load students",
       );
     }
-  }
+  },
 );
 
 const studentListSlice = createSlice({

@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { createStudent } from "../features/adminFeatures/students/studentApi";
+import { createStudent } from "../features/adminFeatures/students/studentService";
 import { getGrades } from "../features/class/gradeService";
 import { getClassesByGrade } from "../features/class/classService";
-import { getYears } from "../features/class/yearService";
 
 export default function AddStudentForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -15,9 +14,8 @@ export default function AddStudentForm({ onSuccess }) {
     Address: "",
     City: "",
     Gender: "",
-    CurrentGradeID: "",
-    CurrentClassID: "",
-    CurrentYearID: "",
+    GradeId: "",
+    ClassNameId: "",
     GuardianName: "",
     GuardianRelation: "",
     GuardianDate: "",
@@ -27,16 +25,14 @@ export default function AddStudentForm({ onSuccess }) {
   const [success, setSuccess] = useState("");
   const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
-  const [years, setYears] = useState([]);
 
   useEffect(() => {
     (async () => {
       try {
-        const [g, y] = await Promise.all([getGrades(), getYears()]);
+        const g = await getGrades();
         setGrades(Array.isArray(g) ? g : []);
-        setYears(Array.isArray(y) ? y : []);
       } catch {
-        console.log("Failed to load grades or years");
+        console.log("Failed to load grades");
       }
     })();
   }, []);
@@ -44,17 +40,24 @@ export default function AddStudentForm({ onSuccess }) {
   useEffect(() => {
     (async () => {
       try {
-        const gradeId = Number(form.CurrentGradeID) || 0;
+        const gradeId = Number(form.GradeId) || 0;
         const cls = await getClassesByGrade(gradeId);
         setClasses(Array.isArray(cls) ? cls : []);
-        if (!cls?.some((c) => String(c.id) === String(form.CurrentClassID))) {
-          setForm((prev) => ({ ...prev, CurrentClassID: "" }));
+        if (
+          !cls?.some(
+            (c) =>
+              String(
+                c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id,
+              ) === String(form.ClassNameId),
+          )
+        ) {
+          setForm((prev) => ({ ...prev, ClassNameId: "" }));
         }
       } catch {
         setClasses([]);
       }
     })();
-  }, [form.CurrentGradeID]);
+  }, [form.GradeId]);
 
   function handleChange(e) {
     const { name, value } = e.target;
@@ -76,9 +79,8 @@ export default function AddStudentForm({ onSuccess }) {
       "Address",
       "City",
       "Gender",
-      "CurrentGradeID",
-      "CurrentClassID",
-      "CurrentYearID",
+      "GradeId",
+      "ClassNameId",
       "GuardianName",
       "GuardianDate",
     ];
@@ -90,16 +92,15 @@ export default function AddStudentForm({ onSuccess }) {
 
     const payload = {
       ...form,
-      CurrentGradeID: Number(form.CurrentGradeID),
-      CurrentClassID: Number(form.CurrentClassID),
-      CurrentYearID: Number(form.CurrentYearID),
+      GradeId: Number(form.GradeId),
+      ClassNameId: Number(form.ClassNameId),
     };
 
     try {
       setLoading(true);
       const message = await createStudent(payload);
       setSuccess(
-        typeof message === "string" ? message : "Student added successfully"
+        typeof message === "string" ? message : "Student added successfully",
       );
       onSuccess?.(message);
       setForm((prev) => ({
@@ -258,14 +259,14 @@ export default function AddStudentForm({ onSuccess }) {
           <h3 className="text-sm font-medium text-neutral-800">Academic</h3>
           <span className="text-xs text-neutral-500">Required</span>
         </header>
-        <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2">
           <div>
             <label className="block text-sm font-medium text-neutral-800">
-              Current Grade*
+              Grade*
             </label>
             <select
-              name="CurrentGradeID"
-              value={form.CurrentGradeID}
+              name="GradeId"
+              value={form.GradeId}
               onChange={handleChange}
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
             >
@@ -279,37 +280,27 @@ export default function AddStudentForm({ onSuccess }) {
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-800">
-              Current Class*
+              Class*
             </label>
             <select
-              name="CurrentClassID"
-              value={form.CurrentClassID}
+              name="ClassNameId"
+              value={form.ClassNameId}
               onChange={handleChange}
-              disabled={!form.CurrentGradeID}
+              disabled={!form.GradeId}
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 disabled:bg-gray-100 disabled:text-gray-500"
             >
               <option value="">Select class</option>
               {classes.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.className ?? c.ClassName ?? `Class ${c.id}`}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-neutral-800">
-              Academic Year*
-            </label>
-            <select
-              name="CurrentYearID"
-              value={form.CurrentYearID}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            >
-              <option value="">Select year</option>
-              {years.map((y) => (
-                <option key={y.id} value={y.id}>
-                  {y.year ?? y.Year}
+                <option
+                  key={c.id}
+                  value={
+                    c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id
+                  }
+                >
+                  {c.name ??
+                    c.className ??
+                    c.ClassName ??
+                    `Class ${c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id}`}
                 </option>
               ))}
             </select>

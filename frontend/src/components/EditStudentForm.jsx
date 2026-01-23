@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { updateStudent } from "../features/adminFeatures/students/studentApi";
+import { updateStudent } from "../features/adminFeatures/students/studentService";
 
 export default function EditStudentForm({ student, onSuccess }) {
   const [form, setForm] = useState({
-    FullName: "",
     Address: "",
     City: "",
     Gender: "",
@@ -17,7 +16,6 @@ export default function EditStudentForm({ student, onSuccess }) {
   useEffect(() => {
     if (student) {
       setForm({
-        FullName: student.fullName || "",
         Address: student.address || "",
         City: student.city || "",
         Gender: student.gender || "",
@@ -37,7 +35,7 @@ export default function EditStudentForm({ student, onSuccess }) {
     setError("");
     setSuccess("");
 
-    const required = ["FullName", "Address", "City", "Gender", "GuardianName"];
+    const required = ["Address", "City", "Gender", "GuardianName"];
     const missing = required.filter((f) => !String(form[f] || "").trim());
     if (missing.length) {
       setError(`Please fill required fields: ${missing.join(", ")}`);
@@ -48,7 +46,7 @@ export default function EditStudentForm({ student, onSuccess }) {
       setLoading(true);
       const msg = await updateStudent(student.id, form);
       setSuccess(
-        typeof msg === "string" ? msg : "Student updated successfully"
+        typeof msg === "string" ? msg : "Student updated successfully",
       );
       onSuccess?.(msg);
     } catch (err) {
@@ -80,13 +78,13 @@ export default function EditStudentForm({ student, onSuccess }) {
           <h3 className="text-sm font-medium text-neutral-800">Edit Details</h3>
         </header>
         <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2">
-          <div>
+          <div className="md:col-span-2">
             <label className="block text-sm font-medium text-neutral-800">
-              Full Name*
+              Address*
             </label>
             <input
-              name="FullName"
-              value={form.FullName}
+              name="Address"
+              value={form.Address}
               onChange={handleChange}
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
             />
@@ -102,17 +100,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
             />
           </div>
-          <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-neutral-800">
-              Address*
-            </label>
-            <input
-              name="Address"
-              value={form.Address}
-              onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            />
-          </div>
+
           <div>
             <label className="block text-sm font-medium text-neutral-800">
               Gender*

@@ -50,6 +50,14 @@ builder.Services.AddScoped<ITeacherAssignmentRepo,TeacherAssignmentRepo>();
 builder.Services.AddScoped<ITeacherAssignmentService,TeacherAssignmentService>();
 builder.Services.AddScoped<ISubjectRepo,SubjectRepo>();
 builder.Services.AddScoped<ISubjectService, SubjectService>();
+builder.Services.AddScoped<ISubjectGradeRepo,SubjectGradeRepo>();
+builder.Services.AddScoped<ISubjectGradeService, SubjectGradeService>();
+builder.Services.AddScoped<ITeacherAssignSubjectRepo,TeacherAssignSubjectRepo>();
+builder.Services.AddScoped<ITeacherAssignSubjectService, TeacherAssignSubjectService>();
+builder.Services.AddScoped<IStudentAttendantRepo,StudentAttendantRepo > ();
+builder.Services.AddScoped<IStudentAttendantService,StudentAttendantService>();
+builder.Services.AddScoped<IExamRepo,ExamRepo>();
+builder.Services.AddScoped<IExamServices,ExamServices>();
 
 
 //authentications

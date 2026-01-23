@@ -62,6 +62,28 @@ namespace Backend.Mapping
             CreateMap<TeacherClassAssign, TeacherClassRes>()
                 .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName))
                 .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Class!.Name));
+
+            CreateMap<AssignTeacherSubjectDto, TeacherSubjectClass>();
+
+            CreateMap<TeacherSubjectClass, AssignTeacherSubjectResDto>()
+                .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName))
+                .ForMember(destination => destination.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
+                .ForMember(destination => destination.ClassName, opt => opt.MapFrom(src => src.Class!.Name));
+
+
+            CreateMap<StudentAttendances, StudentAttendanceResDto>()
+                .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName))
+                .ForMember(destination => destination.StudentName, opt => opt.MapFrom(src => src.Student!.FullName))
+                .ForMember(destination => destination.ClassName, opt => opt.MapFrom(src => src.Student!.Class!.Name));
+
+            CreateMap<StudentAttendanceUpdateDto, StudentAttendances>();
+
+            CreateMap<Exam, ExamResDto>()
+                .ForMember(destination => destination.GradeName, opt => opt.MapFrom(src => src.Grade!.GradeName))
+                .ForMember(destination => destination.AcademicYear, opt => opt.MapFrom(src => src.AcademicYear!.Year));
+
+            CreateMap<ExamUpdateDto, Exam>();
+
         }
     }
 }

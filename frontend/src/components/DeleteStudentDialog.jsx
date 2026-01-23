@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import Modal from "./modal";
-import { deleteStudent } from "../features/adminFeatures/students/studentApi";
+import { deleteStudent } from "../features/adminFeatures/students/studentService";
 
 export default function DeleteStudentDialog({
   open,

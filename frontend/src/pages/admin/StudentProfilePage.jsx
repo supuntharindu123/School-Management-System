@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
-import { GetStudentById } from "../../features/adminFeatures/students/studentApi";
+import { GetStudentById } from "../../features/adminFeatures/students/studentService";
 import EditStudentDialog from "../../components/EditStudentDialog";
 import DeleteStudentDialog from "../../components/DeleteStudentDialog";
 

@@ -9,5 +9,7 @@ namespace Backend.Models
         [Required]
         public int Year { get; set; }
 
+        public ICollection<Exam>? Exams { get; set; }
+
     }
 }

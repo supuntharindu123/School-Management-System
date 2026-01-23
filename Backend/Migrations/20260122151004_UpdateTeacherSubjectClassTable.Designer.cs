@@ -4,6 +4,7 @@ using Backend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260122151004_UpdateTeacherSubjectClassTable")]
+    partial class UpdateTeacherSubjectClassTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -89,17 +92,11 @@ namespace Backend.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("AcademicYearId")
-                        .HasColumnType("int");
-
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
-
-                    b.Property<int>("GradeId")
-                        .HasColumnType("int");
 
                     b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
@@ -108,10 +105,6 @@ namespace Backend.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AcademicYearId");
-
-                    b.HasIndex("GradeId");
 
                     b.ToTable("Exams");
                 });
@@ -507,25 +500,6 @@ namespace Backend.Migrations
                     b.Navigation("Grade");
                 });
 
-            modelBuilder.Entity("Backend.Models.Exam", b =>
-                {
-                    b.HasOne("Backend.Models.AcademicYear", "AcademicYear")
-                        .WithMany("Exams")
-                        .HasForeignKey("AcademicYearId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("Backend.Models.Grade", "Grade")
-                        .WithMany("Exams")
-                        .HasForeignKey("GradeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("AcademicYear");
-
-                    b.Navigation("Grade");
-                });
-
             modelBuilder.Entity("Backend.Models.Marks", b =>
                 {
                     b.HasOne("Backend.Models.Exam", "Exam")
@@ -686,11 +660,6 @@ namespace Backend.Migrations
                     b.Navigation("Teacher");
                 });
 
-            modelBuilder.Entity("Backend.Models.AcademicYear", b =>
-                {
-                    b.Navigation("Exams");
-                });
-
             modelBuilder.Entity("Backend.Models.Class", b =>
                 {
                     b.Navigation("Students");
@@ -715,8 +684,6 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.Grade", b =>
                 {
                     b.Navigation("Classes");
-
-                    b.Navigation("Exams");
 
                     b.Navigation("SubjectGrade");
                 });

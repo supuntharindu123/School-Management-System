@@ -10,6 +10,9 @@ namespace Backend.Models
         public int? GradeName { get; set; }
 
         public ICollection<SubjectGrade>? SubjectGrade {  get; set; }
+
         public ICollection<Class>? Classes { get; set; }
+
+        public ICollection<Exam>? Exams {  get; set; }
     }
 }
