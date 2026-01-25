@@ -20,10 +20,10 @@ namespace Backend.Services
             _token = token;
             _hasher = hasher;
         }
-        public async Task<Result<User>> AddUserToRepo(RegisterDto dto)
+        public async Task<Result<User?>> AddUserToRepo(RegisterDto dto)
         {
             if (await _repo.UserByEmail(dto.Email!)!=null) {
-                return Result<User>.Failure("Email Already Exists!");
+                return Result<User?>.Failure("Email Already Exists!");
             }
 
             var user = _mapper.Map<User>(dto);
@@ -31,7 +31,7 @@ namespace Backend.Services
 
             await _repo.AddUser(user);
 
-            return Result<User>.Success(user);
+            return Result<User?>.Success(user);
         }
 
         public async Task<Result<LoginRes>> LoginByEmail(LoginDto dto)
@@ -59,13 +59,13 @@ namespace Backend.Services
         }
 
 
-        public async Task<Result<User>> UserByID(int id) {
+        public async Task<Result<User?>> UserByID(int id) {
             var user=await _repo.UserById(id);
             if (user == null) {
-                return Result<User>.Failure("User Not Found");
+                return Result<User?>.Failure("User Not Found");
             }
 
-            return Result<User>.Success(user);
+            return Result<User?>.Success(user);
         }
 
 

@@ -1,4 +1,5 @@
-﻿using Backend.Helper;
+﻿using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -37,6 +38,15 @@ namespace Backend.Services
             return Result<IEnumerable<Grade>>.Success(grade);
         }
 
+        public async Task<Result<IEnumerable<GradeSummaryDto>>> GetSummaries()
+        {
+            var data = await _repo.GetGradeSummaries();
+            if (data == null)
+            {
+                return Result<IEnumerable<GradeSummaryDto>>.Failure("Grade summaries not found");
+            }
+            return Result<IEnumerable<GradeSummaryDto>>.Success(data);
+        }
 
     }
 }

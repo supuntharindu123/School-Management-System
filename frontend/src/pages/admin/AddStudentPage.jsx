@@ -1,5 +1,5 @@
 import React from "react";
-import AddStudentForm from "../../components/AddStudentForm";
+import AddStudentForm from "../../components/Student/AddStudentForm";
 
 export default function AddStudentPage() {
   return (

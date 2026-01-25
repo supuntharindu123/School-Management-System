@@ -29,7 +29,10 @@ namespace Backend.Mapping
                 .ForMember(destination => destination.Email, option => option.MapFrom(src => src.User!.Email))
                 .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.User!.PhoneNumber))
                 .ForMember(destination => destination.Role, option => option.MapFrom(src => src.User!.Role))
-                .ForMember(destination => destination.CurrentClass, option => option.MapFrom(src => src.Class!.Name));
+                .ForMember(destination => destination.CurrentClass, option => option.MapFrom(src => src.Class!.Name))
+                .ForMember(destination => destination.CurrentGrade, option => option.MapFrom(src => src.Class!.Grade!.GradeName))
+                .ForMember(destination => destination.AcademicYearId, option => option.MapFrom(src => src.AcademicYearId));
+
 
             CreateMap<StudentUpdateDto, Student>();
 
@@ -44,9 +47,9 @@ namespace Backend.Mapping
             CreateMap<PromotionDto, StudentAcademicHistory>()
                .ForMember(destination => destination.StartDate, option => option.MapFrom(src => DateTime.UtcNow))
                .ForMember(destination => destination.EndDate, option => option.Ignore())
+               .ForMember(destination => destination.Class, option => option.Ignore())
                .ForMember(destination => destination.Student, option => option.Ignore());
-
-
+ 
             CreateMap<PromotionDto, Student>()
                .ForAllMembers(opt => opt.Ignore());
                

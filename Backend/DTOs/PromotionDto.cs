@@ -6,8 +6,12 @@
 
         public int GradeId {  get; set; }
 
-        public int ClassNameId {  get; set; }
+        public int ClassId {  get; set; }
+
+        public int AcademicYearId {  get; set; }
 
         public string? Status {  get; set; }
+
+        public string? Description { get; set; }
     }
 }

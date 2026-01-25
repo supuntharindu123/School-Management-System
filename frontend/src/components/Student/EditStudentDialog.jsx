@@ -1,6 +1,6 @@
 import React from "react";
-import Modal from "./modal";
-import EditStudentForm from "./EditStudentForm";
+import Modal from "../modal";
+import EditStudentForm from "../Student/EditStudentForm";
 
 export default function EditStudentDialog({ open, onClose, student, onSaved }) {
   return (

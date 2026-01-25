@@ -24,63 +24,81 @@ namespace Backend.Services
             _studentRepo = studentrepo;
             _classRepo = classRepo;
         }
-        public async Task<Result> PromotionStudents(PromotionList dto)
+        public async Task<Result> PromotionStudents(List<PromotionDto> dto)
         {
             using var transaction = await _context.Database.BeginTransactionAsync();
 
             try
             {
-                foreach (var promo in dto.Promotions)
+                foreach (var promo in dto)
                 {
                     var student = await _studentRepo.GetStudentById(promo.StudentId);
-
                     if (student == null)
+                        return Result.Failure("Student not found");
+
+                    // always get ACTIVE history
+                    var activeHistory = await _historyRepo.GetById(promo.StudentId);
+                    if (activeHistory == null)
+                        return Result.Failure("Active academic history not found");
+
+                    // close current history
+                    activeHistory.EndDate = DateTime.UtcNow;
+                    activeHistory.Status = promo.Status;
+                    await _historyRepo.UpdateStudentHistory(activeHistory);
+
+                    // ================= PROMOTED =================
+                    if (promo.Status == "Promoted")
                     {
-                        return Result.Failure("Student Not Found");
-                    }
+                        var classEntity = await _classRepo.GetClassById(promo.ClassId);
+                        if (classEntity == null)
+                            return Result.Failure("Invalid class");
 
-
-                    var studenthistory = await _historyRepo.GetById(promo.StudentId);
-
-                    if (studenthistory == null)
-                    {
-                        return Result.Failure("Student Not Found");
-                    }
-
-                    studenthistory.EndDate = DateTime.UtcNow;
-                    studenthistory.Status = promo.Status;
-
-                    if (promo.Status == "Promoted" || promo.Status == "Repeat")
-                    {
                         var newHistory = _mapper.Map<StudentAcademicHistory>(promo);
-
-                        var classEntity = await _classRepo.GetClassByIDs(promo.GradeId, promo.ClassNameId);
-
+                        newHistory.StudentId = student.Id;
                         newHistory.ClassId = classEntity.Id;
+                        newHistory.AcademicYearId = promo.AcademicYearId;
+                        newHistory.Status = "Promoted";
 
                         await _historyRepo.AddStudentHistory(newHistory);
 
                         student.ClassId = classEntity.Id;
-                        student.Class = null;
+                        student.AcademicYearId = promo.AcademicYearId;
+                        // ❌ DO NOT touch student.Status
                     }
-                    else
+
+                    // ================= REPEATED =================
+                    else if (promo.Status == "Repeated")
+                    {
+                        var newHistory = _mapper.Map<StudentAcademicHistory>(promo);
+                        newHistory.StudentId = student.Id;
+                        newHistory.ClassId = student.ClassId; // same class
+                        newHistory.AcademicYearId = promo.AcademicYearId;
+                        newHistory.Status = "Repeated";
+
+                        await _historyRepo.AddStudentHistory(newHistory);
+
+                        student.AcademicYearId = promo.AcademicYearId;
+                        // ❌ DO NOT touch student.Status
+                    }
+
+                    // ================= COMPLETED / LEAVING =================
+                    else if (promo.Status == "Completed" || promo.Status == "Leaving")
                     {
                         student.Status = promo.Status;
+                        // ❌ no new academic history
+                        // ❌ no class/year change
                     }
 
                     await _studentRepo.UpdateStudent(student);
-                    await _historyRepo.UpdateStudentHistory(studenthistory);
-
-                    
                 }
 
                 await transaction.CommitAsync();
                 return Result.Success();
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 await transaction.RollbackAsync();
-                return Result.Failure("An unexpected error occurred while promoting the student"+ex);
+                return Result.Failure("Promotion failed: " + ex.Message);
             }
         }
 

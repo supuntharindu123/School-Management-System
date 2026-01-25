@@ -13,6 +13,8 @@ import ClassManagementPage from "../pages/admin/ClassManagementPage";
 import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
 import TeacherListPage from "../pages/admin/TeacherListPage";
 import AddStudentPage from "../pages/admin/AddStudentPage";
+import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
+import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
 
 import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
@@ -34,6 +36,8 @@ export default function RouteConfig() {
             <Route path="/students/add" element={<AddStudentPage />} />
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/grades" element={<GradeManagementPage />} />
+            <Route path="/grade-summary" element={<GradeSummaryPage />} />
+            <Route path="/promotions" element={<StudentPromotionPage />} />
             <Route path="/classes" element={<ClassManagementPage />} />
             <Route path="/subjects" element={<SubjectManagementPage />} />
             <Route path="/teachers" element={<TeacherListPage />} />

@@ -17,6 +17,9 @@ namespace Backend.DTOs
         public string? City { get; set; }
         public string? Gender { get; set; }
         public string? CurrentClass { get; set; }
+        public int? AcademicYearId { get; set; }
+        public string? Status {  get; set; }
+        public string? CurrentGrade {  get; set; }
         public string? GuardianName { get; set; }
         public string? GuardianRelation { get; set; }
         public DateOnly GuardianDate { get; set; }

@@ -11,5 +11,9 @@ namespace Backend.Models
 
         public ICollection<Exam>? Exams { get; set; }
 
+        public ICollection<Student>? students { get; set; }
+
+        public ICollection<StudentAcademicHistory>? studentAcademicHistories { get; set; }
+
     }
 }

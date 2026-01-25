@@ -1,5 +1,6 @@
 ﻿using Backend.Helper;
 using Backend.Models;
+using Backend.DTOs;
 
 namespace Backend.Services.Interfaces
 {
@@ -7,5 +8,6 @@ namespace Backend.Services.Interfaces
     {
         public Task<Result<IEnumerable<Grade>>> GetAllGrades();
         public Task<Result<Grade>> GetGrade(int id);
+        public Task<Result<IEnumerable<GradeSummaryDto>>> GetSummaries();
     }
 }

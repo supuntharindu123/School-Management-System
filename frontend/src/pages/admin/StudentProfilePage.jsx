@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { GetStudentById } from "../../features/adminFeatures/students/studentService";
-import EditStudentDialog from "../../components/EditStudentDialog";
-import DeleteStudentDialog from "../../components/DeleteStudentDialog";
+import EditStudentDialog from "../../components/Student/EditStudentDialog";
+import DeleteStudentDialog from "../../components/Student/DeleteStudentDialog";
 
 export default function StudentProfilePage() {
   const { id } = useParams();
@@ -185,8 +185,7 @@ export default function StudentProfilePage() {
                 <Field label="Email" value={details.email} />
                 <Field label="Address" value={details.address} />
                 <Field label="City" value={details.city} />
-                <Field label="Grade" value={details.grade} />
-                <Field label="Class" value={details.class} />
+                <Field label="Class" value={details.currentClass} />
                 <Field label="GuardianDate" value={details.guardianDate} />
               </div>
             </section>

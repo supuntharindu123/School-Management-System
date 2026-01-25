@@ -15,7 +15,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Promotion(PromotionList dto)
+        public async Task<IActionResult> Promotion([FromBody] List<PromotionDto> dto)
         {
             var res=await _promotionServices.PromotionStudents(dto);
 

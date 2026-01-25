@@ -24,6 +24,10 @@ namespace Backend.Models
         [Required]
         public int ClassId { get; set; }
         [Required]
+        public int? AcademicYearId { get; set; }
+
+        public AcademicYear? AcademicYear { get; set; }
+        [Required]
         public string? GuardianName { get; set; }
 
         public string? GuardianRelation { get; set; }

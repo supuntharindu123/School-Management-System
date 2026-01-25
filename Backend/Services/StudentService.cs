@@ -30,29 +30,39 @@ namespace Backend.Services
 
         public async Task<Result> CreateStudent(StudentCreateDto dto)
         {
-            var regdto=_mapper.Map<RegisterDto>(dto);
+            // 1️⃣ Create user
+            var regdto = _mapper.Map<RegisterDto>(dto);
+            var userResult = await _userService.AddUserToRepo(regdto);
 
-            var user =await _userService.AddUserToRepo(regdto);
+            if (!userResult.IsSuccess || userResult.Data == null)
+            {
+                return Result.Failure(userResult.Error ?? "User creation failed");
+            }
 
-            var student = _mapper.Map<Student>(dto);
-
-            var studenthistory = _mapper.Map<StudentAcademicHistory>(dto);
-
+            // 2️⃣ Get class
             var clz = await _classRepo.GetClassByIDs(dto.GradeId, dto.ClassNameId);
-            student.UserId = user.Data.Id;
-            student.User = user.Data;
-            student.ClassId=clz.Id;
+            if (clz == null)
+            {
+                return Result.Failure("Class not found for the selected grade");
+            }
+
+            // 3️⃣ Create student
+            var student = _mapper.Map<Student>(dto);
+            student.UserId = userResult.Data.Id;
+            student.ClassId = clz.Id;
 
             await _repo.AddStudent(student);
 
-            studenthistory.StudentId =student.Id;
-            studenthistory.Student = student;
-            studenthistory.ClassId = clz.Id;
+            // 4️⃣ Create academic history
+            var studentHistory = _mapper.Map<StudentAcademicHistory>(dto);
+            studentHistory.StudentId = student.Id;
+            studentHistory.ClassId = clz.Id;
 
-            await _historyrepo.AddStudentHistory(studenthistory);
+            await _historyrepo.AddStudentHistory(studentHistory);
 
             return Result.Success();
         }
+
 
         public async Task<Result<IEnumerable<StudentRes>>> AllStudents()
         {

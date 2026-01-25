@@ -1,4 +1,5 @@
 ﻿using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
@@ -34,6 +35,17 @@ namespace Backend.Controllers
                 return NotFound(grades.Error);
             }
             return Ok(grades.Data);
+        }
+
+        [HttpGet("summary")]
+        public async Task<IActionResult> GetGradeSummaries()
+        {
+            var summaries = await _service.GetSummaries();
+            if (!summaries.IsSuccess)
+            {
+                return NotFound(summaries.Error);
+            }
+            return Ok(summaries.Data);
         }
 
     }

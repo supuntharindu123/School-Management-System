@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { updateStudent } from "../features/adminFeatures/students/studentService";
+import { updateStudent } from "../../features/adminFeatures/students/studentService";
 
 export default function EditStudentForm({ student, onSuccess }) {
   const [form, setForm] = useState({

@@ -23,7 +23,7 @@ namespace Backend.Repositories
 
         public async Task<StudentAcademicHistory?> GetById(int studentid)
         {
-            return await _context.History0fStudents.FirstOrDefaultAsync(s => s.StudentId == studentid && s.EndDate == null);
+            return await _context.History0fStudents.Where(h => h.StudentId == studentid && h.EndDate == null).FirstOrDefaultAsync();
         }
 
         public async Task UpdateStudentHistory(StudentAcademicHistory dto) {

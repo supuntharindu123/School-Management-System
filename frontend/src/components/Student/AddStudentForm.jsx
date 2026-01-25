@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { createStudent } from "../features/adminFeatures/students/studentService";
-import { getGrades } from "../features/class/gradeService";
-import { getClassesByGrade } from "../features/class/classService";
+import { createStudent } from "../../features/adminFeatures/students/studentService";
+import { getGrades } from "../../features/grade/gradeService";
+import { getClassesByGrade } from "../../features/class/classService";
 
 export default function AddStudentForm({ onSuccess }) {
   const [form, setForm] = useState({

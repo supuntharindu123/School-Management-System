@@ -23,19 +23,27 @@ namespace Backend.Repositories
 
         public async Task<List<Student>> GetAllStudents()
         {
-            return await _context.Students.Include(s=>s.User).Include(s => s.Class).ToListAsync();
+            return await _context.Students.Include(s=>s.User).Include(s=>s.AcademicYear).Include(s => s.Class).ThenInclude(s=>s.Grade).ToListAsync();
         }
 
 
         public async Task<Student?> GetStudentById(int id)
         {
             return await _context.Students
-                .AsNoTracking().Include(s=>s.User).Include(c=>c.Class)
+                .AsNoTracking().Include(s=>s.User).Include(c=>c.Class).Include(s => s.AcademicYear)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public async Task UpdateStudent(Student student) {
-             _context.Students.Update(student);
+        public async Task UpdateStudent(Student student)
+        {
+            var dbStudent = await _context.Students.FindAsync(student.Id);
+            if (dbStudent == null)
+                throw new Exception("Student not found");
+
+            dbStudent.ClassId = student.ClassId;
+            dbStudent.AcademicYearId = student.AcademicYearId;
+            dbStudent.Status = student.Status;
+
             await _context.SaveChangesAsync();
         }
 

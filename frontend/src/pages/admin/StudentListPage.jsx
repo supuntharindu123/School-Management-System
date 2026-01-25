@@ -2,45 +2,31 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { useNavigate } from "react-router-dom";
-import AddStudentDialog from "../../components/AddStudentDialog";
-import { getGrades } from "../../features/class/gradeService";
-import { getYears } from "../../features/class/yearService";
+import AddStudentDialog from "../../components/Student/DeleteStudentDialog";
 import { getClassesByGrade } from "../../features/class/classService";
+import { getAllGrades } from "../../features/grade/gradeSlice";
 
 export default function StudentListPage() {
   const [query, setQuery] = useState("");
   const [grade, setGrade] = useState("");
   const [klass, setKlass] = useState("");
   const [year, setYear] = useState("");
-  const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { students, loading, error } = useSelector(
-    (state) => state.studentList,
-  );
+  const studentList = useSelector((state) => state.studentList);
+  const gradesState = useSelector((state) => state.grades);
+  const grades = gradesState.grades;
+  const yearsState = useSelector((state) => state.years);
 
   const [openAdd, setOpenAdd] = useState(false);
 
   useEffect(() => {
     dispatch(GetAllStudents());
+    dispatch(getAllGrades());
   }, [dispatch]);
-
-  useEffect(() => {
-    const yearandgrade = async () => {
-      try {
-        const [g, y] = await Promise.all([getGrades(), getYears()]);
-
-        setGrades(Array.isArray(g) ? g : []);
-        setYears(Array.isArray(y) ? y : []);
-      } catch (err) {
-        console.error("Failed to load grades or years", err);
-      }
-    };
-    yearandgrade();
-  }, [students]);
 
   useEffect(() => {
     const clzfromgrade = async () => {
@@ -52,18 +38,22 @@ export default function StudentListPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return students.filter((s) => {
+    return studentList.students.filter((s) => {
       const searchable = [s.studentIDNumber, s.fullName]
         .filter(Boolean)
         .map((v) => String(v).toLowerCase());
 
       const matchesQuery = q ? searchable.some((f) => f.includes(q)) : true;
-      const matchesGrade = grade ? String(s.grade) === String(grade) : true;
-      const matchesClass = klass ? String(s.class) === String(klass) : true;
+      const matchesGrade = grade
+        ? String(s.currentGrade) === String(grade)
+        : true;
+      const matchesClass = klass
+        ? String(s.currentClass) === String(klass)
+        : true;
 
       return matchesQuery && matchesGrade && matchesClass;
     });
-  }, [students, query, grade, klass]);
+  }, [studentList.students, query, grade, klass]);
 
   const onAddStudent = () => setOpenAdd(true);
   const onView = (id) => {
@@ -168,8 +158,8 @@ export default function StudentListPage() {
             >
               <option value="">All</option>
               {classes.map((c) => (
-                <option key={c.id} value={c.className}>
-                  {c.className || "All"}
+                <option key={c.id} value={c.name}>
+                  {c.name || "All"}
                 </option>
               ))}
             </select>
@@ -213,10 +203,10 @@ export default function StudentListPage() {
                     {row.email}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
-                    {row.grade}
+                    {row.currentGrade}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
-                    {row.class}
+                    {row.currentClass}
                   </td>
                   {/* <td className="border-b border-gray-200 py-2 px-3">
                     <span

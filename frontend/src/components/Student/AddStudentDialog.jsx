@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Modal from "./modal";
-import AddStudentForm from "./AddStudentForm";
+import Modal from "../modal";
+import AddStudentForm from "../AddStudentForm";
 
 export default function AddStudentDialog({ open, onClose, onAdded }) {
   const [refreshKey, setRefreshKey] = useState(0);

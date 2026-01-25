@@ -5,6 +5,6 @@ namespace Backend.Services.Interfaces
 {
     public interface IPromotionServices
     {
-        public Task<Result> PromotionStudents(PromotionList dto);
+        public Task<Result> PromotionStudents(List<PromotionDto> dto);
     }
 }

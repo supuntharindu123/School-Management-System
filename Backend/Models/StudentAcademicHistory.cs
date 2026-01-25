@@ -23,6 +23,10 @@ namespace Backend.Models
 
         public Student? Student { get; set; }
 
+        public int? AcademicYearId {  get; set; }
 
+        public AcademicYear? AcademicYear { get; set; }
+
+        public string? Description { get; set; }
     }
 }

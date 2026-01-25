@@ -15,6 +15,8 @@ namespace Backend.Repositories.Interfaces
 
         public Task<Class?> GetClassByIDs(int gradeId, int classNameId);
 
+        public Task<Class?> GetClassById(int classNameId);
+
         public Task<string> NameOfClass(int gradeId, int classNameId);
     }
 }

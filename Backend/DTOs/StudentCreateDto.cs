@@ -27,6 +27,7 @@ namespace Backend.DTOs
         public string? Gender { get; set; }
         [Required]
         public int ClassNameId { get; set; }
+        public int AcademicYearId { get; set; }
         [Required]
         public int GradeId { get; set; }
         [Required]

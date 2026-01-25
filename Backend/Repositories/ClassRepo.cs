@@ -48,6 +48,13 @@ namespace Backend.Repositories
                 .FirstOrDefaultAsync(c=>c.GradeId==gradeId && c.ClassNameID==classNameId);
         }
 
+
+        public async Task<Class?> GetClassById(int classNameId)
+        {
+            return await _context.Classes.AsNoTracking()
+                .FirstOrDefaultAsync(c => c.Id == classNameId);
+        }
+
         public async Task<string> NameOfClass(int gradeId, int classNameId)
         {
             var grade=await _context.Grades.FirstOrDefaultAsync(g=>g.Id == gradeId);
