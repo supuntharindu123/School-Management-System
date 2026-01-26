@@ -32,7 +32,7 @@ namespace Backend.Repositories
 
         public async Task<List<TeacherClassAssign>> GetAssignmentFromTeacher(int TeacherId)
         {
-            return await _context.TeacherClassAssign.Where(t => t.TeacherId == TeacherId).Include(t => t.Class).ToListAsync();
+            return await _context.TeacherClassAssign.Where(t => t.TeacherId == TeacherId).Include(t => t.Class).Include(t=>t.Teacher).ToListAsync();
         }
     }
 }

@@ -26,6 +26,7 @@ export default function PromotionTable(props) {
                 value={props.promotions[s.id]}
                 onChange={props.onChangePromotion}
                 locked={props.locked}
+                academicYearId={props.academicYearId}
               />
             ))}
           </tbody>

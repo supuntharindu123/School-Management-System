@@ -51,8 +51,7 @@ namespace Backend.Services
             newTask.UpdatedDate = null;
             await _repo.CreateAssignment(newTask);
 
-            return Result.Success();
-                
+            return Result.Success();      
         }
 
         public async Task<Result<IEnumerable<TeacherClassRes>>> AssignmentBYTeacher(int id)

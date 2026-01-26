@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { createStudent } from "../../features/adminFeatures/students/studentService";
-import { getGrades } from "../../features/grade/gradeService";
 import { getClassesByGrade } from "../../features/class/classService";
+import { getAllGrades } from "../../features/grade/gradeSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 export default function AddStudentForm({ onSuccess }) {
   const [form, setForm] = useState({
@@ -23,19 +24,17 @@ export default function AddStudentForm({ onSuccess }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
 
+  const dispatch = useDispatch();
+
+  const gradesList = useSelector((state) => state.grades);
+  const grades = gradesList.grades;
+
   useEffect(() => {
-    (async () => {
-      try {
-        const g = await getGrades();
-        setGrades(Array.isArray(g) ? g : []);
-      } catch {
-        console.log("Failed to load grades");
-      }
-    })();
-  }, []);
+    dispatch(getAllGrades());
+    setLoading(false);
+  }, [dispatch]);
 
   useEffect(() => {
     (async () => {

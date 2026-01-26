@@ -7,7 +7,7 @@ import PromotionTable from "../../components/Promotion/PromotionTable";
 import PromotionSummary from "../../components/Promotion/PromotionSummary";
 import ClassOverview from "../../components/Promotion/ClassOverview";
 
-import { savePromotions } from "../../services/promotion";
+import { savePromotions } from "../../features/adminFeatures/promotion/promotionService";
 import { getClassesByGrade } from "../../features/class/classService";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { getAllGrades } from "../../features/grade/gradeSlice";
@@ -34,6 +34,10 @@ export default function StudentPromotionPage() {
   const [finalized, setFinalized] = useState({});
   const [filter, setFilter] = useState("all");
   const [saving, setSaving] = useState(false);
+  const pendingCount = useMemo(
+    () => Object.values(promotions).filter((p) => !!p?.status).length,
+    [promotions],
+  );
 
   const [context, setContext] = useState({
     yearId: null,
@@ -199,36 +203,93 @@ export default function StudentPromotionPage() {
 
       <PromotionHeader {...context} />
 
-      <div className="mb-4 flex justify-between items-center">
-        <select
-          value={context.gradeId ?? ""}
-          onChange={(e) => {
-            const gid = Number(e.target.value);
-            const cls = classesByGrade[gid] || [];
-            const grade = grades.find((g) => g.id === gid);
+      {/* Controls */}
+      <section className="mb-4 rounded-xl border border-gray-200 bg-white p-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-1 flex-wrap items-center gap-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-neutral-600">Grade</span>
+              <select
+                value={context.gradeId ?? ""}
+                onChange={(e) => {
+                  const gid = Number(e.target.value);
+                  const cls = classesByGrade[gid] || [];
+                  const grade = grades.find((g) => g.id === gid);
 
-            setContext((c) => ({
-              ...c,
-              gradeId: gid,
-              gradeLabel: `Grade ${grade?.gradeName}`,
-              classId: cls[0]?.id ?? null,
-              classLabel: cls[0]?.name ?? "",
-            }));
-            setMode("overview");
-          }}
-        >
-          {grades.map((g) => (
-            <option key={g.id} value={g.id}>
-              Grade {g.gradeName}
-            </option>
-          ))}
-        </select>
+                  setContext((c) => ({
+                    ...c,
+                    gradeId: gid,
+                    gradeLabel: `Grade ${grade?.gradeName}`,
+                    classId: cls[0]?.id ?? null,
+                    classLabel: cls[0]?.name ?? "",
+                  }));
+                  setMode("overview");
+                }}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+              >
+                {grades.map((g) => (
+                  <option key={g.id} value={g.id}>
+                    Grade {g.gradeName}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div className="flex gap-2">
-          <button onClick={() => setMode("overview")}>Overview</button>
-          <button onClick={() => setMode("class")}>Class</button>
+            {mode === "class" && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-neutral-600">Class</span>
+                <select
+                  value={context.classId ?? ""}
+                  onChange={(e) => {
+                    const cid = Number(e.target.value);
+                    const cls = classes.find(
+                      (c) => (c.classNameId ?? c.id) === cid,
+                    );
+                    setContext((c) => ({
+                      ...c,
+                      classId: cid,
+                      classLabel: cls?.name ?? "",
+                    }));
+                  }}
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                >
+                  {classes.map((c) => (
+                    <option
+                      key={c.classNameId ?? c.id}
+                      value={c.classNameId ?? c.id}
+                    >
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+
+          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+            <button
+              onClick={() => setMode("overview")}
+              className={`px-3 py-1.5 text-sm ${
+                mode === "overview"
+                  ? "rounded-md bg-teal-600 text-white"
+                  : "text-neutral-800 hover:text-teal-700"
+              }`}
+            >
+              Overview
+            </button>
+            <button
+              onClick={() => setMode("class")}
+              className={`px-3 py-1.5 text-sm ${
+                mode === "class"
+                  ? "rounded-md bg-teal-600 text-white"
+                  : "text-neutral-800 hover:text-teal-700"
+              }`}
+            >
+              Class
+            </button>
+          </div>
         </div>
-      </div>
+      </section>
 
       {mode === "overview" ? (
         <ClassOverview
@@ -245,30 +306,70 @@ export default function StudentPromotionPage() {
         />
       ) : (
         <>
+          {finalized[context.classId] && (
+            <div className="mb-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm text-purple-800">
+              This class is finalized and locked. Editing is disabled.
+            </div>
+          )}
+
           <PromotionFilterTabs active={filter} onChange={setFilter} />
 
-          <PromotionTable
-            students={visibleStudents}
-            grades={grades}
-            classesByGrade={classesByGrade}
-            promotions={promotions}
-            onChangePromotion={(id, p) =>
-              setPromotions((m) => ({ ...m, [id]: p }))
-            }
-            locked={finalized[context.classId]}
-          />
+          {visibleStudents.length === 0 ? (
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-neutral-600">
+              No students to display for this class and filter.
+            </div>
+          ) : (
+            <PromotionTable
+              students={visibleStudents}
+              grades={grades}
+              classesByGrade={classesByGrade}
+              promotions={promotions}
+              onChangePromotion={(id, p) =>
+                setPromotions((m) => ({ ...m, [id]: p }))
+              }
+              locked={finalized[context.classId]}
+              academicYearId={context.yearId}
+            />
+          )}
 
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={saveAll}
-              disabled={saving}
-              className="bg-teal-600 text-white px-4 py-2 rounded"
-            >
-              {saving ? "Saving..." : "Save Promotions"}
-            </button>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm text-neutral-700">
+              Showing {visibleStudents.length} student
+              {visibleStudents.length === 1 ? "" : "s"}. Changes pending:{" "}
+              {pendingCount}
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setPromotions({})}
+                disabled={pendingCount === 0 || saving}
+                className={`rounded-lg border px-4 py-2 text-sm ${
+                  pendingCount === 0 || saving
+                    ? "cursor-not-allowed border-gray-200 bg-white text-neutral-400"
+                    : "border-gray-200 bg-white text-neutral-800 hover:border-teal-600 hover:text-teal-700"
+                }`}
+              >
+                Reset Changes
+              </button>
+              <button
+                onClick={saveAll}
+                disabled={
+                  saving || pendingCount === 0 || finalized[context.classId]
+                }
+                className={`rounded-lg px-4 py-2 text-sm ${
+                  saving || pendingCount === 0 || finalized[context.classId]
+                    ? "cursor-not-allowed bg-teal-300 text-white"
+                    : "bg-teal-600 text-white hover:bg-teal-700"
+                }`}
+              >
+                {saving ? "Saving..." : "Save Promotions"}
+              </button>
+            </div>
           </div>
 
-          <PromotionSummary promotions={Object.values(promotions)} />
+          <div className="mt-4">
+            <PromotionSummary promotions={Object.values(promotions)} />
+          </div>
         </>
       )}
     </div>

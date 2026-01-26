@@ -7,9 +7,11 @@ namespace Backend.Services.Interfaces
     {
         public Task<Result> CreateClass(Class clz);
         public Task<Result<Class>> GetClassById(int id);
-        public Task<Result<IEnumerable<Class>>> GetClassByGrade(int GradeId);
+        public Task<Result<List<Class>>> GetClassByGrade(int GradeId);
 
         public Task<Result> RemoveClass(int id);
+
+        public Task<Result<List<Class>>> GetClasses();
 
     }
 }

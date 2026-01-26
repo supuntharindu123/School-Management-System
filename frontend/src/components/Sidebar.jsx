@@ -7,6 +7,8 @@ export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
   const dashboardLink = user && user.role === 0 ? "/admin" : "/teacher";
+  const isActive = (to) =>
+    location.pathname === to || location.pathname.startsWith(`${to}/`);
 
   const items = [
     {
@@ -85,6 +87,21 @@ export default function Sidebar({ isOpen, onClose }) {
       ),
     },
     {
+      label: "Student Promotion",
+      to: "/promotions",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="h-5 w-5"
+        >
+          <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h8.25a.75.75 0 0 1 .53.22l4.5 4.5a.75.75 0 0 1 .22.53v9.75A2.25 2.25 0 0 1 16.5 21H5.25A2.25 2.25 0 0 1 3 18.75V6.75Z" />
+          <path d="M12.75 8.25a.75.75 0 0 1 .75-.75h2.19l-2.94-2.94a.75.75 0 0 1 .53-1.28h-8.03A.75.75 0 0 0 6 3.75v.75h6.75a.75.75 0 0 1 .75.75v3Z" />
+        </svg>
+      ),
+    },
+    {
       label: "Settings",
       to: "/settings",
       icon: (
@@ -133,7 +150,7 @@ export default function Sidebar({ isOpen, onClose }) {
       {/* Nav */}
       <nav className="p-2 space-y-1 pt-6">
         {items.map((item) => {
-          const active = location.pathname.startsWith(item.to);
+          const active = isActive(item.to);
           return (
             <Link
               key={item.to}

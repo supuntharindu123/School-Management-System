@@ -3,6 +3,8 @@ import authReducer from "../features/auth/authSlice";
 import studentListReducer from "../features/adminFeatures/students/studentListSlice";
 import yearReducer from "../features/year/yearSlice";
 import gradeReducer from "../features/grade/gradeSlice";
+import classReducer from "../features/class/classSlice";
+import subjectReducer from "../features/subject/subjectSlice";
 
 export const store = configureStore({
   reducer: {
@@ -10,5 +12,7 @@ export const store = configureStore({
     studentList: studentListReducer,
     years: yearReducer,
     grades: gradeReducer,
+    classes: classReducer,
+    subjects: subjectReducer,
   },
 });

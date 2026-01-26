@@ -57,5 +57,16 @@ namespace Backend.Controllers
 
             return NoContent();
         }
+
+        [HttpGet]
+        public async Task<IActionResult> GetClasses()
+        {
+            var clz = await _classService.GetClasses();
+            if (!clz.IsSuccess)
+            {
+                return BadRequest(clz.Error);
+            }
+            return Ok(clz.Data);
+        }
     }
 }

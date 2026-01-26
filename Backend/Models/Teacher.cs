@@ -28,7 +28,7 @@ namespace Backend.Models
         [Required]
         public User? User {  get; set; }
 
-        public ICollection<TeacherClassAssign>? AssignTasks { get; set; }
+        public ICollection<TeacherClassAssign> AssignTasks { get; set; }
 
         public ICollection<TeacherSubjectClass>? TeacherSubjectClass { get; set; }
 

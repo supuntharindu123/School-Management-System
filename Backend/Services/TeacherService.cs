@@ -49,28 +49,28 @@ namespace Backend.Services
             return Result.Success();
         }
 
-        public async Task<Result<IEnumerable<TeacherRes>>> GetAllTeachers()
+        public async Task<Result<IEnumerable<TeacherResponseDto>>> GetAllTeachers()
         {
             var results=await _repo.GetTeachers();
             if(results == null)
             {
-                return Result<IEnumerable<TeacherRes>>.Failure("Teachers Not Found");
+                return Result<IEnumerable<TeacherResponseDto>>.Failure("Teachers Not Found");
             }
-            var teachers = _mapper.Map<List<TeacherRes>>(results);
+            var teachers = _mapper.Map<List<TeacherResponseDto>>(results);
 
-            return Result<IEnumerable<TeacherRes>>.Success(teachers);
+            return Result<IEnumerable<TeacherResponseDto>>.Success(teachers);
         }
 
-        public async Task<Result<TeacherRes>> GetTeacher(int id)
+        public async Task<Result<TeacherResponseDto>> GetTeacher(int id)
         {
             var result = await _repo.GetTeacherById(id);
             if (result == null)
             {
-                return Result< TeacherRes>.Failure("Teacher Not Found");
+                return Result<TeacherResponseDto>.Failure("Teacher Not Found");
              }
-            var teacher=_mapper.Map<TeacherRes>(result);
+            var teacher=_mapper.Map<TeacherResponseDto>(result);
 
-            return Result<TeacherRes>.Success(teacher);
+            return Result<TeacherResponseDto>.Success(teacher);
         }
 
         public async Task<Result> UpdateTeacher(int id, TeacherUpdateDto dto)

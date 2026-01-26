@@ -28,11 +28,11 @@ namespace Backend.Services
 
         }
 
-        public async Task<Result<IEnumerable<Class>>> GetClassByGrade(int gradeId)
+        public async Task<Result<List<Class>>> GetClassByGrade(int gradeId)
         {
             var classes = await _repo.GetClassByGrade(gradeId);
 
-            return Result<IEnumerable<Class>>.Success(classes);
+            return Result<List<Class>>.Success(classes);
         }
 
 
@@ -59,6 +59,19 @@ namespace Backend.Services
             await _repo.DeleteClass(res);
 
             return Result.Success();
+        }
+
+        public async Task<Result<List<Class>>> GetClasses()
+        {
+            var res=await _repo.GetClasses();
+
+            if (res == null)
+            {
+                return Result<List<Class>>.Failure("Classes Not Found");
+            }
+
+            return Result<List<Class>>.Success(res);
+
         }
 
     }

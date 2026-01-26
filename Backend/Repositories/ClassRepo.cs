@@ -63,5 +63,10 @@ namespace Backend.Repositories
 
             return ("Grade"+grade!.GradeName + "-" + name!.Name);
         }
+
+        public async Task<List<Class>> GetClasses()
+        {
+            return await _context.Classes.ToListAsync();    
+        }
     }
 }

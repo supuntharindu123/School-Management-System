@@ -1,7 +1,14 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/CommonElements/Button";
+import AddTeacherDialog from "../../components/Teacher/AddTeacherDialog";
+import {
+  teacherListAPI,
+  createTeacher,
+} from "../../features/adminFeatures/teachers/teacherService";
 
 export default function TeacherListPage() {
+  const navigate = useNavigate();
   const [year, setYear] = useState("2025-2026");
   const [query, setQuery] = useState("");
   const [assignModal, setAssignModal] = useState({
@@ -10,8 +17,6 @@ export default function TeacherListPage() {
   });
   const [editModal, setEditModal] = useState({ open: false, teacher: null });
   const [addModal, setAddModal] = useState({ open: false });
-
-  const years = ["2024-2025", "2025-2026"];
 
   const classesByYear = {
     "2024-2025": [
@@ -32,32 +37,27 @@ export default function TeacherListPage() {
     { id: "eng", name: "English" },
   ];
 
-  const [teachers, setTeachers] = useState([
-    {
-      id: 1,
-      name: "John Doe",
-      email: "john.doe@example.com",
-      status: "Active",
-      assigned: {
-        year: "2025-2026",
-        classes: ["8A"],
-        subjects: ["math", "eng"],
-      },
-    },
-    {
-      id: 2,
-      name: "Marina Patel",
-      email: "marina.patel@example.com",
-      status: "Inactive",
-      assigned: { year: "2024-2025", classes: ["9A"], subjects: ["sci"] },
-    },
-  ]);
+  const [teachers, setTeachers] = useState([]);
+
+  useEffect(() => {
+    const fetchTeachers = async () => {
+      try {
+        const res = await teacherListAPI();
+        setTeachers(res);
+      } catch (error) {
+        console.error("Failed to fetch teachers:", error);
+      }
+    };
+    fetchTeachers();
+  }, []);
 
   const filtered = useMemo(() => {
     return teachers.filter((t) => {
+      const name = t.fullName || "";
+      const email = t.user?.email || "";
       const matchesQuery = query
-        ? [t.name, t.email].some((f) =>
-            f.toLowerCase().includes(query.toLowerCase())
+        ? [name, email].some((f) =>
+            f.toLowerCase().includes(query.toLowerCase()),
           )
         : true;
       return matchesQuery;
@@ -69,8 +69,8 @@ export default function TeacherListPage() {
       list.map((t) =>
         t.id === row.id
           ? { ...t, status: t.status === "Active" ? "Inactive" : "Active" }
-          : t
-      )
+          : t,
+      ),
     );
   };
 
@@ -89,8 +89,8 @@ export default function TeacherListPage() {
                 subjects: payload.subjects,
               },
             }
-          : t
-      )
+          : t,
+      ),
     );
     closeAssign();
   };
@@ -99,24 +99,22 @@ export default function TeacherListPage() {
   const closeEdit = () => setEditModal({ open: false, teacher: null });
   const saveEdit = (up) => {
     setTeachers((list) =>
-      list.map((t) => (t.id === up.id ? { ...t, ...up } : t))
+      list.map((t) => (t.id === up.id ? { ...t, ...up } : t)),
     );
     closeEdit();
   };
 
   const openAdd = () => setAddModal({ open: true });
   const closeAdd = () => setAddModal({ open: false });
-  const saveAdd = (up) => {
-    setTeachers((list) => [
-      {
-        ...up,
-        id: Math.max(...list.map((x) => x.id)) + 1,
-        status: "Active",
-        assigned: { year, classes: [], subjects: [] },
-      },
-      ...list,
-    ]);
-    closeAdd();
+  const saveAdd = async (dto) => {
+    try {
+      await createTeacher(dto);
+      const res = await teacherListAPI();
+      setTeachers(res);
+      closeAdd();
+    } catch (err) {
+      console.error("Failed to add teacher:", err);
+    }
   };
 
   const assignableClasses = classesByYear[year] || [];
@@ -132,20 +130,6 @@ export default function TeacherListPage() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-neutral-700">Academic Year</label>
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
           <input
             placeholder="Search by name or email"
             value={query}
@@ -165,11 +149,6 @@ export default function TeacherListPage() {
                 <th className="border-b border-gray-200 py-2 px-3">Name</th>
                 <th className="border-b border-gray-200 py-2 px-3">Email</th>
                 <th className="border-b border-gray-200 py-2 px-3">Status</th>
-                <th className="border-b border-gray-200 py-2 px-3">
-                  Assigned (Year)
-                </th>
-                <th className="border-b border-gray-200 py-2 px-3">Classes</th>
-                <th className="border-b border-gray-200 py-2 px-3">Subjects</th>
                 <th className="border-b border-gray-200 py-2 px-3 text-right">
                   Actions
                 </th>
@@ -179,10 +158,15 @@ export default function TeacherListPage() {
               {filtered.map((row) => (
                 <tr key={row.id} className="hover:bg-gray-50">
                   <td className="border-b border-gray-200 py-2 px-3 font-medium">
-                    {row.name}
+                    <button
+                      onClick={() => navigate(`/teachers/${row.id}`)}
+                      className="text-teal-700 hover:underline hover:text-teal-800"
+                    >
+                      {row.fullName}
+                    </button>
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
-                    {row.email}
+                    {row.user.email}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
                     <span
@@ -194,19 +178,6 @@ export default function TeacherListPage() {
                     >
                       {row.status}
                     </span>
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    {row.assigned?.year || "-"}
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3 truncate max-w-[220px]">
-                    {row.assigned?.classes?.length
-                      ? row.assigned.classes.join(", ")
-                      : "-"}
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3 truncate max-w-[220px]">
-                    {row.assigned?.subjects?.length
-                      ? row.assigned.subjects.join(", ")
-                      : "-"}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
                     <div className="flex items-center justify-end gap-2">
@@ -240,7 +211,7 @@ export default function TeacherListPage() {
                 <tr>
                   <td
                     className="py-10 text-center text-neutral-600"
-                    colSpan={7}
+                    colSpan={4}
                   >
                     No teachers found.
                   </td>
@@ -272,7 +243,9 @@ export default function TeacherListPage() {
       )}
 
       {/* Add Modal */}
-      {addModal.open && <AddTeacherModal onClose={closeAdd} onSave={saveAdd} />}
+      {addModal.open && (
+        <AddTeacherDialog onClose={closeAdd} onSave={saveAdd} />
+      )}
     </div>
   );
 }
@@ -423,48 +396,4 @@ function EditTeacherModal({ teacher, onClose, onSave }) {
   );
 }
 
-function AddTeacherModal({ onClose, onSave }) {
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-
-  return (
-    <ModalShell
-      title="Add Teacher"
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-          >
-            Cancel
-          </button>
-          <Button label="Add" onClick={() => onSave({ name, email })} />
-        </>
-      }
-    >
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Full Name
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Email
-          </label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-      </div>
-    </ModalShell>
-  );
-}
+// Removed old AddTeacherModal; using AddTeacherDialog component instead.

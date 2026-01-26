@@ -36,11 +36,23 @@ namespace Backend.Mapping
 
             CreateMap<StudentUpdateDto, Student>();
 
-            CreateMap<Teacher, TeacherRes>()
-                .ForMember(destination => destination.Username, option => option.MapFrom(src => src.User!.Username))
-                .ForMember(destination => destination.Email, option => option.MapFrom(src => src.User!.Email))
-                .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.User!.PhoneNumber))
-                .ForMember(destination => destination.Role, option => option.MapFrom(src => src.User!.Role));
+            CreateMap<User, UserDto>();
+
+            CreateMap<Teacher, TeacherResponseDto>()
+                .ForMember(dest => dest.ClassAssignments,
+                    opt => opt.MapFrom(src => src.AssignTasks))
+                .ForMember(dest => dest.SubjectClasses,
+                    opt => opt.MapFrom(src => src.TeacherSubjectClass));
+
+            CreateMap<TeacherClassAssign, TeacherClassAssignResDto>()
+                .ForMember(dest => dest.ClassName,
+                    opt => opt.MapFrom(src => src.Class!.Name));
+
+            CreateMap<TeacherSubjectClass, TeacherSubjectClassResDto>()
+                .ForMember(dest => dest.ClassName,
+                    opt => opt.MapFrom(src => src.Class!.Name))
+                .ForMember(dest => dest.SubjectName,
+                    opt => opt.MapFrom(src => src.Subject!.SubjectName));
 
             CreateMap<TeacherUpdateDto, Teacher>();
 
@@ -63,8 +75,8 @@ namespace Backend.Mapping
             CreateMap<TeacherClassAssignDto, TeacherClassAssign>();
 
             CreateMap<TeacherClassAssign, TeacherClassRes>()
-                .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName))
-                .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Class!.Name));
+                .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName));
+                
 
             CreateMap<AssignTeacherSubjectDto, TeacherSubjectClass>();
 

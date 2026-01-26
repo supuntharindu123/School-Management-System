@@ -11,8 +11,8 @@ namespace Backend.Services.Interfaces
 
         public Task<Result> DeleteTeacher(int id);
 
-        public Task<Result<IEnumerable<TeacherRes>>> GetAllTeachers();
+        public Task<Result<IEnumerable<TeacherResponseDto>>> GetAllTeachers();
 
-        public Task<Result<TeacherRes>> GetTeacher(int id);
+        public Task<Result<TeacherResponseDto>> GetTeacher(int id);
     }
 }

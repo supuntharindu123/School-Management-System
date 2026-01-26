@@ -2,6 +2,21 @@ import api from "../../services/api";
 
 export async function getClassesByGrade(gradeId) {
   if (!gradeId) return [];
-  const res = await api.get(`/class/grade/${gradeId}`);
-  return res.data;
+  try {
+    const res = await api.get(`/class/grade/${gradeId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching classes by grade:", error);
+    throw error;
+  }
+}
+
+export async function getAllClasses() {
+  try {
+    const res = await api.get("/class");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching classes:", error);
+    throw error;
+  }
 }

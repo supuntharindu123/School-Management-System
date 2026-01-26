@@ -37,7 +37,7 @@ namespace Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetStudentAll()
+        public async Task<IActionResult> GetTeacherAll()
         {
             var results = await _service.GetAllTeachers();
 
@@ -48,8 +48,19 @@ namespace Backend.Controllers
             return Ok(results.Data);
         }
 
+        [HttpGet("{id}")]
+        public async Task<IActionResult> TeacherById(int id)
+        {
+            var res = await _service.GetTeacher(id);
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+            return Ok(res.Data);
+        }
+
         [HttpDelete("{id}")]
-        public async Task<IActionResult> DeleteStudent(int id)
+        public async Task<IActionResult> DeleteTeacher(int id)
         {
             var res= await _service.DeleteTeacher(id);
             if (!res.IsSuccess)
@@ -60,7 +71,7 @@ namespace Backend.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateStudent(int id, TeacherUpdateDto dto)
+        public async Task<IActionResult> UpdateTeacher(int id, TeacherUpdateDto dto)
         {
             var res= await _service.UpdateTeacher(id, dto);
             if (!res.IsSuccess)

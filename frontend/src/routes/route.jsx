@@ -12,6 +12,7 @@ import GradeManagementPage from "../pages/admin/GradeManagementPage";
 import ClassManagementPage from "../pages/admin/ClassManagementPage";
 import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
 import TeacherListPage from "../pages/admin/TeacherListPage";
+import TeacherProfilePage from "../pages/admin/TeacherProfilePage";
 import AddStudentPage from "../pages/admin/AddStudentPage";
 import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
 import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
@@ -41,6 +42,7 @@ export default function RouteConfig() {
             <Route path="/classes" element={<ClassManagementPage />} />
             <Route path="/subjects" element={<SubjectManagementPage />} />
             <Route path="/teachers" element={<TeacherListPage />} />
+            <Route path="/teachers/:id" element={<TeacherProfilePage />} />
           </Route>
 
           {/* Admin only */}

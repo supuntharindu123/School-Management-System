@@ -26,15 +26,33 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task<Teacher?> GetTeacherById(int id)
+        public async Task<Teacher?> GetTeacherById(int teacherId)
         {
-            return await _context.Teachers.Include(t=>t.User).Include(t=>t.AssignTasks).FirstOrDefaultAsync(t=>t.Id == id);
+            return await _context.Teachers
+                .Include(t => t.User)
+                .Include(t => t.AssignTasks)
+                    .ThenInclude(a => a.Class)
+                .Include(t => t.TeacherSubjectClass)
+                    .ThenInclude(tsc => tsc.Subject)
+                .Include(t => t.TeacherSubjectClass)
+                    .ThenInclude(tsc => tsc.Class)
+                .Include(t => t.TeacherSubjectClass)
+                .FirstOrDefaultAsync(t => t.Id == teacherId);
         }
 
         public async Task<List<Teacher>> GetTeachers()
         {
 
-            return await _context.Teachers.Include(t => t.User).Include(t => t.AssignTasks).ToListAsync();
+            return await _context.Teachers
+                .Include(t => t.User)
+                .Include(t => t.AssignTasks)
+                    .ThenInclude(a => a.Class)
+                .Include(t => t.TeacherSubjectClass)
+                    .ThenInclude(tsc => tsc.Subject)
+                .Include(t => t.TeacherSubjectClass)
+                    .ThenInclude(tsc => tsc.Class)
+                .Include(t => t.TeacherSubjectClass)
+                .ToListAsync();
         }
 
         public async Task UpdateTeacher(Teacher teacher)
