@@ -20,3 +20,13 @@ export async function getAllClasses() {
     throw error;
   }
 }
+
+export async function getClassDetails(classId) {
+  try {
+    const res = await api.get(`/class/${classId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching class details:", error);
+    throw error;
+  }
+}

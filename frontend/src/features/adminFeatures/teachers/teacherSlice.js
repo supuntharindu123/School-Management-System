@@ -1,24 +1,24 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { getAllClasses } from "./classService";
+import { teacherListAPI } from "./teacherService";
 
-export const getClasses = createAsyncThunk(
-  "classes/getAllClasses",
+export const getTeachers = createAsyncThunk(
+  "teachers/getAllTeachers",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await getAllClasses();
+      const res = await teacherListAPI();
       return res;
     } catch (err) {
       return rejectWithValue(
-        err?.response?.data || err?.message || "Failed to load classes",
+        err?.response?.data || err?.message || "Failed to load teachers",
       );
     }
   },
 );
 
-const classSlice = createSlice({
-  name: "classes",
+const teacherSlice = createSlice({
+  name: "teachers",
   initialState: {
-    classes: [],
+    teachers: [],
     loading: false,
     error: null,
   },
@@ -27,19 +27,19 @@ const classSlice = createSlice({
 
   extraReducers: (builder) => {
     builder
-      .addCase(getClasses.pending, (state) => {
+      .addCase(getTeachers.pending, (state) => {
         state.loading = true;
         state.error = null;
       })
-      .addCase(getClasses.fulfilled, (state, action) => {
+      .addCase(getTeachers.fulfilled, (state, action) => {
         state.loading = false;
-        state.classes = action.payload;
+        state.teachers = action.payload;
         state.error = null;
       })
-      .addCase(getClasses.rejected, (state, action) => {
+      .addCase(getTeachers.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       });
   },
 });
-export default classSlice.reducer;
+export default teacherSlice.reducer;

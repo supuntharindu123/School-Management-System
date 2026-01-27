@@ -1,4 +1,6 @@
-﻿using Backend.Helper;
+﻿using AutoMapper;
+using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -8,15 +10,18 @@ namespace Backend.Services
     public class SubjectGradeService : ISubjectGradeService
     {
         private readonly ISubjectGradeRepo _repo;
+        private readonly IMapper _mapper;
 
-        public SubjectGradeService(ISubjectGradeRepo repo)
+        public SubjectGradeService(ISubjectGradeRepo repo, IMapper mapper)
         {
             _repo = repo;
+            _mapper = mapper;
         }
 
-        public async Task<Result> Add(SubjectGrade subjectGrade)
+        public async Task<Result> Add(SubjectGradeCreateDto subjectGrade)
         {
-            await _repo.Add(subjectGrade);
+            var map=_mapper.Map<SubjectGrade>(subjectGrade);
+            await _repo.Add(map);
             return Result.Success();
         }
 

@@ -1,0 +1,247 @@
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import Button from "../../components/CommonElements/Button";
+import { getAllGrades } from "../../features/grade/gradeSlice";
+import { getClasses } from "../../features/class/classSlice";
+import { getStudentAttendance } from "../../features/attendances/attendanceSlice";
+
+function Field({ label, children }) {
+  return (
+    <div>
+      <label className="block text-sm font-medium text-neutral-800">
+        {label}
+      </label>
+      {children}
+    </div>
+  );
+}
+
+export default function AttendancePage() {
+  const dispatch = useDispatch();
+
+  // Filters
+  const [date, setDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [gradeId, setGradeId] = useState("");
+  const [classId, setClassId] = useState("");
+  const [query, setQuery] = useState("");
+
+  // Redux data
+  const gradesState = useSelector((s) => s.grades);
+  const grades = gradesState.grades || [];
+  const classesState = useSelector((s) => s.classes);
+  const classes = classesState.classes || [];
+  const attendanceState = useSelector((s) => s.attendances);
+  const attendances = attendanceState.attendances || [];
+  const loading = attendanceState.loading;
+  const error = attendanceState.error;
+
+  console.log("Attendances:", attendances);
+
+  useEffect(() => {
+    dispatch(getAllGrades());
+    dispatch(getClasses());
+    dispatch(getStudentAttendance());
+  }, [dispatch]);
+
+  // Class options filtered by grade
+  const classOptions = useMemo(() => {
+    if (!gradeId) return [];
+    return classes.filter((c) => String(c.gradeId) === String(gradeId));
+  }, [classes, gradeId]);
+
+  // Filter attendance records from API by date/grade/class/search
+  const attendanceRows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let rows = attendances;
+
+    // date filter (exact match)
+    if (date) {
+      rows = rows.filter((a) => String(a.date) === String(date));
+    }
+
+    // grade filter using classes map -> class names in selected grade
+    if (gradeId) {
+      const gradeClassNames = new Set(
+        classes
+          .filter((c) => String(c.gradeId) === String(gradeId))
+          .map((c) => c.className || c.name),
+      );
+      rows = rows.filter((a) => gradeClassNames.has(a.className));
+    }
+
+    // class filter using selected class name
+    if (classId) {
+      const selectedClass = classes.find(
+        (c) => String(c.id) === String(classId),
+      );
+      const selectedClassName = selectedClass?.className || selectedClass?.name;
+      if (selectedClassName) {
+        rows = rows.filter((a) => a.className === selectedClassName);
+      }
+    }
+
+    // search filter over student/teacher/class
+    if (q) {
+      rows = rows.filter((a) => {
+        const s = (a.studentName || "").toLowerCase();
+        const t = (a.teacherName || "").toLowerCase();
+        const c = (a.className || "").toLowerCase();
+        return s.includes(q) || t.includes(q) || c.includes(q);
+      });
+    }
+
+    return rows;
+  }, [attendances, date, gradeId, classId, classes, query]);
+
+  return (
+    <div className="space-y-4">
+      {/* Header */}
+      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-neutral-900">
+            Attendance
+          </h1>
+          <p className="text-sm text-neutral-700">
+            Search and filter students to record attendance
+          </p>
+        </div>
+      </header>
+
+      {/* Filters */}
+      <section className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
+          <Field label="Date">
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </Field>
+          <Field label="Grade">
+            <select
+              value={gradeId}
+              onChange={(e) => {
+                setGradeId(e.target.value);
+                setClassId("");
+              }}
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            >
+              <option value="">All</option>
+              {grades.map((g) => (
+                <option key={g.id} value={g.id}>
+                  Grade {g.gradeName}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Class">
+            <select
+              value={classId}
+              onChange={(e) => setClassId(e.target.value)}
+              disabled={!gradeId}
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:bg-gray-50"
+            >
+              <option value="">All</option>
+              {classOptions.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.className || c.name}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Search">
+            <input
+              placeholder="Search by name or ID"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+            />
+          </Field>
+          <div className="flex items-end">
+            <Button
+              label="Filter"
+              onClick={() => {
+                /* UI-only filter applies instantly */
+              }}
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* Results */}
+      <section className="rounded-xl border border-gray-200 bg-white">
+        <div className="flex items-center justify-between border-b px-4 py-3">
+          <p className="text-sm font-semibold text-neutral-900">Results</p>
+          <span className="text-xs text-neutral-600">
+            {attendanceRows.length} records
+          </span>
+        </div>
+        {loading && (
+          <div className="px-4 py-3 text-sm text-neutral-700">
+            Loading attendance...
+          </div>
+        )}
+        {error && (
+          <div className="px-4 py-3 text-sm text-rose-700">{String(error)}</div>
+        )}
+        <div className="overflow-x-auto">
+          <table className="w-full border-collapse text-sm">
+            <thead>
+              <tr className="text-left text-neutral-800">
+                <th className="border-b border-gray-200 py-2 px-3">ID</th>
+                <th className="border-b border-gray-200 py-2 px-3">Date</th>
+                <th className="border-b border-gray-200 py-2 px-3">Student</th>
+                <th className="border-b border-gray-200 py-2 px-3">Class</th>
+                <th className="border-b border-gray-200 py-2 px-3">Teacher</th>
+                <th className="border-b border-gray-200 py-2 px-3">Present</th>
+                <th className="border-b border-gray-200 py-2 px-3">Reason</th>
+              </tr>
+            </thead>
+            <tbody className="text-neutral-800">
+              {attendanceRows.map((a) => (
+                <tr
+                  key={`${a.id ?? a.Id}-${a.date ?? a.Date}`}
+                  className="hover:bg-gray-50"
+                >
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.id ?? a.Id}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.date ?? a.Date}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3 font-medium">
+                    {a.studentName ?? a.StudentName}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.className ?? a.ClassName}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.teacherName ?? a.TeacherName}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.isPresent === undefined && a.IsPresent === undefined
+                      ? "-"
+                      : (a.isPresent ?? a.IsPresent)
+                        ? "Yes"
+                        : "No"}
+                  </td>
+                  <td className="border-b border-gray-200 py-2 px-3">
+                    {a.reason ? a.reason || "-" : "-"}
+                  </td>
+                </tr>
+              ))}
+              {attendanceRows.length === 0 && (
+                <tr>
+                  <td colSpan={7} className="py-8 text-center text-neutral-600">
+                    No records found.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+  );
+}

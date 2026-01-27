@@ -52,7 +52,14 @@ namespace Backend.Repositories
         public async Task<Class?> GetClassById(int classNameId)
         {
             return await _context.Classes.AsNoTracking()
-                .FirstOrDefaultAsync(c => c.Id == classNameId);
+                        .Include(c => c.Students)
+        .Include(c => c.TeacherClassAssign)
+            .ThenInclude(tca => tca.Teacher)
+        .Include(c => c.TeacherSubjectClass)
+            .ThenInclude(tsc => tsc.Teacher)
+        .Include(c => c.TeacherSubjectClass)
+            .ThenInclude(tsc => tsc.Subject)
+        .FirstOrDefaultAsync(c => c.Id == classNameId);
         }
 
         public async Task<string> NameOfClass(int gradeId, int classNameId)
@@ -66,7 +73,14 @@ namespace Backend.Repositories
 
         public async Task<List<Class>> GetClasses()
         {
-            return await _context.Classes.ToListAsync();    
+            return await _context.Classes.AsNoTracking()
+                        .Include(c => c.Students)
+        .Include(c => c.TeacherClassAssign)
+            .ThenInclude(tca => tca.Teacher)
+        .Include(c => c.TeacherSubjectClass)
+            .ThenInclude(tsc => tsc.Teacher)
+        .Include(c => c.TeacherSubjectClass)
+            .ThenInclude(tsc => tsc.Subject).ToListAsync();    
         }
     }
 }

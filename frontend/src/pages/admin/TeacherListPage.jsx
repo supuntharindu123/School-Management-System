@@ -6,50 +6,23 @@ import {
   teacherListAPI,
   createTeacher,
 } from "../../features/adminFeatures/teachers/teacherService";
+import { useDispatch, useSelector } from "react-redux";
+import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
 
 export default function TeacherListPage() {
   const navigate = useNavigate();
-  const [year, setYear] = useState("2025-2026");
   const [query, setQuery] = useState("");
-  const [assignModal, setAssignModal] = useState({
-    open: false,
-    teacherId: null,
-  });
   const [editModal, setEditModal] = useState({ open: false, teacher: null });
   const [addModal, setAddModal] = useState({ open: false });
 
-  const classesByYear = {
-    "2024-2025": [
-      { id: "8A", name: "Grade 8 - A" },
-      { id: "8B", name: "Grade 8 - B" },
-      { id: "9A", name: "Grade 9 - A" },
-    ],
-    "2025-2026": [
-      { id: "8A", name: "Grade 8 - A" },
-      { id: "8C", name: "Grade 8 - C" },
-      { id: "9B", name: "Grade 9 - B" },
-    ],
-  };
+  const dispatch = useDispatch();
 
-  const subjects = [
-    { id: "math", name: "Mathematics" },
-    { id: "sci", name: "Science" },
-    { id: "eng", name: "English" },
-  ];
-
-  const [teachers, setTeachers] = useState([]);
+  const teacherList = useSelector((state) => state.teachers);
+  const teachers = teacherList.teachers;
 
   useEffect(() => {
-    const fetchTeachers = async () => {
-      try {
-        const res = await teacherListAPI();
-        setTeachers(res);
-      } catch (error) {
-        console.error("Failed to fetch teachers:", error);
-      }
-    };
-    fetchTeachers();
-  }, []);
+    dispatch(getTeachers());
+  }, [dispatch]);
 
   const filtered = useMemo(() => {
     return teachers.filter((t) => {
@@ -63,37 +36,6 @@ export default function TeacherListPage() {
       return matchesQuery;
     });
   }, [teachers, query]);
-
-  const onDeactivate = (row) => {
-    setTeachers((list) =>
-      list.map((t) =>
-        t.id === row.id
-          ? { ...t, status: t.status === "Active" ? "Inactive" : "Active" }
-          : t,
-      ),
-    );
-  };
-
-  const openAssign = (row) => setAssignModal({ open: true, teacherId: row.id });
-  const closeAssign = () => setAssignModal({ open: false, teacherId: null });
-
-  const saveAssign = (payload) => {
-    setTeachers((list) =>
-      list.map((t) =>
-        t.id === assignModal.teacherId
-          ? {
-              ...t,
-              assigned: {
-                year,
-                classes: payload.classes,
-                subjects: payload.subjects,
-              },
-            }
-          : t,
-      ),
-    );
-    closeAssign();
-  };
 
   const openEdit = (row) => setEditModal({ open: true, teacher: row });
   const closeEdit = () => setEditModal({ open: false, teacher: null });
@@ -116,8 +58,6 @@ export default function TeacherListPage() {
       console.error("Failed to add teacher:", err);
     }
   };
-
-  const assignableClasses = classesByYear[year] || [];
 
   return (
     <div>
@@ -148,7 +88,7 @@ export default function TeacherListPage() {
               <tr className="text-left text-neutral-800">
                 <th className="border-b border-gray-200 py-2 px-3">Name</th>
                 <th className="border-b border-gray-200 py-2 px-3">Email</th>
-                <th className="border-b border-gray-200 py-2 px-3">Status</th>
+                <th className="border-b border-gray-200 py-2 px-3">Gender</th>
                 <th className="border-b border-gray-200 py-2 px-3 text-right">
                   Actions
                 </th>
@@ -169,15 +109,7 @@ export default function TeacherListPage() {
                     {row.user.email}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${
-                        row.status === "Active"
-                          ? "bg-teal-50 text-teal-700 border-teal-200"
-                          : "bg-gray-100 text-neutral-700 border-gray-200"
-                      }`}
-                    >
-                      {row.status}
-                    </span>
+                    {row.gender}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
                     <div className="flex items-center justify-end gap-2">
@@ -187,22 +119,6 @@ export default function TeacherListPage() {
                       >
                         Edit
                       </button>
-                      <button
-                        onClick={() => openAssign(row)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-                      >
-                        Assign
-                      </button>
-                      <button
-                        onClick={() => onDeactivate(row)}
-                        className={`rounded-lg px-3 py-1.5 text-xs border ${
-                          row.status === "Active"
-                            ? "border-rose-200 text-rose-700 bg-rose-50 hover:border-rose-400"
-                            : "border-teal-200 text-teal-700 bg-teal-50 hover:border-teal-400"
-                        }`}
-                      >
-                        {row.status === "Active" ? "Deactivate" : "Activate"}
-                      </button>
                     </div>
                   </td>
                 </tr>
@@ -211,7 +127,7 @@ export default function TeacherListPage() {
                 <tr>
                   <td
                     className="py-10 text-center text-neutral-600"
-                    colSpan={4}
+                    colSpan={3}
                   >
                     No teachers found.
                   </td>
@@ -221,17 +137,6 @@ export default function TeacherListPage() {
           </table>
         </div>
       </section>
-
-      {/* Assign Modal */}
-      {assignModal.open && (
-        <AssignModal
-          onClose={closeAssign}
-          onSave={saveAssign}
-          year={year}
-          classes={assignableClasses}
-          subjects={subjects}
-        />
-      )}
 
       {/* Edit Modal */}
       {editModal.open && (

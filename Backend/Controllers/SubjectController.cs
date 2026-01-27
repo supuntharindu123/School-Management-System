@@ -1,4 +1,5 @@
-﻿using Backend.Models;
+﻿using Backend.DTOs;
+using Backend.Models;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -86,8 +87,8 @@ namespace Backend.Controllers
 
         }
 
-        [HttpPost("/grade")]
-        public async Task<IActionResult> AddSubjectGrade(SubjectGrade subjectGrade)
+        [HttpPost("grade")]
+        public async Task<IActionResult> AddSubjectGrade(SubjectGradeCreateDto subjectGrade)
         {
             var res=await _subjectGradeService.Add(subjectGrade);
 
@@ -99,7 +100,7 @@ namespace Backend.Controllers
             return Ok("Subject assigned to grade successfully");
         }
 
-        [HttpGet("/grade/{id}")]
+        [HttpGet("grade/{id}")]
         public async Task<IActionResult> GetSubjectGradeById(int id)
         {
             var res = await _subjectGradeService.GetById(id);
@@ -112,7 +113,7 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
-        [HttpGet("/grade/grade/{id}")]
+        [HttpGet("grade/grade/{id}")]
         public async Task<IActionResult> GetSubjectGradeByGradeId(int id)
         {
             var res = await _subjectGradeService.GetByGrade(id);
@@ -126,7 +127,7 @@ namespace Backend.Controllers
         }
 
 
-        [HttpDelete("/grade/{id}")]
+        [HttpDelete("grade/{id}")]
         public async Task<IActionResult> RemoveSubjectGrade(int id)
         {
             var res = await _subjectGradeService.Remove(id);

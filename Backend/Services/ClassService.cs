@@ -1,4 +1,6 @@
-﻿using Backend.Helper;
+﻿using AutoMapper;
+using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
@@ -8,10 +10,12 @@ namespace Backend.Services
     public class ClassService : IClassService
     {
         private readonly IClassRepo _repo;
+        private readonly IMapper _mapper;
 
-        public ClassService(IClassRepo repo)
+        public ClassService(IClassRepo repo, IMapper mapper)
         {
             _repo = repo; 
+            _mapper = mapper;
         }
         public async Task<Result> CreateClass(Class clz)
         {
@@ -36,15 +40,17 @@ namespace Backend.Services
         }
 
 
-        public async Task<Result<Class>> GetClassById(int id)
+        public async Task<Result<ClassDetailsResDto>> GetClassById(int id)
         {
-            var clz = await _repo.GetClass(id);
+            var clz = await _repo.GetClassById(id);
             if (clz == null)
             {
-                return Result<Class>.Failure("Class Not Found");
+                return Result<ClassDetailsResDto>.Failure("Class Not Found");
             }
 
-            return Result<Class>.Success(clz);
+            var map=_mapper.Map<ClassDetailsResDto>(clz);
+
+            return Result<ClassDetailsResDto>.Success(map);
         }
 
         public async Task<Result> RemoveClass(int id)
@@ -61,16 +67,18 @@ namespace Backend.Services
             return Result.Success();
         }
 
-        public async Task<Result<List<Class>>> GetClasses()
+        public async Task<Result<List<ClassDetailsResDto>>> GetClasses()
         {
             var res=await _repo.GetClasses();
 
             if (res == null)
             {
-                return Result<List<Class>>.Failure("Classes Not Found");
+                return Result<List<ClassDetailsResDto>>.Failure("Classes Not Found");
             }
 
-            return Result<List<Class>>.Success(res);
+            var map = _mapper.Map<List<ClassDetailsResDto>>(res);
+
+            return Result<List<ClassDetailsResDto>>.Success(map);
 
         }
 

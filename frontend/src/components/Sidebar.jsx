@@ -42,6 +42,21 @@ export default function Sidebar({ isOpen, onClose }) {
       ),
     },
     {
+      label: "Attendance",
+      to: "/attendance",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="h-5 w-5"
+        >
+          <path d="M6.75 3A2.25 2.25 0 0 0 4.5 5.25v13.5A2.25 2.25 0 0 0 6.75 21h10.5A2.25 2.25 0 0 0 19.5 18.75V5.25A2.25 2.25 0 0 0 17.25 3H6.75Z" />
+          <path d="M8.25 7.5h7.5v1.5h-7.5V7.5ZM8.25 11.25h7.5v1.5h-7.5v-1.5Z" />
+        </svg>
+      ),
+    },
+    {
       label: "Teachers",
       to: "/teachers",
       icon: (
@@ -83,6 +98,21 @@ export default function Sidebar({ isOpen, onClose }) {
         >
           <path d="M6.75 4.5A2.25 2.25 0 0 0 4.5 6.75v10.5A2.25 2.25 0 0 0 6.75 19.5h7.5A2.25 2.25 0 0 0 16.5 17.25V6.75A2.25 2.25 0 0 0 14.25 4.5h-7.5Z" />
           <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75V18a1.5 1.5 0 0 1-1.5 1.5H18V7.5Z" />
+        </svg>
+      ),
+    },
+    {
+      label: "Exams",
+      to: "/exams",
+      icon: (
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+          fill="currentColor"
+          className="h-5 w-5"
+        >
+          <path d="M4.5 4.5A2.25 2.25 0 0 1 6.75 2.25h7.5A2.25 2.25 0 0 1 16.5 4.5v15a.75.75 0 0 1-1.2.6L12 17.25l-3.3 2.85a.75.75 0 0 1-1.2-.6v-15Z" />
+          <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75v9.75A1.5 1.5 0 0 1 19.5 21H18V7.5Z" />
         </svg>
       ),
     },

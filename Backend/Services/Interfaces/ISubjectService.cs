@@ -1,4 +1,5 @@
-﻿using Backend.Helper;
+﻿using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 
 namespace Backend.Services.Interfaces
@@ -11,9 +12,9 @@ namespace Backend.Services.Interfaces
 
         public Task<Result> UpdateSubject(int id,Subject subject);
 
-        public Task<Result<IEnumerable<Subject>>> GetSubjects();
+        public Task<Result<List<SubjectGradeResDto>>> GetSubjects();
 
-        public Task<Result<Subject>> GetSubjectByID(int id);
+        public Task<Result<SubjectGradeResDto>> GetSubjectByID(int id);
 
     }
 }

@@ -1,11 +1,12 @@
-﻿using Backend.Helper;
+﻿using Backend.DTOs;
+using Backend.Helper;
 using Backend.Models;
 
 namespace Backend.Services.Interfaces
 {
     public interface ISubjectGradeService
     {
-        public Task<Result> Add(SubjectGrade subjectGrade);
+        public Task<Result> Add(SubjectGradeCreateDto subjectGrade);
 
         public Task<Result> Remove(int id);
 

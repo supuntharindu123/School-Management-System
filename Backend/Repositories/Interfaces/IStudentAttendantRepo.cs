@@ -21,6 +21,8 @@ namespace Backend.Repositories.Interfaces
 
         public Task<StudentAttendances?> GetByStudentAndDate(int studentId, DateOnly date);
 
-        Task<IDbContextTransaction> BeginTransactionAsync();
+        public Task<IDbContextTransaction> BeginTransactionAsync();
+
+        public Task<List<StudentAttendances>> AllAttendance();
     }
 }

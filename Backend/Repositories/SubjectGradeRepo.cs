@@ -32,5 +32,7 @@ namespace Backend.Repositories
             _context.SubjectGrades.Remove(subjectGrade);
             await _context.SaveChangesAsync();
         }
+
+        
     }
 }

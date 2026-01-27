@@ -5,6 +5,7 @@ using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Backend.Services.Interfaces;
 using System.Transactions;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Backend.Services
 {
@@ -140,6 +141,20 @@ namespace Backend.Services
 
             return Result.Success();
 
+        }
+
+        public async Task<Result<List<StudentAttendanceResDto>>> AllAttendances()
+        {
+            var attendance = await _repo.AllAttendance();
+
+            if (attendance == null)
+            {
+                return Result<List<StudentAttendanceResDto>>.Failure("No attendance records found ");
+            }
+
+            var map = _mapper.Map<List<StudentAttendanceResDto>>(attendance);
+
+            return Result<List<StudentAttendanceResDto>>.Success(map);
         }
     }
 }

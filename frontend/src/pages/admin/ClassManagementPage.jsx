@@ -1,165 +1,178 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { Link } from "react-router-dom";
 import Button from "../../components/CommonElements/Button";
+import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
+import { getClasses } from "../../features/class/classSlice";
+import { getAllGrades } from "../../features/grade/gradeSlice";
 
-export default function ClassManagementPage() {
-  const years = ["2024-2025", "2025-2026"];
-  const [year, setYear] = useState("2025-2026");
-  const [grade, setGrade] = useState(10);
+function ClassManagementPage() {
+  const [selectedGrade, setSelectedGrade] = useState(null);
   const [query, setQuery] = useState("");
   const [assignModal, setAssignModal] = useState({
     open: false,
     classId: null,
   });
 
-  // Sample teachers list for assignment
   const teachers = [
     { id: 1, name: "John Doe" },
     { id: 2, name: "Marina Patel" },
     { id: 3, name: "Elena Garcia" },
   ];
 
-  // Sample classes for a grade per year
-  const baseSections = ["A", "B", "C"];
-  const initialClasses = baseSections.map((sec, idx) => ({
-    id: `${grade}${sec}`,
-    name: `Grade ${grade} - ${sec}`,
-    section: sec,
-    year,
-    teacher: null,
-  }));
+  const dispatch = useDispatch();
 
-  const [classes, setClasses] = useState(initialClasses);
+  const gradeList = useSelector((state) => state.grades);
+  const grades = gradeList.grades;
 
-  // Recompute when year or grade changes
-  React.useEffect(() => {
-    setClasses(
-      baseSections.map((sec) => ({
-        id: `${grade}${sec}`,
-        name: `Grade ${grade} - ${sec}`,
-        section: sec,
-        year,
-        teacher: null,
-      }))
-    );
-  }, [year, grade]);
+  const studentList = useSelector((state) => state.studentList);
+  const students = studentList.students;
 
-  const filtered = useMemo(() => {
-    return classes.filter((c) => {
-      const matchesQuery = query
-        ? c.name.toLowerCase().includes(query.toLowerCase())
-        : true;
-      return matchesQuery;
+  const classList = useSelector((state) => state.classes);
+  const classes = classList.classes;
+
+  useEffect(() => {
+    dispatch(getAllGrades());
+    dispatch(GetAllStudents());
+    dispatch(getClasses());
+  }, [dispatch]);
+
+  const gradeStats = useMemo(() => {
+    return grades.map((g) => {
+      const gradeClasses = classes.filter((c) => c.gradeId === g.id).length;
+      const studentCount = students.filter(
+        (c) => c.currentGrade == g.id,
+      ).length;
+      return { grade: g, classCount: gradeClasses, studentCount };
     });
-  }, [classes, query]);
+  }, [grades, classes, students]);
+
+  const filteredClasses = useMemo(() => {
+    const pool = selectedGrade
+      ? classes.filter((c) => c.gradeId === selectedGrade)
+      : classes;
+    return pool;
+  }, [classes, selectedGrade]);
 
   const openAssign = (row) => setAssignModal({ open: true, classId: row.id });
   const closeAssign = () => setAssignModal({ open: false, classId: null });
   const saveAssign = (teacherId) => {
     const teacher = teachers.find((t) => t.id === teacherId) || null;
     setClasses((list) =>
-      list.map((c) => (c.id === assignModal.classId ? { ...c, teacher } : c))
+      list.map((c) => (c.id === assignModal.classId ? { ...c, teacher } : c)),
     );
     closeAssign();
   };
 
   return (
     <div>
-      {/* Header */}
       <header className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-neutral-900">
             Class Management
           </h1>
           <p className="text-sm text-neutral-700">
-            Manage classes for each grade and assign class teachers
+            Manage grades, classes, and assign class teachers
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-neutral-700">Academic Year</label>
-            <select
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            >
-              {years.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex items-center gap-2">
-            <label className="text-sm text-neutral-700">Grade</label>
-            <select
-              value={grade}
-              onChange={(e) => setGrade(Number(e.target.value))}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            >
-              {Array.from({ length: 13 }, (_, i) => i + 1).map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </select>
-          </div>
-          <input
-            placeholder="Search classes"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
+          {selectedGrade && (
+            <>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-neutral-700">Grade</span>
+                <span className="rounded bg-teal-50 px-2 py-1 text-md text-teal-700 font-medium">
+                  {selectedGrade}
+                </span>
+              </div>
+
+              <button
+                onClick={() => setSelectedGrade(null)}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+              >
+                Back to Grades
+              </button>
+            </>
+          )}
         </div>
       </header>
 
-      {/* Table */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left text-neutral-800">
-                <th className="border-b border-gray-200 py-2 px-3">Class</th>
-                <th className="border-b border-gray-200 py-2 px-3">
-                  Academic Year
-                </th>
-                <th className="border-b border-gray-200 py-2 px-3">
-                  Class Teacher
-                </th>
-                <th className="border-b border-gray-200 py-2 px-3 text-right">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="text-neutral-800">
-              {filtered.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
-                  <td className="border-b border-gray-200 py-2 px-3 font-medium">
-                    {row.name}
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    {row.year}
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    {row.teacher ? row.teacher.name : "-"}
-                  </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openAssign(row)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-                      >
-                        Assign Teacher
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </section>
+      {!selectedGrade && (
+        <section className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {gradeStats.map((g) => (
+              <GradeCard
+                key={g.grade.id}
+                grade={g.grade.gradeName}
+                classCount={g.classCount}
+                studentCount={g.studentCount}
+                onClick={() => setSelectedGrade(g.grade.id)}
+              />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Assign Teacher Modal */}
+      {selectedGrade && (
+        <section className="rounded-xl border border-gray-200 bg-white">
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="text-left text-neutral-800">
+                  <th className="border-b border-gray-200 py-2 px-3">Class</th>
+                  <th className="border-b border-gray-200 py-2 px-3">
+                    Students
+                  </th>
+                  <th className="border-b border-gray-200 py-2 px-3">
+                    Class Teacher
+                  </th>
+                  <th className="border-b border-gray-200 py-2 px-3 text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="text-neutral-800">
+                {filteredClasses
+                  .filter((c) => c.gradeId === selectedGrade)
+                  .map((row) => (
+                    <tr key={row.id} className="hover:bg-gray-50">
+                      <td className="border-b border-gray-200 py-2 px-3 font-medium">
+                        {row.className}
+                      </td>
+
+                      <td className="border-b border-gray-200 py-2 px-3">
+                        {row.students.length}
+                      </td>
+                      <td className="border-b border-gray-200 py-2 px-3">
+                        {row.classTeachers?.length
+                          ? row.classTeachers
+                              .map((t) => t.teacherName)
+                              .join(" ")
+                          : "-"}
+                      </td>
+                      <td className="border-b border-gray-200 py-2 px-3">
+                        <div className="flex items-center justify-end gap-2">
+                          <button
+                            onClick={() => openAssign(row)}
+                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                          >
+                            Assign Teacher
+                          </button>
+                          <Link
+                            to={`/classes/${encodeURIComponent(row.id)}`}
+                            className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                          >
+                            View Details
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      )}
+
       {assignModal.open && (
         <AssignTeacherModal
           teachers={teachers}
@@ -168,6 +181,28 @@ export default function ClassManagementPage() {
         />
       )}
     </div>
+  );
+}
+
+function GradeCard({ grade, classCount, studentCount, onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="w-full rounded-xl border border-gray-200 bg-white p-4 text-left transition hover:border-teal-600 hover:shadow-sm"
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-xs text-neutral-500">Grade</p>
+          <p className="text-xl font-semibold text-neutral-900">{grade}</p>
+        </div>
+        <span className="rounded-md bg-teal-50 px-2 py-1 text-xs font-medium text-teal-700">
+          {classCount} classes
+        </span>
+      </div>
+      <div className="mt-3">
+        <p className="text-sm text-neutral-700">{studentCount} Students</p>
+      </div>
+    </button>
   );
 }
 
@@ -230,3 +265,5 @@ function AssignTeacherModal({ teachers, onClose, onSave }) {
     </ModalShell>
   );
 }
+
+export default ClassManagementPage;

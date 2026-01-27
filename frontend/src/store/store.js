@@ -5,6 +5,8 @@ import yearReducer from "../features/year/yearSlice";
 import gradeReducer from "../features/grade/gradeSlice";
 import classReducer from "../features/class/classSlice";
 import subjectReducer from "../features/subject/subjectSlice";
+import teacherReducer from "../features/adminFeatures/teachers/teacherSlice";
+import attendanceReducer from "../features/attendances/attendanceSlice";
 
 export const store = configureStore({
   reducer: {
@@ -14,5 +16,7 @@ export const store = configureStore({
     grades: gradeReducer,
     classes: classReducer,
     subjects: subjectReducer,
+    teachers: teacherReducer,
+    attendances: attendanceReducer,
   },
 });

@@ -63,5 +63,11 @@ namespace Backend.Repositories
         {
             return await _context.Database.BeginTransactionAsync();
         }
+
+        public async Task<List<StudentAttendances>> AllAttendance()
+        {
+            return await _context.StudentAttendances.Include(s=>s.Teacher).Include(s=>s.Student).ThenInclude(s=>s.Class).ToListAsync();
+        }
+
     }
 }

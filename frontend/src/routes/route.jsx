@@ -10,16 +10,19 @@ import StudentListPage from "../pages/admin/StudentListPage";
 import StudentProfilePage from "../pages/admin/StudentProfilePage";
 import GradeManagementPage from "../pages/admin/GradeManagementPage";
 import ClassManagementPage from "../pages/admin/ClassManagementPage";
+import ClassDetailsPage from "../pages/admin/ClassDetailsPage";
 import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
 import TeacherListPage from "../pages/admin/TeacherListPage";
 import TeacherProfilePage from "../pages/admin/TeacherProfilePage";
 import AddStudentPage from "../pages/admin/AddStudentPage";
 import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
 import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
+import ExamManagementPage from "../pages/admin/ExamManagementPage";
 
 import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import AdminRoute from "../routes/AdminRoute";
+import AttendancePage from "../pages/admin/AttendancePage";
 
 export default function RouteConfig() {
   return (
@@ -40,9 +43,12 @@ export default function RouteConfig() {
             <Route path="/grade-summary" element={<GradeSummaryPage />} />
             <Route path="/promotions" element={<StudentPromotionPage />} />
             <Route path="/classes" element={<ClassManagementPage />} />
+            <Route path="/classes/:id" element={<ClassDetailsPage />} />
             <Route path="/subjects" element={<SubjectManagementPage />} />
+            <Route path="/exams" element={<ExamManagementPage />} />
             <Route path="/teachers" element={<TeacherListPage />} />
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
+            <Route path="/attendance" element={<AttendancePage />} />
           </Route>
 
           {/* Admin only */}

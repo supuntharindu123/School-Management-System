@@ -99,6 +99,30 @@ namespace Backend.Mapping
 
             CreateMap<ExamUpdateDto, Exam>();
 
+            CreateMap<Student, StudentBasicDto>();
+
+            CreateMap<TeacherClassAssign, ClassTeacherDto>()
+                .ForMember(d => d.TeacherName,
+                    o => o.MapFrom(s => s.Teacher!.FullName));
+
+            CreateMap<TeacherSubjectClass, ClassSubjectTeacherDto>()
+                .ForMember(d => d.SubjectName,
+                    o => o.MapFrom(s => s.Subject!.SubjectName))
+                .ForMember(d => d.TeacherName,
+                    o => o.MapFrom(s => s.Teacher!.FullName));
+
+            CreateMap<Class, ClassDetailsResDto>()
+                .ForMember(d => d.ClassId, o => o.MapFrom(s => s.Id))
+                .ForMember(d => d.ClassName, o => o.MapFrom(s => s.Name))
+                .ForMember(d => d.ClassTeachers, o => o.MapFrom(s => s.TeacherClassAssign))
+                .ForMember(d => d.SubjectTeachers, o => o.MapFrom(s => s.TeacherSubjectClass));
+
+            CreateMap<Grade, GradeResDto>();
+
+            CreateMap<Subject, SubjectGradeResDto>()
+                .ForMember(d => d.Grades, opt => opt.MapFrom(s => s.SubjectGrade!.Select(s => s.Grade)));
+
+            CreateMap<SubjectGradeCreateDto, SubjectGrade>();
         }
     }
 }

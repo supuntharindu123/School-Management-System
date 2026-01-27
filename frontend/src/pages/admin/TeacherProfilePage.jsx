@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import {
   getTeacherById,
   assignClassToTeacher,
@@ -10,6 +10,7 @@ import AssignSubjectDialog from "../../components/Teacher/AssignSubjectDialog";
 
 export default function TeacherProfilePage() {
   const { id } = useParams();
+  const location = useLocation();
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -17,6 +18,10 @@ export default function TeacherProfilePage() {
   const [assignError, setAssignError] = useState(null);
   const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
   const [assignSubjectError, setAssignSubjectError] = useState(null);
+  const [initialAssign, setInitialAssign] = useState({
+    gradeId: null,
+    classId: null,
+  });
 
   useEffect(() => {
     let mounted = true;
@@ -34,6 +39,21 @@ export default function TeacherProfilePage() {
       mounted = false;
     };
   }, [id]);
+
+  // Auto-open Assign Class dialog from query params and preselect grade/class
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const shouldOpen = params.get("assign") === "class";
+    const classIdParam = params.get("classId");
+    const gradeIdParam = params.get("gradeId");
+    if (shouldOpen) {
+      setAssignOpen(true);
+      setInitialAssign({
+        gradeId: gradeIdParam ? Number(gradeIdParam) : null,
+        classId: classIdParam ? Number(classIdParam) : null,
+      });
+    }
+  }, [location.search]);
 
   if (loading) {
     return (
@@ -277,6 +297,8 @@ export default function TeacherProfilePage() {
       {assignOpen && (
         <AssignClassDialog
           teacherId={id}
+          initialGradeId={initialAssign.gradeId}
+          initialClassNameId={initialAssign.classId}
           onClose={() => setAssignOpen(false)}
           onSave={async (payload) => {
             try {

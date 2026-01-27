@@ -83,10 +83,23 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
-        [HttpGet]
+        [HttpGet("date")]
         public async Task<IActionResult> AttendantByDate([FromQuery] DateOnly date)
         {
             var res = await _service.AttendantByDate(date);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> Attendants()
+        {
+            var res = await _service.AllAttendances();
 
             if (!res.IsSuccess)
             {

@@ -19,5 +19,7 @@ namespace Backend.Services.Interfaces
         public Task<Result<List<StudentAttendanceResDto>>> AttendantByDate(DateOnly date);
 
         public Task<Result> UpdateAttendant(int id,StudentAttendances studentAttendances);
+
+        public Task<Result<List<StudentAttendanceResDto>>> AllAttendances();
     }
 }

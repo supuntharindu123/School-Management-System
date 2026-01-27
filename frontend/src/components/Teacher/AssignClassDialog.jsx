@@ -1,15 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { getGrades } from "../../features/grade/gradeService";
 import { getClassesByGrade } from "../../features/class/classService";
 import { useDispatch, useSelector } from "react-redux";
 import { getAllGrades } from "../../features/grade/gradeSlice";
+import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
 
-export default function AssignClassDialog({ teacherId, onClose, onSave }) {
+export default function AssignClassDialog({
+  teacherId,
+  gradeId,
+  classNameId,
+  isTeacher,
+  onClose,
+  onSave,
+}) {
   //   const [grades, setGrades] = useState([]);
   const [classes, setClasses] = useState([]);
   const [form, setForm] = useState({
-    gradeId: "",
-    classNameId: "",
+    teacherId: teacherId || "",
+    gradeId: gradeId || "",
+    classNameId: classNameId || "",
     role: "",
     description: "",
   });
@@ -22,30 +30,16 @@ export default function AssignClassDialog({ teacherId, onClose, onSave }) {
   const gradesList = useSelector((state) => state.grades);
   const grades = gradesList.grades;
 
+  const teachersList = useSelector((state) => state.teachers);
+  const teachers = teachersList.teachers;
+
   const ROLE_OPTIONS = ["Class Teacher", "Assistant Class Teacher"];
 
   useEffect(() => {
     dispatch(getAllGrades());
+    dispatch(getTeachers());
     setLoading(false);
   }, [dispatch]);
-
-  //   useEffect(() => {
-  //     let mounted = true;
-  //     (async () => {
-  //       try {
-  //         const gs = await getGrades();
-  //         if (mounted) {
-  //           setGrades(gs || []);
-  //           setLoading(false);
-  //         }
-  //       } catch (err) {
-  //         setLoading(false);
-  //       }
-  //     })();
-  //     return () => {
-  //       mounted = false;
-  //     };
-  //   }, []);
 
   useEffect(() => {
     (async () => {
@@ -74,9 +68,11 @@ export default function AssignClassDialog({ teacherId, onClose, onSave }) {
     setSaving(true);
     try {
       await onSave({
-        teacherId: Number(teacherId),
-        gradeId: Number(form.gradeId),
-        classNameId: form.classNameId ? Number(form.classNameId) : 0,
+        teacherId: Number(teacherId) || Number(form.teacherId),
+        gradeId: Number(form.gradeId) || Number(gradeId),
+        classNameId: form.classNameId
+          ? Number(form.classNameId)
+          : Number(classNameId),
         role: form.role || null,
         description: form.description || null,
       });
@@ -102,6 +98,23 @@ export default function AssignClassDialog({ teacherId, onClose, onSave }) {
             <p className="text-sm text-neutral-700">Loading...</p>
           ) : (
             <div className="space-y-3">
+              {isTeacher ? null : (
+                <Field label="Teacher" error={errors.gradeId}>
+                  <select
+                    value={form.teacherId}
+                    onChange={(e) => setField("teacherId", e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  >
+                    <option value="">Select</option>
+                    {teachers.map((g) => (
+                      <option key={g.id} value={g.id}>
+                        Teacher {g.fullName}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
+
               <Field label="Grade" error={errors.gradeId}>
                 <select
                   value={form.gradeId}
