@@ -10,5 +10,9 @@ namespace Backend.DTOs
         public string? email { get; set; }
 
         public UserRole role { get; set; }
+
+        public int? teacherId { get; set; }
+
+        public int? studentId { get; set; }
     }
 }

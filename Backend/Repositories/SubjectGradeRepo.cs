@@ -11,9 +11,18 @@ namespace Backend.Repositories
         public SubjectGradeRepo(AppDbContext context) { 
             _context = context;
         }
-        public async Task Add(SubjectGrade subjectGrade)
+        public async Task Add(int subjectId,List<SubjectGrade> subjectGrade)
         {
-            _context.SubjectGrades.Add(subjectGrade);
+
+            var existing=await _context.SubjectGrades.Where(s=>s.SubjectId==subjectId).ToListAsync();
+
+            if (existing.Any())
+            {
+                _context.SubjectGrades.RemoveRange(existing);
+            }
+
+            await _context.SubjectGrades.AddRangeAsync(subjectGrade);
+           
             await _context.SaveChangesAsync();
         }
 
@@ -21,6 +30,7 @@ namespace Backend.Repositories
         {
             return await _context.SubjectGrades.AsNoTracking().Include(s => s.Subject).Include(s => s.Grade).FirstOrDefaultAsync(s => s.Id == id);
         }
+
 
         public async Task<List<SubjectGrade>> GetByGrade(int gradeId)
         {

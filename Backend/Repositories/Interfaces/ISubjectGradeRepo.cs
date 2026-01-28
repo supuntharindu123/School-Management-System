@@ -4,7 +4,7 @@ namespace Backend.Repositories.Interfaces
 {
     public interface ISubjectGradeRepo
     {
-        public Task Add(SubjectGrade subjectGrade);
+        public Task Add(int subjectId,List<SubjectGrade> subjectGrade);
 
         public Task Remove(SubjectGrade subjectGrade);
 

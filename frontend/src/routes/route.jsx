@@ -23,6 +23,7 @@ import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
 import AdminRoute from "../routes/AdminRoute";
 import AttendancePage from "../pages/admin/AttendancePage";
+import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 
 export default function RouteConfig() {
   return (
@@ -49,6 +50,10 @@ export default function RouteConfig() {
             <Route path="/teachers" element={<TeacherListPage />} />
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
             <Route path="/attendance" element={<AttendancePage />} />
+
+            {/* teacher only */}
+
+            <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
           </Route>
 
           {/* Admin only */}

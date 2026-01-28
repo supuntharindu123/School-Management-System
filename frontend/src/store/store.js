@@ -7,6 +7,7 @@ import classReducer from "../features/class/classSlice";
 import subjectReducer from "../features/subject/subjectSlice";
 import teacherReducer from "../features/adminFeatures/teachers/teacherSlice";
 import attendanceReducer from "../features/attendances/attendanceSlice";
+import examReducer from "../features/exam/examSlice";
 
 export const store = configureStore({
   reducer: {
@@ -18,5 +19,6 @@ export const store = configureStore({
     subjects: subjectReducer,
     teachers: teacherReducer,
     attendances: attendanceReducer,
+    exams: examReducer,
   },
 });

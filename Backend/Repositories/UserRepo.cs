@@ -22,7 +22,7 @@ namespace Backend.Repositories
         public async Task<User?> UserByEmail(string email)
         { 
             return await _context.Users
-            .AsNoTracking()
+           .Include(u=>u.Teacher).Include(u=>u.Student)
             .FirstOrDefaultAsync(u => u.Email == email);
         }
 

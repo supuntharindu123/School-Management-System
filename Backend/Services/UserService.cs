@@ -55,6 +55,8 @@ namespace Backend.Services
                 username = user.Username,
                 email = user.Email,
                 role = user.Role,
+                teacherId=user.Teacher?.Id,
+                studentId=user.Student?.Id,
             }); 
         }
 

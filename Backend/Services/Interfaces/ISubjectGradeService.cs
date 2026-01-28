@@ -6,7 +6,7 @@ namespace Backend.Services.Interfaces
 {
     public interface ISubjectGradeService
     {
-        public Task<Result> Add(SubjectGradeCreateDto subjectGrade);
+        public Task<Result> Add(List<SubjectGradeCreateDto> subjectGrade);
 
         public Task<Result> Remove(int id);
 

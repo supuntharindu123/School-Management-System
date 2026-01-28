@@ -49,3 +49,23 @@ export const assignSubjectToTeacher = async (payload) => {
     throw error;
   }
 };
+
+export const getClassAssignmentsForTeacher = async (teacherId) => {
+  try {
+    const res = await api.get(`/teacher/class/teacher/${teacherId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching class assignments for teacher:", error);
+    throw error;
+  }
+};
+
+export const getSubjectAssignmentsForTeacher = async (teacherId) => {
+  try {
+    const res = await api.get(`/teacher/subject/teacher/${teacherId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching subject assignments for teacher:", error);
+    throw error;
+  }
+};

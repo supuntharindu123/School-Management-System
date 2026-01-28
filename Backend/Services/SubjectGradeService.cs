@@ -18,10 +18,11 @@ namespace Backend.Services
             _mapper = mapper;
         }
 
-        public async Task<Result> Add(SubjectGradeCreateDto subjectGrade)
+        public async Task<Result> Add(List<SubjectGradeCreateDto> subjectGrade)
         {
-            var map=_mapper.Map<SubjectGrade>(subjectGrade);
-            await _repo.Add(map);
+            var subjectId=subjectGrade.First().SubjectId;
+            var map=_mapper.Map<List<SubjectGrade>>(subjectGrade);
+            await _repo.Add(subjectId,map);
             return Result.Success();
         }
 

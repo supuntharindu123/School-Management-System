@@ -88,7 +88,7 @@ namespace Backend.Controllers
         }
 
         [HttpPost("grade")]
-        public async Task<IActionResult> AddSubjectGrade(SubjectGradeCreateDto subjectGrade)
+        public async Task<IActionResult> AddSubjectGrade(List<SubjectGradeCreateDto> subjectGrade)
         {
             var res=await _subjectGradeService.Add(subjectGrade);
 

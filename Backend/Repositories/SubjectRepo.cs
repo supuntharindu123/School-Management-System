@@ -34,7 +34,7 @@ namespace Backend.Repositories
 
         public async Task<List<Subject>> GetSubjects()
         {
-            return await _context.Subjects.Include(s=>s.SubjectGrade).ThenInclude(sg=>sg.Grade).ToListAsync();
+            return await _context.Subjects.Include(s=>s.SubjectGrade).ThenInclude(sg=>sg.Grade).OrderByDescending(s => s.Id).ToListAsync();
         }
 
         public async Task UpdateSubject(Subject subject)

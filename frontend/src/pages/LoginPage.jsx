@@ -7,15 +7,17 @@ import { login } from "../features/auth/authSlice";
 export default function LoginPage() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  // const { user, loading, error, isAuthenticated } = useSelector(
-  //   (state) => state.auth
-  // );
+  const { user } = useSelector((state) => state.auth);
 
   const handleLogin = async (credentials) => {
     const res = await dispatch(login(credentials));
     console.log(res);
     if (res.type === "auth/login/fulfilled") {
-      navigate("/admin");
+      if (res.payload.role == 1) {
+        navigate("/teacher/dashboard");
+      } else if (res.payload.role == 0) {
+        navigate("/admin");
+      }
     }
   };
 

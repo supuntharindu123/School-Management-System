@@ -11,13 +11,14 @@ export const login = createAsyncThunk(
     } catch (err) {
       return error.rejectWithValue(err.response.data);
     }
-  }
+  },
 );
 
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    user: getToken(),
+    user: null,
+    token: getToken(),
     loading: false,
     error: null,
     isAuthenticated: !!getToken(),
@@ -37,9 +38,16 @@ const authSlice = createSlice({
       })
       .addCase(login.fulfilled, (state, action) => {
         state.loading = false;
-        const { token, username, email, role } = action.payload;
+        const { token, username, email, role, teacherId, studentId } =
+          action.payload;
         setToken(token);
-        state.user = { username, email, role };
+        state.user = {
+          username,
+          email,
+          role,
+          teacherId: teacherId ?? null,
+          studentId: studentId ?? null,
+        };
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {
