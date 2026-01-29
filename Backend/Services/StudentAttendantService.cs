@@ -135,9 +135,9 @@ namespace Backend.Services
                 return Result.Failure("Attendance can only be updated on the same day it was marked");
             }
 
-            _mapper.Map(studentAttendances, attendant);
+            attendant.IsPresent = studentAttendances.IsPresent;
 
-            await _repo.UpdateAttendant(attendant);
+            await _repo.UpdateAttendant();
 
             return Result.Success();
 

@@ -28,8 +28,7 @@ namespace Backend.Repositories
 
         public async Task<User?> UserById(int id)
         {
-            return await _context.Users
-            .AsNoTracking()
+            return await _context.Users.Include(u=>u.Teacher).Include(u=>u.Student)
             .FirstOrDefaultAsync(u => u.Id == id);
         }
 
@@ -38,5 +37,6 @@ namespace Backend.Repositories
             _context.Users.Remove(user);
             await _context.SaveChangesAsync();
         }
+
     }
 }

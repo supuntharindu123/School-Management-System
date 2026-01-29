@@ -13,8 +13,6 @@ namespace Backend.DTOs
         public string? Role { get; set; }
 
         [Required]
-        public int GradeId { get; set; }
-
-        public int ClassNameId {  get; set; }
+        public int ClassId { get; set; }
     }
 }

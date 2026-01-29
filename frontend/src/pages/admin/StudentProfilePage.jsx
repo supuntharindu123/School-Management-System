@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import React, { useEffect, useMemo, useState } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { GetStudentById } from "../../features/adminFeatures/students/studentService";
 import EditStudentDialog from "../../components/Student/EditStudentDialog";
 import DeleteStudentDialog from "../../components/Student/DeleteStudentDialog";
+import { useSelector } from "react-redux";
+import { GetAttendanceByStudent } from "../../features/attendances/attendanceService";
 
 export default function StudentProfilePage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [tab, setTab] = useState("personal");
   const [details, setDetails] = useState({});
   const [openEdit, setOpenEdit] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [openDelete, setOpenDelete] = useState(false);
+  const [attRecords, setAttRecords] = useState([]);
+  const [attLoading, setAttLoading] = useState(false);
+  const [attError, setAttError] = useState(null);
 
   const tabs = [
     { key: "personal", label: "Personal Information" },
-    { key: "guardian", label: "Guardian Details" },
     { key: "attendance", label: "Attendance Summary" },
     { key: "exams", label: "Exam Results Summary" },
   ];
+
+  const { user } = useSelector((state) => state.auth);
 
   const fetchStudent = async () => {
     try {
@@ -32,20 +39,51 @@ export default function StudentProfilePage() {
     fetchStudent();
   }, [id]);
 
-  console.log("Student details:", details);
+  useEffect(() => {
+    const fetchAttendance = async () => {
+      try {
+        setAttLoading(true);
+        setAttError(null);
+        const res = await GetAttendanceByStudent(id);
+        setAttRecords(Array.isArray(res) ? res : []);
+      } catch (err) {
+        setAttError(
+          err?.response?.data || err?.message || "Failed to load attendance",
+        );
+      } finally {
+        setAttLoading(false);
+      }
+    };
+    fetchAttendance();
+  }, [id]);
 
-  const attendance = {
-    presentDays: 132,
-    absentDays: 8,
-    lateDays: 4,
-    percentage: 94,
-    monthly: [
-      { month: "Sep", pct: 95 },
-      { month: "Oct", pct: 92 },
-      { month: "Nov", pct: 96 },
-      { month: "Dec", pct: 93 },
-    ],
-  };
+  const attendance = useMemo(() => {
+    const total = attRecords.length;
+    const presentDays = attRecords.filter(
+      (a) => (a.isPresent ?? a.IsPresent) === true,
+    ).length;
+    const absentDays = total - presentDays;
+    const percentage = total ? Math.round((presentDays / total) * 100) : 0;
+    const monthStats = new Map();
+    attRecords.forEach((a) => {
+      const ds = a.date ?? a.Date;
+      if (!ds) return;
+      const d = new Date(`${ds}T00:00:00`);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleString(undefined, { month: "short" });
+      const cur = monthStats.get(key) || { label, total: 0, present: 0 };
+      cur.total += 1;
+      if ((a.isPresent ?? a.IsPresent) === true) cur.present += 1;
+      monthStats.set(key, cur);
+    });
+    const monthly = Array.from(monthStats.entries())
+      .sort((a, b) => (a[0] < b[0] ? -1 : 1))
+      .map(([_, v]) => ({
+        month: v.label,
+        pct: v.total ? Math.round((v.present / v.total) * 100) : 0,
+      }));
+    return { presentDays, absentDays, percentage, monthly };
+  }, [attRecords]);
 
   const exams = [
     { exam: "Midterm", subject: "Mathematics", score: 88, grade: "A" },
@@ -91,29 +129,34 @@ export default function StudentProfilePage() {
             Student Profile
           </h1>
           <p className="text-sm text-neutral-700">
-            Student ID: {details.studentIDNumber} • Grade {details.grade}-
-            {details.class} • {details.academicYear}
+            Student ID: {details.studentIDNumber}
           </p>
         </div>
         <div className="flex gap-2">
-          <Link
-            to="/students"
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
           >
-            Back to List
-          </Link>
-          <button
-            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
-            onClick={() => onEdit(details)}
-          >
-            Edit Profile
+            Back
           </button>
-          <button
-            className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
-            onClick={() => onDelete(details)}
-          >
-            Delete
-          </button>
+
+          {user?.role === 0 && (
+            <>
+              <button
+                className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                onClick={() => onEdit(details)}
+              >
+                Edit Profile
+              </button>
+              <button
+                className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-medium text-white hover:bg-rose-700"
+                onClick={() => onDelete(details)}
+              >
+                Delete
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -187,31 +230,11 @@ export default function StudentProfilePage() {
                 <Field label="City" value={details.city} />
                 <Field label="Class" value={details.currentClass} />
                 <Field label="GuardianDate" value={details.guardianDate} />
+                <Field
+                  label={details.guardianRelation}
+                  value={details.guardianName}
+                />
               </div>
-            </section>
-          )}
-
-          {/* Guardian Details */}
-          {tab === "guardian" && (
-            <section
-              role="tabpanel"
-              id="panel-guardian"
-              aria-labelledby="tab-guardian"
-              className="rounded-xl border border-gray-200 bg-white p-4"
-            >
-              <h2 className="text-sm font-medium text-neutral-800">
-                Guardian Details
-              </h2>
-              <ul className="mt-3 space-y-3">
-                <li className="rounded-lg border border-gray-200 p-3">
-                  <p className="font-medium text-neutral-900">
-                    {details.guardianRelation}: {details.guardianName}
-                  </p>
-                  <p className="text-sm text-neutral-700">
-                    Phone: {} • Email: {}
-                  </p>
-                </li>
-              </ul>
             </section>
           )}
 
@@ -226,6 +249,16 @@ export default function StudentProfilePage() {
               <h2 className="text-sm font-medium text-neutral-800">
                 Attendance Summary
               </h2>
+              {attLoading && (
+                <div className="mt-2 text-sm text-neutral-700">
+                  Loading attendance...
+                </div>
+              )}
+              {attError && (
+                <div className="mt-2 text-sm text-rose-700">
+                  {String(attError)}
+                </div>
+              )}
               <div className="mt-3 grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div className="rounded-lg border border-gray-200 p-4">
                   <p className="text-sm text-neutral-700">
@@ -259,9 +292,9 @@ export default function StudentProfilePage() {
                   Monthly Trend
                 </p>
                 <div className="mt-2 grid grid-cols-4 gap-3">
-                  {attendance.monthly.map((m) => (
+                  {attendance.monthly.map((m, idx) => (
                     <div
-                      key={m.month}
+                      key={`${m.month}-${idx}`}
                       className="rounded-lg border border-gray-200 p-3 text-center"
                     >
                       <p className="text-xs text-neutral-600">{m.month}</p>
@@ -270,6 +303,81 @@ export default function StudentProfilePage() {
                       </p>
                     </div>
                   ))}
+                </div>
+              </div>
+
+              {/* Attendance Records */}
+              <div className="mt-6">
+                <p className="text-sm font-medium text-neutral-800">
+                  Attendance Records
+                </p>
+                <div className="mt-2 overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="text-left text-neutral-800">
+                        <th className="border-b border-gray-200 py-2 px-3">
+                          Date
+                        </th>
+                        <th className="border-b border-gray-200 py-2 px-3">
+                          Class
+                        </th>
+                        <th className="border-b border-gray-200 py-2 px-3">
+                          Teacher
+                        </th>
+                        <th className="border-b border-gray-200 py-2 px-3">
+                          Present
+                        </th>
+                        <th className="border-b border-gray-200 py-2 px-3">
+                          Reason
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="text-neutral-800">
+                      {attRecords
+                        .slice()
+                        .sort((a, b) => {
+                          const da = new Date(
+                            `${(a.date ?? a.Date) || "1970-01-01"}T00:00:00`,
+                          ).getTime();
+                          const db = new Date(
+                            `${(b.date ?? b.Date) || "1970-01-01"}T00:00:00`,
+                          ).getTime();
+                          return db - da;
+                        })
+                        .map((r, idx) => (
+                          <tr
+                            key={`${r.id ?? r.Id}-${idx}`}
+                            className="hover:bg-gray-50"
+                          >
+                            <td className="border-b border-gray-200 py-2 px-3">
+                              {r.date ?? r.Date}
+                            </td>
+                            <td className="border-b border-gray-200 py-2 px-3">
+                              {r.className ?? r.ClassName ?? "-"}
+                            </td>
+                            <td className="border-b border-gray-200 py-2 px-3">
+                              {r.teacherName ?? r.TeacherName ?? "-"}
+                            </td>
+                            <td className="border-b border-gray-200 py-2 px-3">
+                              {(r.isPresent ?? r.IsPresent) ? "Yes" : "No"}
+                            </td>
+                            <td className="border-b border-gray-200 py-2 px-3">
+                              {(r.reason ?? r.Reason) || "-"}
+                            </td>
+                          </tr>
+                        ))}
+                      {(!attRecords || attRecords.length === 0) && (
+                        <tr>
+                          <td
+                            colSpan={5}
+                            className="py-8 text-center text-neutral-600"
+                          >
+                            No attendance records.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
             </section>

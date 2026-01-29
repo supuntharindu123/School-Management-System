@@ -1,13 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
-import Button from "../../components/CommonElements/Button";
+import { useDispatch, useSelector } from "react-redux";
 import { getTeacherById } from "../../features/adminFeatures/teachers/teacherService";
-import api from "../../services/api";
+import { useNavigate } from "react-router-dom";
 
 export default function TeacherDashboard() {
-  const { user } = useSelector((s) => s.auth);
-  const [teachers, setTeachers] = useState([]);
-  const [teacherId, setTeacherId] = useState("");
   const [teacherInfo, setTeacherInfo] = useState(null);
 
   const [classes, setClasses] = useState([]);
@@ -17,10 +13,16 @@ export default function TeacherDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
+  const { user } = useSelector((s) => s.auth);
+
   console.log("user", user);
 
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (!user || user.role !== 1) return;
+    if (!user || user.role !== 1) {
+      console.warn("User is not a teacher or not logged in");
+    }
 
     const fetchTeacherData = async () => {
       try {
@@ -40,10 +42,11 @@ export default function TeacherDashboard() {
     fetchTeacherData();
   }, [user]);
 
-  console.log("teacherInfo", teacherInfo);
+  const classDetails = (id) => {
+    navigate(`/classes/${id}`);
+  };
 
-  const totalClasses = classes.length;
-  const totalSubjects = subjects.length;
+  console.log("teacherInfo", teacherInfo);
 
   const upcomingExams = useMemo(() => {
     const now = new Date();
@@ -101,7 +104,13 @@ export default function TeacherDashboard() {
             </thead>
             <tbody className="text-neutral-800">
               {(classes || []).map((c) => (
-                <tr key={c.id} className="hover:bg-gray-50">
+                <tr
+                  key={c.id}
+                  className="hover:bg-gray-50"
+                  onClick={() => {
+                    classDetails(c.classId);
+                  }}
+                >
                   <td className="border-b border-gray-200 py-2 px-3">
                     {c.className || `Class #${c.classId}`}
                   </td>

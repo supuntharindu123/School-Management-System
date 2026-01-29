@@ -1,6 +1,13 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import { Login } from "./authApi";
-import { getToken, removeToken, setToken } from "../../services/tokenservice";
+import {
+  getToken,
+  getUser,
+  removeToken,
+  removeUser,
+  setToken,
+  setUser,
+} from "../../services/tokenservice";
 
 export const login = createAsyncThunk(
   "auth/login",
@@ -17,7 +24,7 @@ export const login = createAsyncThunk(
 const authSlice = createSlice({
   name: "auth",
   initialState: {
-    user: null,
+    user: getUser() || null,
     token: getToken(),
     loading: false,
     error: null,
@@ -28,6 +35,7 @@ const authSlice = createSlice({
       state.user = null;
       state.isAuthenticated = false;
       removeToken();
+      removeUser();
     },
   },
   extraReducers: (builder) => {
@@ -41,13 +49,15 @@ const authSlice = createSlice({
         const { token, username, email, role, teacherId, studentId } =
           action.payload;
         setToken(token);
-        state.user = {
+        const user = {
           username,
           email,
           role,
           teacherId: teacherId ?? null,
           studentId: studentId ?? null,
         };
+        state.user = user;
+        setUser(user);
         state.isAuthenticated = true;
       })
       .addCase(login.rejected, (state, action) => {

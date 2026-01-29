@@ -42,10 +42,8 @@ namespace Backend.Services
                 tasks.UpdatedDate= DateTime.Now;
             }
 
-            var classID = await _classRepo.GetClassByIDs(task.GradeId, task.ClassNameId);
-
             var newTask = _mapper.Map<TeacherClassAssign>(task);
-            newTask.ClassId = classID!.Id;
+            newTask.ClassId = task.ClassId;
             newTask.IsActive = true;
             newTask.CreatedDate = DateTime.Now;
             newTask.UpdatedDate = null;

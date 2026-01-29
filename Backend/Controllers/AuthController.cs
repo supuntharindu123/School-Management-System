@@ -1,7 +1,10 @@
 ﻿using Backend.DTOs;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace Backend.Controllers
 {
@@ -37,5 +40,42 @@ namespace Backend.Controllers
             }
             return Ok(token.Data);
         }
+
+        [Authorize]
+        [HttpGet("me")]
+        public async Task<IActionResult> Me()
+        {
+            var userIdClaim = User.FindFirst("userId")?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized("Invalid token");
+
+            if (!int.TryParse(userIdClaim, out int userId))
+                return Unauthorized("Invalid token");
+
+            var result = await _service.UserByID(userId);
+
+            if (!result.IsSuccess)
+                return NotFound(result.Error);
+
+            var user = result.Data!;
+
+            return Ok(new
+            {
+                userId = user.Id,
+                email = user.Email,
+                role = user.Role,
+                teacherId = user.Teacher?.Id,
+                studentId = user.Student?.Id
+            });
+        }
+
+       
+        [HttpGet("ping")]
+        public IActionResult Ping()
+        {
+            return Ok("TOKEN WORKS");
+        }
+
     }
 }

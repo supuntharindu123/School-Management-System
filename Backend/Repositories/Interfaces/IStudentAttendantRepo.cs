@@ -17,7 +17,7 @@ namespace Backend.Repositories.Interfaces
 
         public Task<List<StudentAttendances>> AttendantByDate(DateOnly date);
 
-        public Task UpdateAttendant(StudentAttendances studentAttendances);
+        public Task UpdateAttendant();
 
         public Task<StudentAttendances?> GetByStudentAndDate(int studentId, DateOnly date);
 

@@ -8,7 +8,6 @@ import { getAllGrades } from "../../features/grade/gradeSlice";
 
 function ClassManagementPage() {
   const [selectedGrade, setSelectedGrade] = useState(null);
-  const [query, setQuery] = useState("");
   const [assignModal, setAssignModal] = useState({
     open: false,
     classId: null,

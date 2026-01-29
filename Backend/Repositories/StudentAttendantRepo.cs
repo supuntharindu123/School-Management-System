@@ -47,9 +47,9 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task UpdateAttendant(StudentAttendances studentAttendances)
+        public async Task UpdateAttendant()
         {
-            _context.StudentAttendances.Update(studentAttendances);
+            
             await _context.SaveChangesAsync();
         }
 
