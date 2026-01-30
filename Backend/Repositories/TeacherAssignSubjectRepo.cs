@@ -41,7 +41,7 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
         }
 
-        public async Task Update(TeacherSubjectClass teacherSubjectClass)
+        public async Task Update()
         {
             await _context.SaveChangesAsync();
         }

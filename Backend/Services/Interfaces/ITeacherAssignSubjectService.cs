@@ -17,5 +17,7 @@ namespace Backend.Services.Interfaces
         public Task<Result> Update(int id,AssignTeacherSubjectDto teacherSubjectClass);
 
         public Task<Result<AssignTeacherSubjectResDto?>> GetById(int id);
+
+        public Task<Result> TerminateSubjectAssign(int id);
     }
 }

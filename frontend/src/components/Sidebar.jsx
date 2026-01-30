@@ -6,7 +6,13 @@ import logo from "../assets/school-logo.svg";
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
-  const dashboardLink = user && user.role == 0 ? "/admin" : "/teacher";
+  const dashboardLink = user
+    ? user.role == 0
+      ? "/admin"
+      : user.role == 2
+        ? "/student/dashboard"
+        : "/teacher"
+    : "/teacher";
   const isActive = (to) =>
     location.pathname === to || location.pathname.startsWith(`${to}/`);
 

@@ -36,17 +36,14 @@ namespace Backend.Services
                     if (student == null)
                         return Result.Failure("Student not found");
 
-                    // always get ACTIVE history
                     var activeHistory = await _historyRepo.GetById(promo.StudentId);
                     if (activeHistory == null)
                         return Result.Failure("Active academic history not found");
 
-                    // close current history
                     activeHistory.EndDate = DateTime.UtcNow;
                     activeHistory.Status = promo.Status;
                     await _historyRepo.UpdateStudentHistory(activeHistory);
-
-                    // ================= PROMOTED =================
+                
                     if (promo.Status == "Promoted")
                     {
                         var classEntity = await _classRepo.GetClassById(promo.ClassId);
@@ -63,33 +60,31 @@ namespace Backend.Services
 
                         student.ClassId = classEntity.Id;
                         student.AcademicYearId = promo.AcademicYearId;
-                        // ❌ DO NOT touch student.Status
+                       
                     }
 
-                    // ================= REPEATED =================
                     else if (promo.Status == "Repeated")
                     {
                         var newHistory = _mapper.Map<StudentAcademicHistory>(promo);
                         newHistory.StudentId = student.Id;
-                        newHistory.ClassId = student.ClassId; // same class
+                        newHistory.ClassId = student.ClassId; 
                         newHistory.AcademicYearId = promo.AcademicYearId;
                         newHistory.Status = "Repeated";
 
                         await _historyRepo.AddStudentHistory(newHistory);
 
                         student.AcademicYearId = promo.AcademicYearId;
-                        // ❌ DO NOT touch student.Status
+
                     }
 
-                    // ================= COMPLETED / LEAVING =================
+
                     else if (promo.Status == "Completed" || promo.Status == "Leaving")
                     {
                         student.Status = promo.Status;
-                        // ❌ no new academic history
-                        // ❌ no class/year change
+
                     }
 
-                    await _studentRepo.UpdateStudent(student);
+                    await _studentRepo.UpdateStudent();
                 }
 
                 await transaction.CommitAsync();

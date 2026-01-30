@@ -4,7 +4,15 @@ import Button from "../../components/CommonElements/Button";
 import { getClassDetails } from "../../services/classes";
 import { assignClassToTeacher } from "../../features/adminFeatures/teachers/teacherService";
 import AssignClassDialog from "../../components/Teacher/AssignClassDialog";
+import AssignSubjectDialog from "../../components/Teacher/AssignSubjectDialog";
 import { useSelector } from "react-redux";
+import Modal from "../../components/modal";
+import {
+  assignSubjectToTeacher,
+  getClassAssignmentsForTeacher,
+  terminateClassAssignment,
+  terminateSubjectAssignment,
+} from "../../features/adminFeatures/teachers/teacherService";
 import {
   MarkStudentAttendances,
   GetClassAttendanceByDate,
@@ -42,6 +50,26 @@ export default function ClassDetailsPage() {
   const [todayAttendanceExists, setTodayAttendanceExists] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState(null);
+  const [classHistoryOpen, setClassHistoryOpen] = useState(false);
+  const [subjectHistoryOpen, setSubjectHistoryOpen] = useState(false);
+  const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
+  const [assignSubjectError, setAssignSubjectError] = useState(null);
+  const [terminatingKey, setTerminatingKey] = useState(null);
+  const [confirmClass, setConfirmClass] = useState({
+    open: false,
+    teacherId: null,
+    name: "",
+  });
+  const [confirmSubject, setConfirmSubject] = useState({
+    open: false,
+    subjectId: null,
+    subject: "",
+    className: "",
+  });
+  const [busyTerminateClass, setBusyTerminateClass] = useState(false);
+  const [busyTerminateSubject, setBusyTerminateSubject] = useState(false);
 
   const navigate = useNavigate();
 
@@ -137,6 +165,52 @@ export default function ClassDetailsPage() {
     navigate(`/students/${studentId}`);
   };
 
+  const terminateClassForTeacher = async (teacherId) => {
+    const key = `ct-${teacherId}`;
+    setTerminatingKey(key);
+    try {
+      const assignments = await getClassAssignmentsForTeacher(teacherId);
+      const match = (assignments || []).find(
+        (a) =>
+          (a.classId ?? a.ClassId) === details.classId &&
+          (a.isActive ?? a.IsActive),
+      );
+      if (!match) {
+        alert("Active class assignment not found for this teacher.");
+        return;
+      }
+      await terminateClassAssignment(match.id ?? match.Id);
+      const refreshed = await getClassDetails(id);
+      setDetails(refreshed);
+    } catch (err) {
+      alert(
+        err?.response?.data ||
+          err?.message ||
+          "Failed to terminate class assignment.",
+      );
+    } finally {
+      setTerminatingKey(null);
+    }
+  };
+
+  const terminateSubjectForTeacher = async (teacherId, subjectId) => {
+    const key = `st-${teacherId}-${subjectId}`;
+    setTerminatingKey(key);
+    try {
+      await terminateSubjectAssignment(subjectId);
+      const refreshed = await getClassDetails(id);
+      setDetails(refreshed);
+    } catch (err) {
+      alert(
+        err?.response?.data ||
+          err?.message ||
+          "Failed to terminate subject assignment.",
+      );
+    } finally {
+      setTerminatingKey(null);
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -150,6 +224,12 @@ export default function ClassDetailsPage() {
         <div className="flex items-center gap-2">
           {user.role === 0 && (
             <>
+              <Link
+                to={`/teachers?assign=class&classId=${encodeURIComponent(details.classId)}`}
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+              >
+                Back
+              </Link>
               <Button
                 label={
                   activeClassTeacher
@@ -159,12 +239,10 @@ export default function ClassDetailsPage() {
                 onClick={() => setAssignOpen(true)}
               />
 
-              <Link
-                to={`/teachers?assign=class&classId=${encodeURIComponent(details.classId)}`}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-              >
-                Go to Teacher Assignment
-              </Link>
+              <Button
+                label="Assign Subject Teacher"
+                onClick={() => setAssignSubjectOpen(true)}
+              />
             </>
           )}
         </div>
@@ -228,25 +306,82 @@ export default function ClassDetailsPage() {
               <p className="text-sm font-semibold text-neutral-900">
                 Class Teachers
               </p>
+              {classTeachers.some((t) => !t.isActive) && (
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  onClick={() => setClassHistoryOpen((v) => !v)}
+                >
+                  {classHistoryOpen ? "Hide History" : "Show History"}
+                </button>
+              )}
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {classTeachers.map((t) => (
-                  <div
-                    key={`${t.teacherId}-${t.role}`}
-                    className="rounded-lg border border-gray-200 p-3 text-sm"
-                  >
-                    <p className="font-medium text-neutral-900">
-                      {t.teacherName}
-                    </p>
-                    <p className="text-neutral-700">Role: {t.role}</p>
-                    <p className="text-neutral-700">
-                      Active: {t.isActive ? "Yes" : "No"}
-                    </p>
+                {classTeachers
+                  .filter((t) => t.isActive)
+                  .map((t) => (
+                    <div
+                      key={`${t.teacherId}-${t.role}`}
+                      className="rounded-lg border border-gray-200 p-3 text-sm"
+                    >
+                      <p className="font-medium text-neutral-900">
+                        {t.teacherName}
+                      </p>
+                      <p className="text-neutral-700">Role: {t.role}</p>
+                      <p className="text-neutral-700">Active: Yes</p>
+                      {user.role === 0 && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `ct-${t.teacherId}` ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+                            disabled={terminatingKey === `ct-${t.teacherId}`}
+                            onClick={() =>
+                              setConfirmClass({
+                                open: true,
+                                teacherId: t.teacherId,
+                                name: t.teacherName,
+                              })
+                            }
+                          >
+                            {terminatingKey === `ct-${t.teacherId}`
+                              ? "Terminating..."
+                              : "Terminate"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                {classTeachers.filter((t) => t.isActive).length === 0 && (
+                  <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-700">
+                    No active class teacher assignments.
                   </div>
-                ))}
+                )}
               </div>
             </div>
+            {classHistoryOpen && (
+              <div className="border-t px-4 py-3">
+                <p className="text-sm font-semibold text-neutral-900">
+                  History
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {classTeachers
+                    .filter((t) => !t.isActive)
+                    .map((t) => (
+                      <div
+                        key={`${t.teacherId}-${t.role}-hist`}
+                        className="rounded-lg border border-gray-200 p-3 text-sm"
+                      >
+                        <p className="font-medium text-neutral-900">
+                          {t.teacherName}
+                        </p>
+                        <p className="text-neutral-700">Role: {t.role}</p>
+                        <p className="text-neutral-700">Status: Inactive</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </section>
 
           {/* Subject Teachers */}
@@ -255,27 +390,91 @@ export default function ClassDetailsPage() {
               <p className="text-sm font-semibold text-neutral-900">
                 Subject Teachers
               </p>
+              {subjectTeachers.some((st) => !st.isActive) && (
+                <button
+                  type="button"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  onClick={() => setSubjectHistoryOpen((v) => !v)}
+                >
+                  {subjectHistoryOpen ? "Hide History" : "Show History"}
+                </button>
+              )}
             </div>
             <div className="p-4">
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {subjectTeachers.map((st) => (
-                  <div
-                    key={`${st.subjectId}-${st.teacherId}`}
-                    className="rounded-lg border border-gray-200 p-3 text-sm"
-                  >
-                    <p className="font-medium text-neutral-900">
-                      {st.subjectName}
-                    </p>
-                    <p className="text-neutral-700">
-                      Teacher: {st.teacherName}
-                    </p>
-                    <p className="text-neutral-700">
-                      Active: {st.isActive ? "Yes" : "No"}
-                    </p>
+                {subjectTeachers
+                  .filter((st) => st.isActive)
+                  .map((st) => (
+                    <div
+                      key={`${st.subjectId}-${st.teacherId}`}
+                      className="rounded-lg border border-gray-200 p-3 text-sm"
+                    >
+                      <p className="font-medium text-neutral-900">
+                        {st.subjectName}
+                      </p>
+                      <p className="text-neutral-700">
+                        Teacher: {st.teacherName}
+                      </p>
+                      <p className="text-neutral-700">Active: Yes</p>
+                      {user.role === 0 && (
+                        <div className="mt-2">
+                          <button
+                            type="button"
+                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `st-${st.teacherId}-${st.subjectId}` ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+                            disabled={
+                              terminatingKey ===
+                              `st-${st.teacherId}-${st.subjectId}`
+                            }
+                            onClick={() =>
+                              setConfirmSubject({
+                                open: true,
+                                subjectId: st.subjectId,
+                                subject: st.subjectName,
+                                className: details.className,
+                              })
+                            }
+                          >
+                            {terminatingKey ===
+                            `st-${st.teacherId}-${st.subjectId}`
+                              ? "Terminating..."
+                              : "Terminate"}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                {subjectTeachers.filter((st) => st.isActive).length === 0 && (
+                  <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-700">
+                    No active subject teacher assignments.
                   </div>
-                ))}
+                )}
               </div>
             </div>
+            {subjectHistoryOpen && (
+              <div className="border-t px-4 py-3">
+                <p className="text-sm font-semibold text-neutral-900">
+                  History
+                </p>
+                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                  {subjectTeachers
+                    .filter((st) => !st.isActive)
+                    .map((st) => (
+                      <div
+                        key={`${st.subjectId}-${st.teacherId}-hist`}
+                        className="rounded-lg border border-gray-200 p-3 text-sm"
+                      >
+                        <p className="font-medium text-neutral-900">
+                          {st.subjectName}
+                        </p>
+                        <p className="text-neutral-700">
+                          Teacher: {st.teacherName}
+                        </p>
+                        <p className="text-neutral-700">Status: Inactive</p>
+                      </div>
+                    ))}
+                </div>
+              </div>
+            )}
           </section>
         </>
       )}
@@ -613,6 +812,81 @@ export default function ClassDetailsPage() {
           }}
         />
       )}
+
+      {assignSubjectOpen && (
+        <AssignSubjectDialog
+          isTeacher={false}
+          gradeId={details.gradeId}
+          classId={details.classId}
+          onClose={() => setAssignSubjectOpen(false)}
+          onSave={async (payload) => {
+            try {
+              setAssignSubjectError(null);
+              await assignSubjectToTeacher(payload);
+              const refreshed = await getClassDetails(id);
+              setDetails(refreshed);
+              setAssignSubjectOpen(false);
+            } catch (err) {
+              setAssignSubjectError(
+                "Failed to assign subject. Please try again.",
+              );
+            }
+          }}
+        />
+      )}
+
+      {/* Confirm terminate class assignment */}
+      {confirmClass.open && (
+        <ConfirmClassTerminate
+          open={confirmClass.open}
+          name={confirmClass.name}
+          busy={busyTerminateClass}
+          onCancel={() =>
+            setConfirmClass({ open: false, teacherId: null, name: "" })
+          }
+          onConfirm={async () => {
+            try {
+              setBusyTerminateClass(true);
+              await terminateClassForTeacher(confirmClass.teacherId);
+              setConfirmClass({ open: false, teacherId: null, name: "" });
+            } finally {
+              setBusyTerminateClass(false);
+            }
+          }}
+        />
+      )}
+
+      {/* Confirm terminate subject assignment */}
+      {confirmSubject.open && (
+        <ConfirmSubjectTerminate
+          open={confirmSubject.open}
+          subject={confirmSubject.subject}
+          className={confirmSubject.className}
+          busy={busyTerminateSubject}
+          onCancel={() =>
+            setConfirmSubject({
+              open: false,
+              subjectId: null,
+              subject: "",
+              className: "",
+            })
+          }
+          onConfirm={async () => {
+            try {
+              setBusyTerminateSubject(true);
+              await terminateSubjectForTeacher(null, confirmSubject.subjectId);
+              setConfirmSubject({
+                open: false,
+                subjectId: null,
+                subject: "",
+                className: "",
+              });
+            } finally {
+              setBusyTerminateSubject(false);
+            }
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -786,5 +1060,83 @@ function TeacherAttendanceSection({ students, teacherId, onSuccess }) {
         </div>
       </div>
     </section>
+  );
+}
+
+function ConfirmClassTerminate({ open, name, busy, onCancel, onConfirm }) {
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title="Terminate Class Assignment"
+      footer={
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+            onClick={onConfirm}
+            disabled={busy}
+          >
+            {busy ? "Terminating..." : "Confirm"}
+          </button>
+        </div>
+      }
+    >
+      <p className="text-sm text-neutral-800">
+        Are you sure you want to terminate the class assignment for
+        <span className="font-semibold"> {name} </span>?
+      </p>
+    </Modal>
+  );
+}
+
+function ConfirmSubjectTerminate({
+  open,
+  subject,
+  className,
+  busy,
+  onCancel,
+  onConfirm,
+}) {
+  return (
+    <Modal
+      open={open}
+      onClose={onCancel}
+      title="Terminate Subject Assignment"
+      footer={
+        <div className="flex justify-end gap-2">
+          <button
+            type="button"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            onClick={onCancel}
+            disabled={busy}
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+            onClick={onConfirm}
+            disabled={busy}
+          >
+            {busy ? "Terminating..." : "Confirm"}
+          </button>
+        </div>
+      }
+    >
+      <p className="text-sm text-neutral-800">
+        Are you sure you want to terminate the{" "}
+        <span className="font-semibold">{subject}</span> assignment for class
+        <span className="font-semibold"> {className}</span>?
+      </p>
+    </Modal>
   );
 }

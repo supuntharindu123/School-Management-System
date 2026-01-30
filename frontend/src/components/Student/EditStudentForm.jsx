@@ -105,13 +105,17 @@ export default function EditStudentForm({ student, onSuccess }) {
             <label className="block text-sm font-medium text-neutral-800">
               Gender*
             </label>
-            <input
+            <select
               name="Gender"
               value={form.Gender}
               onChange={handleChange}
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-              placeholder="Male / Female"
-            />
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
           <div>
             <label className="block text-sm font-medium text-neutral-800">

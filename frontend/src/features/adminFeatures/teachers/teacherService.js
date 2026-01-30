@@ -50,6 +50,29 @@ export const assignSubjectToTeacher = async (payload) => {
   }
 };
 
+export const getAllSubjectAssignments = async () => {
+  try {
+    const res = await api.get("/teacher/subject/assign");
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching all subject assignments:", error);
+    throw error;
+  }
+};
+
+export const terminateSubjectAssignment = async (assignmentId) => {
+  try {
+    const res = await api.put(`/teacher/subject/assign/${assignmentId}`);
+    return res.data;
+  } catch (error) {
+    console.error(
+      `Error terminating subject assignment ${assignmentId}:`,
+      error,
+    );
+    throw error;
+  }
+};
+
 export const getClassAssignmentsForTeacher = async (teacherId) => {
   try {
     const res = await api.get(`/teacher/class/teacher/${teacherId}`);
@@ -69,3 +92,51 @@ export const getSubjectAssignmentsForTeacher = async (teacherId) => {
     throw error;
   }
 };
+
+export const terminateClassAssignment = async (assignmentId) => {
+  try {
+    const res = await api.put(`/teacher/class/assign/${assignmentId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error terminating class assignment:", error);
+    throw error;
+  }
+};
+
+export const updateTeacher = async (id, payload) => {
+  try {
+    const body = {
+      ...payload,
+      BirthDay: payload.BirthDay ? formatDateOnly(payload.BirthDay) : undefined,
+    };
+    const res = await api.put(`/teacher/${id}`, body);
+    return res.data;
+  } catch (error) {
+    console.error(`Error updating teacher ${id}:`, error);
+    throw error;
+  }
+};
+
+export const deleteTeacher = async (id) => {
+  try {
+    const res = await api.delete(`/teacher/${id}`);
+    return res.data;
+  } catch (error) {
+    console.error(`Error deleting teacher ${id}:`, error);
+    throw error;
+  }
+};
+
+function formatDateOnly(value) {
+  if (!value) return undefined;
+  if (value instanceof Date) {
+    const year = value.getFullYear();
+    const month = String(value.getMonth() + 1).padStart(2, "0");
+    const day = String(value.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  }
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
+  const d = new Date(value);
+  if (!isNaN(d.getTime())) return formatDateOnly(d);
+  return value;
+}

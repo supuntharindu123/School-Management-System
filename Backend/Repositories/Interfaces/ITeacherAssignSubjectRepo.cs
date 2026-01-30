@@ -12,7 +12,7 @@ namespace Backend.Repositories.Interfaces
 
         public Task RemovePermission(TeacherSubjectClass teacherSubjectClass);
 
-        public Task Update(TeacherSubjectClass teacherSubjectClass);
+        public Task Update();
 
         public Task<TeacherSubjectClass?> GetById(int id);
 

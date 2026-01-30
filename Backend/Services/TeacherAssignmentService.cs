@@ -34,22 +34,47 @@ namespace Backend.Services
             return Result<TeacherClassRes>.Success(classRes);
         }
 
+        //public async Task<Result> CreateAssignmentTask(TeacherClassAssignDto task)
+        //{
+        //    var tasks = await _repo.AssignmentById(task.TeacherId);
+        //    if (tasks != null) {
+        //        tasks.IsActive = false;
+        //        tasks.UpdatedDate= DateTime.Now;
+        //    }
+
+        //    var newTask = _mapper.Map<TeacherClassAssign>(task);
+        //    newTask.ClassId = task.ClassId;
+        //    newTask.IsActive = true;
+        //    newTask.CreatedDate = DateTime.Now;
+        //    newTask.UpdatedDate = null;
+        //    await _repo.CreateAssignment(newTask);
+
+        //    return Result.Success();      
+        //}
+
         public async Task<Result> CreateAssignmentTask(TeacherClassAssignDto task)
         {
-            var tasks = await _repo.AssignmentById(task.TeacherId);
-            if (tasks != null) {
-                tasks.IsActive = false;
-                tasks.UpdatedDate= DateTime.Now;
+            var teacher = await _repo.GetAssignmentFromTeacher(task.TeacherId);
+
+            if (teacher.Count(t=>t.IsActive) >= 2)
+            {
+                return Result.Failure("A teacher cannot be assigned to more than two classes.");
+            }
+
+            var assignment = await _repo.AssignmentByClass(task.ClassId);
+
+            if (assignment.Count(t => t.IsActive) >= 2)
+            {
+                return Result.Failure("A class cannot be assigned to more than two teachers.");
             }
 
             var newTask = _mapper.Map<TeacherClassAssign>(task);
-            newTask.ClassId = task.ClassId;
             newTask.IsActive = true;
             newTask.CreatedDate = DateTime.Now;
             newTask.UpdatedDate = null;
             await _repo.CreateAssignment(newTask);
 
-            return Result.Success();      
+            return Result.Success();
         }
 
         public async Task<Result<IEnumerable<TeacherClassRes>>> AssignmentBYTeacher(int id)
@@ -73,6 +98,24 @@ namespace Backend.Services
             var classRes = _mapper.Map<TeacherClassRes>(res);
             return Result<TeacherClassRes?>.Success(classRes);
             
+        }
+
+        public async Task<Result> AssignmentTerminate(int id)
+        {
+            var assignment=await _repo.AssignmentById(id);
+
+            if (assignment == null)
+            {
+                return Result.Failure("Assignment not found");
+            }
+
+            assignment.IsActive = false;
+            assignment.UpdatedDate = DateTime.Now;
+
+            await _repo.AssignmentTerminate();
+
+            return Result.Success();
+
         }
     }
 

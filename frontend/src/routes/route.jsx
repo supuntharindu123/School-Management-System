@@ -24,6 +24,7 @@ import ProtectedRoute from "../routes/ProtectedRoute";
 import AdminRoute from "../routes/AdminRoute";
 import AttendancePage from "../pages/admin/AttendancePage";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard";
+import StudentDashboard from "../pages/student/StudentDashboard";
 
 export default function RouteConfig() {
   return (
@@ -54,6 +55,7 @@ export default function RouteConfig() {
             {/* teacher only */}
 
             <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+            <Route path="/student/dashboard" element={<StudentDashboard />} />
           </Route>
 
           {/* Admin only */}

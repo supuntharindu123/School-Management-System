@@ -64,18 +64,18 @@ namespace Backend.Services
         }
 
 
-        public async Task<Result<IEnumerable<StudentRes>>> AllStudents()
+        public async Task<Result<List<StudentRes>>> AllStudents()
         {
             var students=await _repo.GetAllStudents();
 
             if (!students.Any())
             {
-                return Result<IEnumerable<StudentRes>>.Failure("Students Not Found");
+                return Result<List<StudentRes>>.Failure("Students Not Found");
             }
 
             var result=_mapper.Map<List<StudentRes>>(students);
 
-            return Result<IEnumerable<StudentRes>>.Success(result);
+            return Result<List<StudentRes>>.Success(result);
 
         }
 
@@ -117,7 +117,7 @@ namespace Backend.Services
 
             _mapper.Map(dto, student);
 
-            await _repo.UpdateStudent(student);
+            await _repo.UpdateStudent();
 
             return Result.Success();
         }

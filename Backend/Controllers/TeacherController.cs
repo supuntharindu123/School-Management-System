@@ -107,6 +107,17 @@ namespace Backend.Controllers
             return Ok(task.Data);
         }
 
+        [HttpPut("class/assign/{id}")]
+        public async Task<IActionResult> AssignmentTerminate(int id)
+        {
+            var task = await _assignmentService.AssignmentTerminate(id);
+            if (!task.IsSuccess)
+            {
+                return NotFound(task.Error);
+            }
+            return Ok("Assignment is Terminated!");
+        }
+
         [HttpGet("class/teacher/{id}")]
         public async Task<IActionResult> AssignmentByTeacher(int id)
         {
@@ -183,9 +194,9 @@ namespace Backend.Controllers
         }
 
         [HttpPut("subject/assign/{id}")]
-        public async Task<IActionResult> Update(int id, AssignTeacherSubjectDto teacherSubjectClass)
+        public async Task<IActionResult> Update(int id)
         {
-            var res=await _assignSubjectService.Update(id, teacherSubjectClass);
+            var res=await _assignSubjectService.TerminateSubjectAssign(id);
 
             if (!res.IsSuccess)
             {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createStudent } from "../../features/adminFeatures/students/studentService";
 import { getClassesByGrade } from "../../features/class/classService";
 import { getAllGrades } from "../../features/grade/gradeSlice";
+import { getAllYears } from "../../features/year/yearSlice";
 import { useDispatch, useSelector } from "react-redux";
 
 export default function AddStudentForm({ onSuccess }) {
@@ -17,6 +18,7 @@ export default function AddStudentForm({ onSuccess }) {
     Gender: "",
     GradeId: "",
     ClassNameId: "",
+    AcademicYearId: "",
     GuardianName: "",
     GuardianRelation: "",
     GuardianDate: "",
@@ -30,9 +32,12 @@ export default function AddStudentForm({ onSuccess }) {
 
   const gradesList = useSelector((state) => state.grades);
   const grades = gradesList.grades;
+  const yearsList = useSelector((state) => state.years);
+  const years = yearsList.years;
 
   useEffect(() => {
     dispatch(getAllGrades());
+    dispatch(getAllYears());
     setLoading(false);
   }, [dispatch]);
 
@@ -93,6 +98,9 @@ export default function AddStudentForm({ onSuccess }) {
       ...form,
       GradeId: Number(form.GradeId),
       ClassNameId: Number(form.ClassNameId),
+      AcademicYearId: form.AcademicYearId
+        ? Number(form.AcademicYearId)
+        : undefined,
     };
 
     try {
@@ -242,13 +250,17 @@ export default function AddStudentForm({ onSuccess }) {
             <label className="block text-sm font-medium text-neutral-800">
               Gender*
             </label>
-            <input
+            <select
               name="Gender"
               value={form.Gender}
               onChange={handleChange}
               className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-              placeholder="Male / Female"
-            />
+            >
+              <option value="">Select gender</option>
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+              <option value="Other">Other</option>
+            </select>
           </div>
         </div>
       </section>
@@ -300,6 +312,24 @@ export default function AddStudentForm({ onSuccess }) {
                     c.className ??
                     c.ClassName ??
                     `Class ${c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id}`}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-neutral-800">
+              Academic Year (optional)
+            </label>
+            <select
+              name="AcademicYearId"
+              value={form.AcademicYearId}
+              onChange={handleChange}
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+            >
+              <option value="">Select academic year</option>
+              {years.map((y) => (
+                <option key={y.id} value={y.id}>
+                  {y.year}
                 </option>
               ))}
             </select>

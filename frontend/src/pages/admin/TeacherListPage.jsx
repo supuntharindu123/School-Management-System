@@ -2,17 +2,14 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "../../components/CommonElements/Button";
 import AddTeacherDialog from "../../components/Teacher/AddTeacherDialog";
-import {
-  teacherListAPI,
-  createTeacher,
-} from "../../features/adminFeatures/teachers/teacherService";
+import { createTeacher } from "../../features/adminFeatures/teachers/teacherService";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
+import { getClassAssignmentsForTeacher } from "../../features/adminFeatures/teachers/teacherService";
 
 export default function TeacherListPage() {
   const navigate = useNavigate();
   const [query, setQuery] = useState("");
-  const [editModal, setEditModal] = useState({ open: false, teacher: null });
   const [addModal, setAddModal] = useState({ open: false });
 
   const dispatch = useDispatch();
@@ -37,22 +34,13 @@ export default function TeacherListPage() {
     });
   }, [teachers, query]);
 
-  const openEdit = (row) => setEditModal({ open: true, teacher: row });
-  const closeEdit = () => setEditModal({ open: false, teacher: null });
-  const saveEdit = (up) => {
-    setTeachers((list) =>
-      list.map((t) => (t.id === up.id ? { ...t, ...up } : t)),
-    );
-    closeEdit();
-  };
-
   const openAdd = () => setAddModal({ open: true });
   const closeAdd = () => setAddModal({ open: false });
   const saveAdd = async (dto) => {
     try {
       await createTeacher(dto);
-      const res = await teacherListAPI();
-      setTeachers(res);
+      // Refresh via redux instead of local state setter
+      dispatch(getTeachers());
       closeAdd();
     } catch (err) {
       console.error("Failed to add teacher:", err);
@@ -89,19 +77,18 @@ export default function TeacherListPage() {
                 <th className="border-b border-gray-200 py-2 px-3">Name</th>
                 <th className="border-b border-gray-200 py-2 px-3">Email</th>
                 <th className="border-b border-gray-200 py-2 px-3">Gender</th>
-                <th className="border-b border-gray-200 py-2 px-3 text-right">
-                  Actions
-                </th>
+                <th className="border-b border-gray-200 py-2 px-3">Classes</th>
               </tr>
             </thead>
             <tbody className="text-neutral-800">
               {filtered.map((row) => (
-                <tr key={row.id} className="hover:bg-gray-50">
+                <tr
+                  key={row.id}
+                  className="hover:bg-gray-50"
+                  onClick={() => navigate(`/teachers/${row.id}`)}
+                >
                   <td className="border-b border-gray-200 py-2 px-3 font-medium">
-                    <button
-                      onClick={() => navigate(`/teachers/${row.id}`)}
-                      className="text-teal-700 hover:underline hover:text-teal-800"
-                    >
+                    <button className="text-teal-700 hover:underline hover:text-teal-800">
                       {row.fullName}
                     </button>
                   </td>
@@ -111,23 +98,14 @@ export default function TeacherListPage() {
                   <td className="border-b border-gray-200 py-2 px-3">
                     {row.gender}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    <div className="flex items-center justify-end gap-2">
-                      <button
-                        onClick={() => openEdit(row)}
-                        className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-                      >
-                        Edit
-                      </button>
-                    </div>
-                  </td>
+                  <AssignmentsCells teacherId={row.id} />
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
                   <td
                     className="py-10 text-center text-neutral-600"
-                    colSpan={3}
+                    colSpan={4}
                   >
                     No teachers found.
                   </td>
@@ -138,15 +116,6 @@ export default function TeacherListPage() {
         </div>
       </section>
 
-      {/* Edit Modal */}
-      {editModal.open && (
-        <EditTeacherModal
-          teacher={editModal.teacher}
-          onClose={closeEdit}
-          onSave={saveEdit}
-        />
-      )}
-
       {/* Add Modal */}
       {addModal.open && (
         <AddTeacherDialog onClose={closeAdd} onSave={saveAdd} />
@@ -155,150 +124,50 @@ export default function TeacherListPage() {
   );
 }
 
-function ModalShell({ title, children, onClose, footer }) {
+// Fetch and render class/subject assignments per teacher as two cells
+function AssignmentsCells({ teacherId }) {
+  const { classes, loading } = useTeacherAssignments(teacherId);
+
+  const classesText =
+    classes && classes.length
+      ? classes
+          .map((c) => c.className || c.ClassName || c.name)
+          .filter(Boolean)
+          .join(", ")
+      : "—";
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-semibold text-neutral-900">{title}</p>
-          <button
-            onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-neutral-700 hover:bg-gray-100"
-          >
-            Close
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-        <div className="border-t px-4 py-3 flex justify-end gap-2">
-          {footer}
-        </div>
-      </div>
-    </div>
+    <>
+      <td className="border-b border-gray-200 py-2 px-3">
+        {loading ? "Loading..." : classesText}
+      </td>
+    </>
   );
 }
 
-function AssignModal({ onClose, onSave, year, classes, subjects }) {
-  const [selectedClasses, setSelectedClasses] = useState([]);
-  const [selectedSubjects, setSelectedSubjects] = useState([]);
+function useTeacherAssignments(teacherId) {
+  const [state, setState] = useState({ classes: [], loading: true });
 
-  const toggle = (setFn, list, id) => {
-    setFn(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
-  };
-
-  return (
-    <ModalShell
-      title={`Assign Classes & Subjects (${year})`}
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-          >
-            Cancel
-          </button>
-          <Button
-            label="Save"
-            onClick={() =>
-              onSave({ classes: selectedClasses, subjects: selectedSubjects })
-            }
-          />
-        </>
+  useEffect(() => {
+    let alive = true;
+    async function load() {
+      if (!teacherId) {
+        if (alive) setState({ classes: [], subjects: [], loading: false });
+        return;
       }
-    >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <p className="text-sm font-medium text-neutral-800">Classes</p>
-          <div className="mt-2 space-y-2">
-            {classes.map((c) => (
-              <label
-                key={c.id}
-                className="flex items-center gap-2 text-sm text-neutral-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedClasses.includes(c.id)}
-                  onChange={() =>
-                    toggle(setSelectedClasses, selectedClasses, c.id)
-                  }
-                />
-                {c.name}
-              </label>
-            ))}
-          </div>
-        </div>
-        <div>
-          <p className="text-sm font-medium text-neutral-800">Subjects</p>
-          <div className="mt-2 space-y-2">
-            {subjects.map((s) => (
-              <label
-                key={s.id}
-                className="flex items-center gap-2 text-sm text-neutral-800"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedSubjects.includes(s.id)}
-                  onChange={() =>
-                    toggle(setSelectedSubjects, selectedSubjects, s.id)
-                  }
-                />
-                {s.name}
-              </label>
-            ))}
-          </div>
-        </div>
-      </div>
-    </ModalShell>
-  );
-}
-
-function EditTeacherModal({ teacher, onClose, onSave }) {
-  const [name, setName] = useState(teacher?.name || "");
-  const [email, setEmail] = useState(teacher?.email || "");
-
-  return (
-    <ModalShell
-      title="Edit Teacher"
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-          >
-            Cancel
-          </button>
-          <Button
-            label="Save"
-            onClick={() => onSave({ ...teacher, name, email })}
-          />
-        </>
+      try {
+        const cls = await getClassAssignmentsForTeacher(teacherId);
+        if (alive)
+          setState({ classes: Array.isArray(cls) ? cls : [], loading: false });
+      } catch {
+        if (alive) setState({ classes: [], loading: false });
       }
-    >
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Full Name
-          </label>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Email
-          </label>
-          <input
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-      </div>
-    </ModalShell>
-  );
-}
+    }
+    load();
+    return () => {
+      alive = false;
+    };
+  }, [teacherId]);
 
-// Removed old AddTeacherModal; using AddTeacherDialog component instead.
+  return state;
+}

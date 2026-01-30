@@ -31,7 +31,7 @@ namespace Backend.Repositories
 
         public async Task<List<GradeSummaryDto>> GetGradeSummaries()
         {
-            // Build summaries per grade with counts of classes and students
+        
             var summaries = await _context.Grades
                 .Select(g => new GradeSummaryDto
                 {

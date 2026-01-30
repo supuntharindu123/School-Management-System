@@ -14,14 +14,14 @@ namespace Backend.Repositories
             _context = context;
         }
 
-        public async Task<TeacherClassAssign?> AssignmentById(int TeacherId)
+        public async Task<TeacherClassAssign?> AssignmentById(int id)
         {
-            return await _context.TeacherClassAssign.Include(t=>t.Class).Include(t => t.Teacher).FirstOrDefaultAsync(t=>t.Id==TeacherId && t.IsActive==true);
+            return await _context.TeacherClassAssign.Include(t=>t.Class).Include(t => t.Teacher).FirstOrDefaultAsync(t=>t.Id==id && t.IsActive==true);
         }
 
-        public async Task<TeacherClassAssign?> AssignmentByClass(int ClassId)
+        public async Task<List<TeacherClassAssign>> AssignmentByClass(int ClassId)
         {
-            return await _context.TeacherClassAssign.Include(t => t.Class).Include(t => t.Teacher).FirstOrDefaultAsync(t => t.Id == ClassId && t.IsActive == true);
+            return await _context.TeacherClassAssign.Where(t=>t.ClassId==ClassId  && t.IsActive==true).Include(t => t.Class).Include(t => t.Teacher).ToListAsync();
         }
 
         public async Task CreateAssignment(TeacherClassAssign task)
@@ -32,7 +32,19 @@ namespace Backend.Repositories
 
         public async Task<List<TeacherClassAssign>> GetAssignmentFromTeacher(int TeacherId)
         {
-            return await _context.TeacherClassAssign.Where(t => t.TeacherId == TeacherId).Include(t => t.Class).Include(t=>t.Teacher).ToListAsync();
+            return await _context.TeacherClassAssign
+            .Where(t => t.TeacherId == TeacherId)
+            .Include(t => t.Class)
+            .Include(t => t.Teacher)
+            .OrderByDescending(t => t.IsActive)      
+            .ThenByDescending(t => t.CreatedDate)    
+            .ToListAsync();
         }
+
+        public async Task AssignmentTerminate()
+        {
+            await _context.SaveChangesAsync();
+        }
+
     }
 }

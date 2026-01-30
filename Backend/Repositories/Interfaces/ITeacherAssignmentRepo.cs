@@ -10,7 +10,8 @@ namespace Backend.Repositories.Interfaces
 
         public Task<List<TeacherClassAssign>> GetAssignmentFromTeacher(int TeacherId);
 
-        public Task<TeacherClassAssign?> AssignmentByClass(int ClassId);
+        public Task<List<TeacherClassAssign?>> AssignmentByClass(int ClassId);
 
+        public Task AssignmentTerminate();
     }
 }

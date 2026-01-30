@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { useNavigate } from "react-router-dom";
-import AddStudentDialog from "../../components/Student/DeleteStudentDialog";
+import AddStudentDialog from "../../components/Student/AddStudentDialog";
 import { getClassesByGrade } from "../../features/class/classService";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 

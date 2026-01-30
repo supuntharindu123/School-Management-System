@@ -6,7 +6,7 @@ namespace Backend.Services.Interfaces
     public interface IStudentService
     {
         public Task<Result> CreateStudent(StudentCreateDto dto);
-        public Task<Result<IEnumerable<StudentRes>>> AllStudents();
+        public Task<Result<List<StudentRes>>> AllStudents();
 
         public Task<Result<StudentRes>> StudentById(int id);
 

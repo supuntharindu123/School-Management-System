@@ -13,5 +13,7 @@ namespace Backend.Services.Interfaces
         public Task<Result<IEnumerable<TeacherClassRes>>> AssignmentBYTeacher(int id);
 
         public Task<Result<TeacherClassRes?>> AssignmentByClass(int ClassId);
+
+        public Task<Result> AssignmentTerminate(int id);
     }
 }

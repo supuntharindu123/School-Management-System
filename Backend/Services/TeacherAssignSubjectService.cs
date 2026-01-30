@@ -81,6 +81,24 @@ namespace Backend.Services
             return Result<List<AssignTeacherSubjectResDto>>.Success(map);
         }
 
+
+
+        public async Task<Result> TerminateSubjectAssign(int id)
+        {
+            var subject = await _repo.GetById(id);
+            if (subject == null)
+            {
+                return Result.Failure("Subject not found");
+            }
+
+            subject.IsActive = false;
+            subject.EndDate = DateTime.Now;
+
+            await _repo.Update();
+
+            return Result.Success();
+        }
+
         public async Task<Result> RemovePermission(int id)
         {
             var res = await _repo.GetById(id);
@@ -120,7 +138,7 @@ namespace Backend.Services
 
             await _repo.AssignSubject(map);
 
-            await _repo.Update(res);
+            await _repo.Update();
 
             return Result.Success();
         }

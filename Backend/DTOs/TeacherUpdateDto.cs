@@ -4,13 +4,16 @@ namespace Backend.DTOs
 {
     public class TeacherUpdateDto
     {
-        [Required]
+
         public string? FullName { get; set; }
-        [Required]
+
+        [DataType(DataType.Date)]
+        public DateOnly BirthDay { get; set; }
+
         public string? Address { get; set; }
-        [Required]
+
         public string? City { get; set; }
-        [Required]
+
         public string? Gender { get; set; }
     }
 }

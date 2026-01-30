@@ -4,13 +4,22 @@ import { getClassesByGrade } from "../../features/class/classService";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 import { getAllSubjects } from "../../features/subject/subjectSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
 
-export default function AssignSubjectDialog({ teacherId, onClose, onSave }) {
+export default function AssignSubjectDialog({
+  teacherId,
+  gradeId,
+  classId,
+  isTeacher = true,
+  onClose,
+  onSave,
+}) {
   const [classes, setClasses] = useState([]);
   const [form, setForm] = useState({
+    teacherId: teacherId || "",
     subjectId: "",
-    gradeId: "",
-    classId: "",
+    gradeId: gradeId || "",
+    classId: classId || "",
     isActive: true,
     description: "",
   });
@@ -26,9 +35,13 @@ export default function AssignSubjectDialog({ teacherId, onClose, onSave }) {
   const subjectList = useSelector((state) => state.subjects);
   const subjects = subjectList.subjects;
 
+  const teachersList = useSelector((state) => state.teachers);
+  const teachers = teachersList.teachers || [];
+
   useEffect(() => {
     dispatch(getAllGrades());
     dispatch(getAllSubjects());
+    dispatch(getTeachers());
     setLoading(false);
   }, [dispatch]);
 
@@ -48,6 +61,7 @@ export default function AssignSubjectDialog({ teacherId, onClose, onSave }) {
 
   const validate = () => {
     const e = {};
+    if (!isTeacher && !form.teacherId) e.teacherId = "Teacher is required";
     if (!form.subjectId) e.subjectId = "Subject is required";
     if (!form.classId) e.classId = "Class is required";
     setErrors(e);
@@ -59,9 +73,9 @@ export default function AssignSubjectDialog({ teacherId, onClose, onSave }) {
     setSaving(true);
     try {
       await onSave({
-        teacherId: Number(teacherId),
+        teacherId: Number(teacherId) || Number(form.teacherId),
         subjectId: Number(form.subjectId),
-        classId: Number(form.classId),
+        classId: Number(form.classId) || Number(classId),
         isActive: Boolean(form.isActive),
         description: form.description || null,
       });
@@ -89,6 +103,22 @@ export default function AssignSubjectDialog({ teacherId, onClose, onSave }) {
             <p className="text-sm text-neutral-700">Loading...</p>
           ) : (
             <div className="space-y-4">
+              {isTeacher ? null : (
+                <Field label="Teacher" error={errors.teacherId}>
+                  <select
+                    value={form.teacherId}
+                    onChange={(e) => setField("teacherId", e.target.value)}
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  >
+                    <option value="">Select</option>
+                    {teachers.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.fullName}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+              )}
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Subject" error={errors.subjectId}>
                   <select

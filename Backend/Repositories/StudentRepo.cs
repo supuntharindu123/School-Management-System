@@ -30,20 +30,12 @@ namespace Backend.Repositories
         public async Task<Student?> GetStudentById(int id)
         {
             return await _context.Students
-                .AsNoTracking().Include(s=>s.User).Include(c=>c.Class).Include(s => s.AcademicYear)
+                .Include(s=>s.User).Include(c=>c.Class).Include(s => s.AcademicYear)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 
-        public async Task UpdateStudent(Student student)
+        public async Task UpdateStudent()
         {
-            var dbStudent = await _context.Students.FindAsync(student.Id);
-            if (dbStudent == null)
-                throw new Exception("Student not found");
-
-            dbStudent.ClassId = student.ClassId;
-            dbStudent.AcademicYearId = student.AcademicYearId;
-            dbStudent.Status = student.Status;
-
             await _context.SaveChangesAsync();
         }
 

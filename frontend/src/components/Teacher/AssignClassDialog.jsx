@@ -67,14 +67,14 @@ export default function AssignClassDialog({
     if (!validate()) return;
     setSaving(true);
     try {
+      // Backend expects: { TeacherId, Description, Role, ClassId }
       await onSave({
-        teacherId: Number(teacherId) || Number(form.teacherId),
-        gradeId: Number(form.gradeId) || Number(gradeId),
-        classNameId: form.classNameId
+        TeacherId: Number(teacherId) || Number(form.teacherId),
+        Description: form.description || null,
+        Role: form.role || null,
+        ClassId: form.classNameId
           ? Number(form.classNameId)
           : Number(classNameId),
-        role: form.role || null,
-        description: form.description || null,
       });
     } finally {
       setSaving(false);

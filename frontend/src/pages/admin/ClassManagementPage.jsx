@@ -5,6 +5,8 @@ import Button from "../../components/CommonElements/Button";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { getClasses } from "../../features/class/classSlice";
 import { getAllGrades } from "../../features/grade/gradeSlice";
+import AssignClassDialog from "../../components/Teacher/AssignClassDialog";
+import { assignClassToTeacher } from "../../features/adminFeatures/teachers/teacherService";
 
 function ClassManagementPage() {
   const [selectedGrade, setSelectedGrade] = useState(null);
@@ -13,11 +15,7 @@ function ClassManagementPage() {
     classId: null,
   });
 
-  const teachers = [
-    { id: 1, name: "John Doe" },
-    { id: 2, name: "Marina Patel" },
-    { id: 3, name: "Elena Garcia" },
-  ];
+  // Teachers are fetched inside AssignClassDialog via Redux slice
 
   const dispatch = useDispatch();
 
@@ -55,13 +53,8 @@ function ClassManagementPage() {
 
   const openAssign = (row) => setAssignModal({ open: true, classId: row.id });
   const closeAssign = () => setAssignModal({ open: false, classId: null });
-  const saveAssign = (teacherId) => {
-    const teacher = teachers.find((t) => t.id === teacherId) || null;
-    setClasses((list) =>
-      list.map((c) => (c.id === assignModal.classId ? { ...c, teacher } : c)),
-    );
-    closeAssign();
-  };
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState(null);
 
   return (
     <div>
@@ -173,10 +166,25 @@ function ClassManagementPage() {
       )}
 
       {assignModal.open && (
-        <AssignTeacherModal
-          teachers={teachers}
+        <AssignClassDialog
+          gradeId={selectedGrade}
+          classNameId={assignModal.classId}
+          isTeacher={false}
           onClose={closeAssign}
-          onSave={saveAssign}
+          onSave={async (payload) => {
+            try {
+              setAssignError(null);
+              setAssigning(true);
+              await assignClassToTeacher(payload);
+              // refresh classes list
+              await dispatch(getClasses());
+              closeAssign();
+            } catch (err) {
+              setAssignError("Failed to assign class. Please try again.");
+            } finally {
+              setAssigning(false);
+            }
+          }}
         />
       )}
     </div>

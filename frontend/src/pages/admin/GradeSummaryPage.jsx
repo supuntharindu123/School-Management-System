@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import StatCard from "../../components/CommonElements/StatCard";
+import CreativeStatCard from "../../components/CommonElements/CreativeStatCard";
 import { getGradeSummaries } from "../../services/grades";
 
 export default function GradeSummaryPage() {
@@ -40,9 +40,9 @@ export default function GradeSummaryPage() {
       ) : error ? (
         <p className="text-sm text-red-600">{error}</p>
       ) : (
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((g) => (
-            <StatCard
+            <CreativeStatCard
               key={g.gradeId}
               title={`Grade ${g.gradeName ?? g.gradeId}`}
               stats={[
