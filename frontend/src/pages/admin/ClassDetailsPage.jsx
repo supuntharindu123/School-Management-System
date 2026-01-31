@@ -212,9 +212,9 @@ export default function ClassDetailsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
           <h1 className="text-2xl font-semibold text-neutral-900">
             {details.className || `Class ${details.classId}`}

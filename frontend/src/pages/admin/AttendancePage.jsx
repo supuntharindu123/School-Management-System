@@ -94,28 +94,26 @@ export default function AttendancePage() {
   }, [attendances, date, gradeId, classId, classes, query]);
 
   return (
-    <div className="space-y-4">
+    <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
-            Attendance
-          </h1>
-          <p className="text-sm text-neutral-700">
+          <h1 className="text-2xl font-semibold text-cyan-50">Attendance</h1>
+          <p className="text-sm text-cyan-50">
             Search and filter students to record attendance
           </p>
         </div>
       </header>
 
       {/* Filters */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
+      <section className="rounded-xl border border-gray-300 bg-white p-4">
         <div className="grid grid-cols-1 gap-3 md:grid-cols-5">
           <Field label="Date">
             <input
               type="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
             />
           </Field>
           <Field label="Grade">
@@ -125,7 +123,7 @@ export default function AttendancePage() {
                 setGradeId(e.target.value);
                 setClassId("");
               }}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
             >
               <option value="">All</option>
               {grades.map((g) => (
@@ -140,7 +138,7 @@ export default function AttendancePage() {
               value={classId}
               onChange={(e) => setClassId(e.target.value)}
               disabled={!gradeId}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:bg-gray-50"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 disabled:bg-gray-50"
             >
               <option value="">All</option>
               {classOptions.map((c) => (
@@ -155,7 +153,7 @@ export default function AttendancePage() {
               placeholder="Search by name or ID"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
             />
           </Field>
           <div className="flex items-end">
@@ -170,8 +168,8 @@ export default function AttendancePage() {
       </section>
 
       {/* Results */}
-      <section className="rounded-xl border border-gray-200 bg-white">
-        <div className="flex items-center justify-between border-b px-4 py-3">
+      <section className="rounded-xl border border-gray-300 bg-white mt-6">
+        <div className="flex items-center justify-between border-b border-gray-300 px-4 py-3">
           <p className="text-sm font-semibold text-neutral-900">Results</p>
           <span className="text-xs text-neutral-600">
             {attendanceRows.length} records
@@ -185,48 +183,70 @@ export default function AttendancePage() {
         {error && (
           <div className="px-4 py-3 text-sm text-rose-700">{String(error)}</div>
         )}
-        <div className="overflow-x-auto">
+        <div className="max-h-[60vh] overflow-auto">
           <table className="w-full border-collapse text-sm">
             <thead>
-              <tr className="text-left text-neutral-800">
-                <th className="border-b border-gray-200 py-2 px-3">ID</th>
-                <th className="border-b border-gray-200 py-2 px-3">Date</th>
-                <th className="border-b border-gray-200 py-2 px-3">Student</th>
-                <th className="border-b border-gray-200 py-2 px-3">Class</th>
-                <th className="border-b border-gray-200 py-2 px-3">Teacher</th>
-                <th className="border-b border-gray-200 py-2 px-3">Present</th>
-                <th className="border-b border-gray-200 py-2 px-3">Reason</th>
+              <tr className="text-left text-neutral-800 bg-cyan-500 rounded-lg">
+                <th className="border-b border-gray-100 py-2 px-3 sticky top-0">
+                  <span className="inline-flex items-center gap-1">ID</span>
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  <span className="inline-flex items-center gap-1">Date</span>
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  Student
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  Class
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  Teacher
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  Present
+                </th>
+                <th className="border-b border-gray-300 py-2 px-3 sticky top-0">
+                  Reason
+                </th>
               </tr>
             </thead>
             <tbody className="text-neutral-800">
               {attendanceRows.map((a) => (
                 <tr
                   key={`${a.id ?? a.Id}-${a.date ?? a.Date}`}
-                  className="hover:bg-gray-50"
+                  className="odd:bg-white even:bg-gray-50 hover:bg-cyan-50 transition-colors"
                 >
-                  <td className="border-b border-gray-200 py-2 px-3">
+                  <td className="border-b border-gray-300 py-2 px-3">
                     {a.id ?? a.Id}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
+                  <td className="border-b border-gray-300 py-2 px-3">
                     {a.date ?? a.Date}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3 font-medium">
+                  <td className="border-b border-gray-300 py-2 px-3 font-medium">
                     {a.studentName ?? a.StudentName}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
+                  <td className="border-b border-gray-300 py-2 px-3">
                     {a.className ?? a.ClassName}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
+                  <td className="border-b border-gray-300 py-2 px-3">
                     {a.teacherName ?? a.TeacherName}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    {a.isPresent === undefined && a.IsPresent === undefined
-                      ? "-"
-                      : (a.isPresent ?? a.IsPresent)
-                        ? "Yes"
-                        : "No"}
+                  <td className="border-b border-gray-300 py-2 px-3">
+                    {a.isPresent === undefined && a.IsPresent === undefined ? (
+                      <span className="inline-flex items-center rounded-full px-2 py-0.5 text-xs bg-gray-100 text-neutral-700 border border-gray-200">
+                        -
+                      </span>
+                    ) : (a.isPresent ?? a.IsPresent) ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-emerald-700 ">
+                        Prsent
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-rose-700 ">
+                        Absent
+                      </span>
+                    )}
                   </td>
-                  <td className="border-b border-gray-200 py-2 px-3">
+                  <td className="border-b border-gray-300 py-2 px-3 max-w-[18rem] truncate">
                     {a.reason ? a.reason || "-" : "-"}
                   </td>
                 </tr>

@@ -102,7 +102,7 @@ export default function StudentProfilePage() {
   };
 
   return (
-    <div>
+    <div className="mx-auto max-w-7xl">
       <EditStudentDialog
         open={openEdit}
         onClose={() => setOpenEdit(false)}
@@ -123,12 +123,10 @@ export default function StudentProfilePage() {
         }}
       />
       {/* Header */}
-      <header className="mb-4 flex items-center justify-between">
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
-            Student Profile
-          </h1>
-          <p className="text-sm text-neutral-700">
+          <h1 className="text-3xl font-bold text-cyan-50">Student Profile</h1>
+          <p className="text-sm text-cyan-50">
             Student ID: {details.studentIDNumber}
           </p>
         </div>
@@ -136,7 +134,7 @@ export default function StudentProfilePage() {
           <button
             type="button"
             onClick={() => navigate(-1)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
           >
             Back
           </button>
@@ -144,7 +142,7 @@ export default function StudentProfilePage() {
           {user?.role === 0 && (
             <>
               <button
-                className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+                className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-700"
                 onClick={() => onEdit(details)}
               >
                 Edit Profile
@@ -163,7 +161,7 @@ export default function StudentProfilePage() {
       {/* Summary card */}
       <section className="rounded-xl border border-gray-200 bg-white p-4">
         <div className="flex items-center gap-4">
-          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-teal-500 to-teal-700 text-white text-lg font-semibold">
+          <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-lg font-semibold">
             {details?.fullName
               ?.split(" ")
               .map((n) => n[0])
@@ -195,10 +193,10 @@ export default function StudentProfilePage() {
               aria-controls={`panel-${t.key}`}
               id={`tab-${t.key}`}
               onClick={() => setTab(t.key)}
-              className={`rounded-lg border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-teal-600 ${
+              className={`rounded-lg border px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 ${
                 tab === t.key
-                  ? "border-teal-600 bg-teal-50 text-teal-700"
-                  : "border-gray-200 bg-white text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  ? "border-cyan-600 bg-cyan-50 text-cyan-700"
+                  : "border-gray-200 bg-white text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
               }`}
             >
               {t.label}
@@ -269,7 +267,7 @@ export default function StudentProfilePage() {
                   </p>
                   <div className="mt-3 h-2 w-full rounded bg-gray-100">
                     <div
-                      className="h-2 rounded bg-teal-600"
+                      className="h-2 rounded bg-cyan-600"
                       style={{ width: attendance.percentage + "%" }}
                     />
                   </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LoginPage from "../pages/LoginPage";
-import AdminDashboardPage from "../pages/admin/AdminDashboardPage";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 import TeacherDashboardPage from "../pages/TeacherDashboardPage";
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import NotFoundPage from "../pages/NotFoundPage";
@@ -14,7 +14,7 @@ import ClassDetailsPage from "../pages/admin/ClassDetailsPage";
 import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
 import TeacherListPage from "../pages/admin/TeacherListPage";
 import TeacherProfilePage from "../pages/admin/TeacherProfilePage";
-import AddStudentPage from "../pages/admin/AddStudentPage";
+// import AddStudentPage from "../pages/admin/AddStudentPage";
 import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
 import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
 import ExamManagementPage from "../pages/admin/ExamManagementPage";
@@ -39,7 +39,7 @@ export default function RouteConfig() {
           <Route element={<AppLayout />}>
             <Route path="/teacher" element={<TeacherDashboardPage />} />
             <Route path="/students" element={<StudentListPage />} />
-            <Route path="/students/add" element={<AddStudentPage />} />
+            {/* <Route path="/students/add" element={<AddStudentPage />} /> */}
             <Route path="/students/:id" element={<StudentProfilePage />} />
             <Route path="/grades" element={<GradeManagementPage />} />
             <Route path="/grade-summary" element={<GradeSummaryPage />} />
@@ -61,7 +61,7 @@ export default function RouteConfig() {
           {/* Admin only */}
           <Route element={<AdminRoute />}>
             <Route element={<AppLayout />}>
-              <Route path="/admin" element={<AdminDashboardPage />} />
+              <Route path="/admin" element={<AdminDashboard />} />
             </Route>
           </Route>
         </Route>

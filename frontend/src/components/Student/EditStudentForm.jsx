@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { updateStudent } from "../../features/adminFeatures/students/studentService";
+import Button from "../CommonElements/Button";
 
 export default function EditStudentForm({ student, onSuccess }) {
   const [form, setForm] = useState({
@@ -86,7 +87,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               name="Address"
               value={form.Address}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             />
           </div>
           <div>
@@ -97,7 +98,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               name="City"
               value={form.City}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             />
           </div>
 
@@ -109,7 +110,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               name="Gender"
               value={form.Gender}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             >
               <option value="">Select gender</option>
               <option value="Male">Male</option>
@@ -125,7 +126,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               name="GuardianName"
               value={form.GuardianName}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             />
           </div>
           <div>
@@ -136,7 +137,7 @@ export default function EditStudentForm({ student, onSuccess }) {
               name="GuardianRelation"
               value={form.GuardianRelation}
               onChange={handleChange}
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
               placeholder="Parent / Relative"
             />
           </div>
@@ -144,13 +145,12 @@ export default function EditStudentForm({ student, onSuccess }) {
       </section>
 
       <div className="flex items-center justify-end gap-2">
-        <button
+        <Button
           type="submit"
           disabled={loading}
-          className="inline-flex justify-center rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:opacity-60"
-        >
-          {loading ? "Saving..." : "Save Changes"}
-        </button>
+          label={loading ? "Saving..." : "Save Changes"}
+          bgcolor="bg-cyan-800"
+        ></Button>
       </div>
     </form>
   );

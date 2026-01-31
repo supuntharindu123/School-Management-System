@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import logo from "../assets/school-logo.svg";
+import logo from "../assets/logo.png";
 import Button from "./CommonElements/Button";
 
 export default function LoginForm({ onLogin }) {
@@ -15,7 +15,7 @@ export default function LoginForm({ onLogin }) {
 
   return (
     <section
-      className="w-full max-w-md bg-white shadow-sm rounded-xl p-8"
+      className="w-full max-w-md bg-white rounded-xl p-8 shadow-stone-300 shadow-xl"
       role="region"
       aria-labelledby="login-title"
     >
@@ -26,9 +26,10 @@ export default function LoginForm({ onLogin }) {
       />
       <h1
         id="login-title"
-        className="mt-3 text-3xl font-bold text-neutral-900 text-center"
+        className="my-3 text-3xl font-bold text-neutral-900 text-center"
       >
-        School Management System
+        Rajapaksha Central <br />
+        College
       </h1>
       <p className="mt-1 text-sm text-neutral-600 text-center">
         Sign in to continue
@@ -52,7 +53,7 @@ export default function LoginForm({ onLogin }) {
             onChange={(e) => setEmail(e.target.value)}
             required
             autoComplete="email"
-            className="mt-2 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+            className="mt-2 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
           />
         </div>
 
@@ -74,13 +75,13 @@ export default function LoginForm({ onLogin }) {
               onChange={(e) => setPassword(e.target.value)}
               required
               autoComplete="current-password"
-              className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-16 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 pr-16 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             />
             <button
               type="button"
               onClick={() => setShowPassword((v) => !v)}
               aria-label={showPassword ? "Hide password" : "Show password"}
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 text-xs font-medium text-teal-600 hover:text-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-600"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-2 text-xs font-medium text-cyan-600 hover:text-cyan-700 focus:outline-none focus:ring-2 focus:ring-cyan-600"
             >
               {showPassword ? "Hide" : "Show"}
             </button>
@@ -93,7 +94,7 @@ export default function LoginForm({ onLogin }) {
             type={"submit"}
             onClick={handleSubmit}
             label="Sign in"
-            bgcolor={"w-full bg-teal-600"}
+            bgcolor={"w-full bg-cyan-700"}
           />
         </div>
 
@@ -101,7 +102,7 @@ export default function LoginForm({ onLogin }) {
         <div className="mt-4 space-y-2 text-center">
           <a
             href="/forgot-password"
-            className="text-sm font-medium text-teal-600 hover:text-teal-700"
+            className="text-sm font-medium text-cyan-600 hover:text-cyan-700"
           >
             Forgot password?
           </a>

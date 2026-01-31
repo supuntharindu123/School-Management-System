@@ -10,7 +10,6 @@ export default function StudentListPage() {
   const [query, setQuery] = useState("");
   const [grade, setGrade] = useState("");
   const [klass, setKlass] = useState("");
-  const [year, setYear] = useState("");
   const [classes, setClasses] = useState([]);
 
   const dispatch = useDispatch();
@@ -38,7 +37,7 @@ export default function StudentListPage() {
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return studentList.students.filter((s) => {
+    const f = studentList.students.filter((s) => {
       const searchable = [s.studentIDNumber, s.fullName]
         .filter(Boolean)
         .map((v) => String(v).toLowerCase());
@@ -53,7 +52,16 @@ export default function StudentListPage() {
 
       return matchesQuery && matchesGrade && matchesClass;
     });
+
+    return f;
   }, [studentList.students, query, grade, klass]);
+
+  const getInitials = (name) => {
+    if (!name) return "T";
+    const parts = String(name).trim().split(" ").filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
 
   const onAddStudent = () => setOpenAdd(true);
   const onView = (id) => {
@@ -65,7 +73,7 @@ export default function StudentListPage() {
   const onExportPdf = () => {};
 
   return (
-    <div>
+    <div className="mx-auto max-w-7xl">
       <AddStudentDialog
         open={openAdd}
         onClose={() => setOpenAdd(false)}
@@ -73,31 +81,29 @@ export default function StudentListPage() {
           dispatch(GetAllStudents());
         }}
       />
-      <header className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
-            Student Dashboard
-          </h1>
-          <p className="text-sm text-neutral-700">
+          <h1 className="text-3xl font-bold text-cyan-50">Student Dashboard</h1>
+          <p className="text-sm text-cyan-50">
             Search, filter, and manage student records
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          <button
+          {/* <button
             onClick={onExportPdf}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
           >
             Export PDF
-          </button>
+          </button> */}
           <button
             onClick={downloadExcel}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
           >
             Export Excel
           </button>
           <button
             onClick={onAddStudent}
-            className="rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white hover:bg-teal-700"
+            className="rounded-lg bg-cyan-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyan-700"
           >
             Add Student
           </button>
@@ -105,7 +111,7 @@ export default function StudentListPage() {
       </header>
 
       {/* Filters */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
+      <section className="rounded-xl border border-gray-300  p-4">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:gap-4">
           <div className="flex-1">
             <label
@@ -114,13 +120,32 @@ export default function StudentListPage() {
             >
               Search
             </label>
-            <input
-              id="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search by StudentID No or Name"
-              className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-            />
+            <div className="relative">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-cyan-600"
+              >
+                <path d="M10.5 3.75a6.75 6.75 0 1 0 3.89 12.3l3.28 3.28a.75.75 0 1 0 1.06-1.06l-3.28-3.28A6.75 6.75 0 0 0 10.5 3.75Zm0 1.5a5.25 5.25 0 1 1 0 10.5 5.25 5.25 0 0 1 0-10.5Z" />
+              </svg>
+              <input
+                id="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by StudentID No or Name"
+                className="mt-1 block w-full rounded-lg border border-gray-300 bg-white pl-9 pr-9 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+              />
+              {query && (
+                <button
+                  type="button"
+                  onClick={() => setQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs text-cyan-700 hover:bg-cyan-50 border border-cyan-300"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </div>
           <div>
             <label
@@ -133,7 +158,7 @@ export default function StudentListPage() {
               id="grade"
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
-              className="mt-1 block w-44 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-44 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             >
               <option value="">All</option>
               {grades.map((g) => (
@@ -154,7 +179,7 @@ export default function StudentListPage() {
               id="class"
               value={klass}
               onChange={(e) => setKlass(e.target.value)}
-              className="mt-1 block w-44 rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
+              className="mt-1 block w-44 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
             >
               <option value="">All</option>
               {classes.map((c) => (
@@ -165,39 +190,79 @@ export default function StudentListPage() {
             </select>
           </div>
         </div>
+
+        {/* Active filters and count */}
+        <div className="mt-3 flex items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {grade && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 px-3 py-1 text-xs">
+                Grade: {grade}
+                <button
+                  type="button"
+                  className="ml-1 text-cyan-700 hover:text-cyan-900"
+                  onClick={() => setGrade("")}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+            {klass && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-300 px-3 py-1 text-xs">
+                Class: {klass}
+                <button
+                  type="button"
+                  className="ml-1 text-cyan-700 hover:text-cyan-900"
+                  onClick={() => setKlass("")}
+                >
+                  ×
+                </button>
+              </span>
+            )}
+          </div>
+          <span className="text-xs rounded bg-cyan-50 text-cyan-700 px-2 py-1 border border-cyan-200">
+            {filtered.length} results
+          </span>
+        </div>
       </section>
 
       {/* Table */}
-      <section className="mt-4 rounded-xl border border-gray-200 bg-white">
-        <div className="overflow-x-auto">
+      <section className="mt-4 rounded-2xl border border-gray-200 bg-white">
+        <div className="max-h-[60vh] overflow-auto rounded-md">
           <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left text-neutral-800">
-                <th className="border-b border-gray-200 py-2 px-3">
+            <thead className=" rounded-xl">
+              <tr className="text-left text-neutral-800 bg-cyan-500 rounded-xl">
+                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
+                  Name
+                </th>
+                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
                   Student ID
                 </th>
-                <th className="border-b border-gray-200 py-2 px-3">Name</th>
-                <th className="border-b border-gray-200 py-2 px-3">Email</th>
-                <th className="border-b border-gray-200 py-2 px-3">Grade</th>
-                <th className="border-b border-gray-200 py-2 px-3">Class</th>
-
-                {/* <th className="border-b border-gray-200 py-2 px-3 text-right">
-                  Actions
-                </th> */}
+                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
+                  Email
+                </th>
+                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
+                  Grade
+                </th>
+                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
+                  Class
+                </th>
               </tr>
             </thead>
             <tbody className="text-neutral-800">
               {filtered.map((row) => (
                 <tr
                   key={row.id}
-                  className="hover:bg-gray-50"
+                  className="odd:bg-white even:bg-gray-50 hover:bg-cyan-50"
                   onClick={() => onView(row.id)}
                 >
                   <td className="border-b border-gray-200 py-2 px-3">
-                    {row.studentIDNumber}
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-xs font-semibold mr-2">
+                      {getInitials(row.fullName)}
+                    </span>
+                    <span> {row.fullName}</span>
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
-                    {row.fullName}
+                    {row.studentIDNumber}
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
                     {row.email}
@@ -207,33 +272,6 @@ export default function StudentListPage() {
                   </td>
                   <td className="border-b border-gray-200 py-2 px-3">
                     {row.currentClass}
-                  </td>
-                  {/* <td className="border-b border-gray-200 py-2 px-3">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium border ${
-                        getStatus(row) === "Active"
-                          ? "bg-teal-50 text-teal-700 border-teal-200"
-                          : "bg-gray-100 text-neutral-700 border-gray-200"
-                      }`}
-                    >
-                      {getStatus(row)}
-                    </span>
-                  </td> */}
-                  <td className="border-b border-gray-200 py-2 px-3">
-                    <div className="flex items-center justify-end gap-2">
-                      {/* <button
-                        onClick={() => onToggleStatus(row)}
-                        className={`rounded-lg px-3 py-1.5 text-xs border ${
-                          getStatus(row) === "Active"
-                            ? "border-rose-200 text-rose-700 bg-rose-50 hover:border-rose-400"
-                            : "border-teal-200 text-teal-700 bg-teal-50 hover:border-teal-400"
-                        }`}
-                      >
-                        {getStatus(row) === "Active"
-                          ? "Deactivate"
-                          : "Activate"}
-                      </button> */}
-                    </div>
                   </td>
                 </tr>
               ))}

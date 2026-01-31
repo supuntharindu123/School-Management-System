@@ -1,11 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import logo from "../assets/school-logo.svg";
+import { logout } from "../features/auth/authSlice";
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
+
   const dashboardLink = user
     ? user.role == 0
       ? "/admin"
@@ -107,21 +108,21 @@ export default function Sidebar({ isOpen, onClose }) {
         </svg>
       ),
     },
-    {
-      label: "Exams",
-      to: "/exams",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
-        >
-          <path d="M4.5 4.5A2.25 2.25 0 0 1 6.75 2.25h7.5A2.25 2.25 0 0 1 16.5 4.5v15a.75.75 0 0 1-1.2.6L12 17.25l-3.3 2.85a.75.75 0 0 1-1.2-.6v-15Z" />
-          <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75v9.75A1.5 1.5 0 0 1 19.5 21H18V7.5Z" />
-        </svg>
-      ),
-    },
+    // {
+    //   label: "Exams",
+    //   to: "/exams",
+    //   icon: (
+    //     <svg
+    //       xmlns="http://www.w3.org/2000/svg"
+    //       viewBox="0 0 24 24"
+    //       fill="currentColor"
+    //       className="h-5 w-5"
+    //     >
+    //       <path d="M4.5 4.5A2.25 2.25 0 0 1 6.75 2.25h7.5A2.25 2.25 0 0 1 16.5 4.5v15a.75.75 0 0 1-1.2.6L12 17.25l-3.3 2.85a.75.75 0 0 1-1.2-.6v-15Z" />
+    //       <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75v9.75A1.5 1.5 0 0 1 19.5 21H18V7.5Z" />
+    //     </svg>
+    //   ),
+    // },
     {
       label: "Student Promotion",
       to: "/promotions",
@@ -137,28 +138,28 @@ export default function Sidebar({ isOpen, onClose }) {
         </svg>
       ),
     },
-    {
-      label: "Settings",
-      to: "/settings",
-      icon: (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
-        >
-          <path d="M10.5 2.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v1.19a7.538 7.538 0 0 1 1.914.793l.842-.842a.75.75 0 0 1 1.06 0l1.06 1.06a.75.75 0 0 1 0 1.06l-.842.842c.33.594.594 1.23.793 1.914h1.19a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-.75.75h-1.19a7.538 7.538 0 0 1-.793 1.914l.842.842a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06 0l-.842-.842a7.538 7.538 0 0 1-1.914.793v1.19a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.19a7.538 7.538 0 0 1-1.914-.793l-.842.842a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 0 1 0-1.06l.842-.842A7.538 7.538 0 0 1 6.84 13.5H5.65a.75.75 0 0 1-.75-.75v-1.5c0-.414.336-.75.75-.75h1.19a7.538 7.538 0 0 1 .793-1.914l-.842-.842a.75.75 0 0 1 0-1.06L7.85 4.38a.75.75 0 0 1 1.06 0l.842.842c.594-.33 1.23-.594 1.914-.793V2.25Z" />
-          <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
-        </svg>
-      ),
-    },
+    // {
+    //   label: "Settings",
+    //   to: "/settings",
+    //   icon: (
+    //     <svg
+    //       xmlns="http://www.w3.org/2000/svg"
+    //       viewBox="0 0 24 24"
+    //       fill="currentColor"
+    //       className="h-5 w-5"
+    //     >
+    //       <path d="M10.5 2.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v1.19a7.538 7.538 0 0 1 1.914.793l.842-.842a.75.75 0 0 1 1.06 0l1.06 1.06a.75.75 0 0 1 0 1.06l-.842.842c.33.594.594 1.23.793 1.914h1.19a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-.75.75h-1.19a7.538 7.538 0 0 1-.793 1.914l.842.842a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06 0l-.842-.842a7.538 7.538 0 0 1-1.914.793v1.19a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.19a7.538 7.538 0 0 1-1.914-.793l-.842.842a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 0 1 0-1.06l.842-.842A7.538 7.538 0 0 1 6.84 13.5H5.65a.75.75 0 0 1-.75-.75v-1.5c0-.414.336-.75.75-.75h1.19a7.538 7.538 0 0 1 .793-1.914l-.842-.842a.75.75 0 0 1 0-1.06L7.85 4.38a.75.75 0 0 1 1.06 0l.842.842c.594-.33 1.23-.594 1.914-.793V2.25Z" />
+    //       <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
+    //     </svg>
+    //   ),
+    // },
   ];
 
   return (
     <aside
       id="sidebar"
       className={`fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] my-4 rounded-r-sm
-      bg-gray-200 border-r border-gray-200
+      bg-cyan-950 border-r border-cyan-800 text-white
       transform transition-transform duration-300
       ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
       aria-label="Sidebar"
@@ -177,7 +178,7 @@ export default function Sidebar({ isOpen, onClose }) {
           <button
             onClick={onClose}
             aria-label="Hide sidebar"
-            className="rounded px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-teal-600"
+            className="rounded px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-600"
           >
             Hide
           </button>
@@ -194,21 +195,21 @@ export default function Sidebar({ isOpen, onClose }) {
               onClick={onClose}
               className={`group relative flex items-center gap-3 rounded-lg px-3 py-3 text-md font-semibold ${
                 active
-                  ? "bg-teal-600 text-white"
-                  : "text-neutral-800 hover:bg-gray-100"
+                  ? "bg-cyan-600 text-white"
+                  : "text-white/80 hover:bg-cyan-800"
               }`}
             >
               {/* Active indicator */}
               {/* <span
                 className={`absolute left-0 top-0 h-full w-1 rounded-r ${
                   active
-                    ? "bg-teal-600"
-                    : "bg-transparent group-hover:bg-gray-300"
+                    ? "bg-cyan-600"
+                    : "bg-transparent group-hover:bg-cyan-700"
                 }`}
               /> */}
               <span
-                className={`text-neutral-600 group-hover:text-teal-700 ${
-                  active ? "text-white" : " "
+                className={`text-white/70 group-hover:text-white ${
+                  active ? "text-white" : ""
                 }`}
               >
                 {item.icon}
@@ -218,8 +219,11 @@ export default function Sidebar({ isOpen, onClose }) {
           );
         })}
 
-        <div className="mt-3 border-t border-gray-200 pt-2">
-          <button className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600">
+        <div className="mt-3 border-t border-cyan-800 pt-2">
+          <button
+            className="w-full rounded-lg border border-white/30 bg-transparent px-3 py-2 text-sm text-white hover:border-white hover:text-cyan-200"
+            onClick={() => logout()}
+          >
             Logout
           </button>
         </div>

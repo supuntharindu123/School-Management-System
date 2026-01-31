@@ -17,13 +17,13 @@ export default function Modal({ open, onClose, title, children, footer }) {
       />
 
       {/* Dialog */}
-      <div className="relative z-10 w-full max-w-4xl rounded-xl bg-white shadow-2xl transition-all duration-200 ease-out sm:mx-4">
+      <div className="relative z-10 w-full max-w-4xl rounded-xl bg-white shadow-2xl transition-all duration-200 ease-out sm:mx-4 border border-cyan-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3 bg-teal-600 rounded-t-xl">
+        <div className="flex items-center justify-between border-b border-cyan-200 px-4 py-3 bg-cyan-800 rounded-t-xl">
           <h3 className="text-lg font-semibold text-white">{title}</h3>
           <button
             onClick={onClose}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-teal-300 bg-white/10 text-white hover:bg-white/20"
+            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-cyan-300 bg-white/10 text-white hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-cyan-300"
             aria-label="Close"
           >
             ×
@@ -35,7 +35,7 @@ export default function Modal({ open, onClose, title, children, footer }) {
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-2 border-t border-gray-200 px-4 py-3 bg-gray-50 rounded-b-xl">
+          <div className="flex items-center justify-end gap-2 border-t border-cyan-200 px-4 py-3 bg-cyan-50 rounded-b-xl">
             {footer}
           </div>
         )}
