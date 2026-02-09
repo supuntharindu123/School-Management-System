@@ -1,4 +1,4 @@
-﻿using Backend.DTOs;
+﻿using Backend.DTOs.Student;
 using Backend.Helper;
 
 namespace Backend.Services.Interfaces

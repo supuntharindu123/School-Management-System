@@ -1,4 +1,4 @@
-﻿using Backend.DTOs;
+﻿using Backend.DTOs.Grade;
 using Backend.Helper;
 using Backend.Models;
 

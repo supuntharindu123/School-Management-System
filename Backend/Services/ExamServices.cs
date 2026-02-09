@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Backend.DTOs;
+using Backend.DTOs.Exam;
 using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
@@ -78,6 +78,69 @@ namespace Backend.Services
             await _repo.UpdateExam(res);
 
             return Result.Success();
+        }
+
+        public async Task<Result> AssignGradesForExam(List<ExamGrade> examGrades)
+        {
+            using var Transaction=await _repo.BeginTransactionAsync();
+
+            try
+            {
+                foreach(var eg in examGrades)
+                {
+                    await _repo.AssignGradesForExam(eg);
+                }
+
+                await Transaction.CommitAsync();
+                return Result.Success();
+
+            }
+            catch
+            {
+                await Transaction.RollbackAsync();
+                return Result.Failure("Failed to assign grade for exam!");
+
+            }
+        }
+
+        public async Task<Result> AssignSubjectsForExam(List<ExamGradeSubject> examGradeSubjects)
+        {
+            using var Transaction = await _repo.BeginTransactionAsync();
+
+            try
+            {
+                foreach (var eg in examGradeSubjects)
+                {
+                    if(!await _repo.CheckAssignGradesForExam(eg.ExamId, eg.GradeId, eg.SubjectId)){
+                        await _repo.AssignSubjectsForExam(eg);
+                    }
+                    
+                }
+
+                await Transaction.CommitAsync();
+                return Result.Success();
+
+            }
+            catch
+            {
+                await Transaction.RollbackAsync();
+                return Result.Failure("Failed to assign grade for exam!");
+
+            }
+
+
+        }
+
+        public async Task<Result<ExamDetailsResDto>> ExamDetails(int id)
+        {
+            var res=await _repo.ExamDetails(id);
+
+            if (res == null)
+            {
+                return Result<ExamDetailsResDto>.Failure("Exam Not Found!");
+            }
+
+            return Result<ExamDetailsResDto>.Success(res);
         }
     }
 }

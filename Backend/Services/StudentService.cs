@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
-using Backend.DTOs;
+using Backend.DTOs.Student;
+using Backend.DTOs.User;
 using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;

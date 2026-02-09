@@ -1,4 +1,4 @@
-﻿using Backend.DTOs;
+﻿using Backend.DTOs.Exam;
 using Backend.Helper;
 using Backend.Models;
 
@@ -15,5 +15,11 @@ namespace Backend.Services.Interfaces
         public Task<Result<ExamResDto?>> GetExamById(int id);
 
         public Task<Result<List<ExamResDto>>> GetExams();
+
+        public Task<Result> AssignGradesForExam(List<ExamGrade> examGrades);
+
+        public Task<Result> AssignSubjectsForExam(List<ExamGradeSubject> examGradeSubjects);
+
+        public Task<Result<ExamDetailsResDto>> ExamDetails(int id);
     }
 }

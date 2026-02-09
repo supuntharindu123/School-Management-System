@@ -1,5 +1,5 @@
 ﻿using Backend.Models;
-using Backend.DTOs;
+using Backend.DTOs.Grade;
 
 namespace Backend.Repositories.Interfaces
 {

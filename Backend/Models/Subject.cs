@@ -14,6 +14,8 @@ namespace Backend.Models
 
         public ICollection<SubjectGrade>? SubjectGrade {  get; set; }
 
+        public ICollection<ExamGradeSubject>? ExamGradeSubjects {  get; set; }
+
         public ICollection<TeacherSubjectClass>? TeacherSubjectClass {  get; set; }
 
 

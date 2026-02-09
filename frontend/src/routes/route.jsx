@@ -18,6 +18,7 @@ import TeacherProfilePage from "../pages/admin/TeacherProfilePage";
 import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
 import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
 import ExamManagementPage from "../pages/admin/ExamManagementPage";
+import ExamDetailsPage from "../pages/admin/ExamDetailsPage";
 
 import AppLayout from "../layouts/AppLayout";
 import ProtectedRoute from "../routes/ProtectedRoute";
@@ -51,6 +52,7 @@ export default function RouteConfig() {
             <Route path="/classes/:id" element={<ClassDetailsPage />} />
             <Route path="/subjects" element={<SubjectManagementPage />} />
             <Route path="/exams" element={<ExamManagementPage />} />
+            <Route path="/exams/:id" element={<ExamDetailsPage />} />
             <Route path="/teachers" element={<TeacherListPage />} />
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
             <Route path="/attendance" element={<AttendancePage />} />

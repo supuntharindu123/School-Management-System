@@ -1,25 +1,31 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import Button from "../../components/CommonElements/Button";
 import { getAllExams } from "../../features/exam/examSlice";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 import { getAllYears } from "../../features/year/yearSlice";
+import { getAllSubjects } from "../../features/subject/subjectSlice";
 import { createExam } from "../../features/exam/examService";
 
 export default function ExamManagementPage() {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { exams, loading: examsLoading } = useSelector((s) => s.exams);
   const { grades } = useSelector((s) => s.grades);
   const { years } = useSelector((s) => s.years);
+  const { subjects } = useSelector((s) => s.subjects || {});
 
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [assignExam, setAssignExam] = useState(null);
 
   useEffect(() => {
     dispatch(getAllExams());
     dispatch(getAllGrades());
     dispatch(getAllYears());
+    dispatch(getAllSubjects());
   }, [dispatch]);
 
   const filtered = useMemo(() => {
@@ -56,13 +62,27 @@ export default function ExamManagementPage() {
         ) : filtered.length ? (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((e) => (
-              <ExamCard key={e.id} exam={e} />
+              <ExamCard
+                key={e.id}
+                exam={e}
+                onManageAssignments={() => setAssignExam(e)}
+                onViewDetails={() => navigate(`/exams/${e.id}`)}
+              />
             ))}
           </div>
         ) : (
           <p className="text-sm text-neutral-600">No exams found.</p>
         )}
       </section>
+
+      {assignExam && (
+        <ManageAssignmentsModal
+          exam={assignExam}
+          grades={grades}
+          subjects={subjects}
+          onClose={() => setAssignExam(null)}
+        />
+      )}
 
       {addOpen && (
         <AddExamModal
@@ -90,7 +110,7 @@ export default function ExamManagementPage() {
   );
 }
 
-function ExamCard({ exam }) {
+function ExamCard({ exam, onManageAssignments, onViewDetails }) {
   const { title, description, startDate, endDate, gradeName, academicYear } =
     exam;
   return (
@@ -101,6 +121,20 @@ function ExamCard({ exam }) {
           <p className="text-xs text-neutral-600">
             Grade {gradeName} · Year {academicYear}
           </p>
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={onManageAssignments}
+            className="rounded px-2 py-1 text-xs text-teal-700 hover:bg-teal-50 border border-teal-200"
+          >
+            Assignments
+          </button>
+          <button
+            onClick={onViewDetails}
+            className="rounded px-2 py-1 text-xs text-neutral-700 hover:bg-gray-100 border border-gray-200"
+          >
+            Details
+          </button>
         </div>
       </div>
       <p className="mt-2 line-clamp-3 text-sm text-neutral-800">
@@ -277,6 +311,121 @@ function AddExamModal({ onClose, onSave, grades, years, saving }) {
                 </option>
               ))}
             </select>
+          </div>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function ManageAssignmentsModal({ exam, grades, subjects, onClose }) {
+  const [selectedGrades, setSelectedGrades] = useState(() => {
+    const store = JSON.parse(localStorage.getItem("examAssignments") || "{}");
+    const existing = store?.[exam?.id]?.gradeIds || [];
+    return existing;
+  });
+  const [subjectsByGrade, setSubjectsByGrade] = useState(() => {
+    const store = JSON.parse(localStorage.getItem("examAssignments") || "{}");
+    const existing = store?.[exam?.id]?.subjectsByGrade || {};
+    return existing;
+  });
+
+  const toggleGrade = (gradeId) => {
+    setSelectedGrades((prev) =>
+      prev.includes(gradeId)
+        ? prev.filter((g) => g !== gradeId)
+        : [...prev, gradeId],
+    );
+  };
+
+  const setSubjectsFor = (gradeId, values) => {
+    setSubjectsByGrade((prev) => ({ ...prev, [gradeId]: values }));
+  };
+
+  const save = () => {
+    const store = JSON.parse(localStorage.getItem("examAssignments") || "{}");
+    store[exam.id] = {
+      gradeIds: selectedGrades,
+      subjectsByGrade,
+    };
+    localStorage.setItem("examAssignments", JSON.stringify(store));
+    alert("Assignments saved (UI only)");
+    onClose();
+  };
+
+  return (
+    <ModalShell
+      title={`Manage Assignments — ${exam?.title}`}
+      onClose={onClose}
+      footer={
+        <>
+          <button
+            onClick={onClose}
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+          >
+            Cancel
+          </button>
+          <Button label="Save Assignments" onClick={save} />
+        </>
+      }
+    >
+      <div className="space-y-4">
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">
+            Assign Grades
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-2">
+            {(grades || []).map((g) => (
+              <label
+                key={g.id}
+                className="flex items-center gap-2 rounded border border-gray-200 px-3 py-2 text-sm"
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedGrades.includes(g.id)}
+                  onChange={() => toggleGrade(g.id)}
+                />
+                <span>Grade {g.gradeName}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <p className="text-sm font-semibold text-neutral-900">
+            Assign Subjects per Grade
+          </p>
+          <div className="mt-2 space-y-3">
+            {selectedGrades.length === 0 ? (
+              <p className="text-sm text-neutral-700">Select grades first.</p>
+            ) : (
+              selectedGrades.map((gid) => (
+                <div key={gid} className="rounded border border-gray-200 p-3">
+                  <p className="text-xs font-medium text-neutral-800">
+                    Grade {grades?.find((g) => g.id === gid)?.gradeName}
+                  </p>
+                  <select
+                    multiple
+                    value={subjectsByGrade[gid] || []}
+                    onChange={(e) =>
+                      setSubjectsFor(
+                        gid,
+                        Array.from(e.target.selectedOptions).map((o) =>
+                          Number(o.value),
+                        ),
+                      )
+                    }
+                    className="mt-2 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600 h-32"
+                  >
+                    {(subjects || []).map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.subjectName}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>

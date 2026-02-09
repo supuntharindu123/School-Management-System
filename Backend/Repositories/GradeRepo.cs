@@ -1,5 +1,5 @@
 ﻿using Backend.Data;
-using Backend.DTOs;
+using Backend.DTOs.Grade;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;

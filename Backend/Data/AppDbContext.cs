@@ -37,6 +37,10 @@ namespace Backend.Data
 
         public DbSet<Exam> Exams { get; set; }
 
+        public DbSet<ExamGrade> ExamGrades { get; set; }
+
+        public DbSet<ExamGradeSubject> ExamGradeSubjects {  get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
 
@@ -188,10 +192,34 @@ namespace Backend.Data
                 .HasForeignKey(e=>e.AcademicYearId)
                 .OnDelete(DeleteBehavior.Restrict);
 
-            modelBuilder.Entity<Exam>()
-                .HasOne(e=>e.Grade)
-                .WithMany(g=>g.Exams)
-                .HasForeignKey(e=>e.GradeId)
+            modelBuilder.Entity<ExamGrade>()
+                .HasOne(eg => eg.Exam)
+                .WithMany(e => e.ExamGrades)
+                .HasForeignKey(eg => eg.ExamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExamGrade>()
+                .HasOne(eg => eg.Grade)
+                .WithMany(g => g.ExamGrades)
+                .HasForeignKey(eg => eg.GradeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExamGradeSubject>()
+                .HasOne(egs => egs.Grade)
+                .WithMany(g => g.ExamGradeSubjects)
+                .HasForeignKey(egs => egs.GradeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<ExamGradeSubject>()
+                .HasOne(egs => egs.Exam)
+                .WithMany(e => e.ExamGradeSubjects)
+                .HasForeignKey(egs => egs.ExamId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<ExamGradeSubject>()
+                .HasOne(egs => egs.Subject)
+                .WithMany(g => g.ExamGradeSubjects)
+                .HasForeignKey(egs => egs.SubjectId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

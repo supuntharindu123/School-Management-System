@@ -98,7 +98,7 @@ namespace Backend.Migrations
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
 
-                    b.Property<int>("GradeId")
+                    b.Property<int>("ExamType")
                         .HasColumnType("int");
 
                     b.Property<DateOnly>("StartDate")
@@ -111,9 +111,58 @@ namespace Backend.Migrations
 
                     b.HasIndex("AcademicYearId");
 
+                    b.ToTable("Exams");
+                });
+
+            modelBuilder.Entity("Backend.Models.ExamGrade", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExamId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GradeId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
                     b.HasIndex("GradeId");
 
-                    b.ToTable("Exams");
+                    b.ToTable("ExamGrades");
+                });
+
+            modelBuilder.Entity("Backend.Models.ExamGradeSubject", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ExamId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("GradeId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExamId");
+
+                    b.HasIndex("GradeId");
+
+                    b.HasIndex("SubjectId");
+
+                    b.ToTable("ExamGradeSubjects");
                 });
 
             modelBuilder.Entity("Backend.Models.Grade", b =>
@@ -528,15 +577,53 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("AcademicYear");
+                });
+
+            modelBuilder.Entity("Backend.Models.ExamGrade", b =>
+                {
+                    b.HasOne("Backend.Models.Exam", "Exam")
+                        .WithMany("ExamGrades")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.Grade", "Grade")
-                        .WithMany("Exams")
+                        .WithMany("ExamGrades")
                         .HasForeignKey("GradeId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.Navigation("AcademicYear");
+                    b.Navigation("Exam");
 
                     b.Navigation("Grade");
+                });
+
+            modelBuilder.Entity("Backend.Models.ExamGradeSubject", b =>
+                {
+                    b.HasOne("Backend.Models.Exam", "Exam")
+                        .WithMany("ExamGradeSubjects")
+                        .HasForeignKey("ExamId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Grade", "Grade")
+                        .WithMany("ExamGradeSubjects")
+                        .HasForeignKey("GradeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Backend.Models.Subject", "Subject")
+                        .WithMany("ExamGradeSubjects")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Exam");
+
+                    b.Navigation("Grade");
+
+                    b.Navigation("Subject");
                 });
 
             modelBuilder.Entity("Backend.Models.Marks", b =>
@@ -741,6 +828,10 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Exam", b =>
                 {
+                    b.Navigation("ExamGradeSubjects");
+
+                    b.Navigation("ExamGrades");
+
                     b.Navigation("Marks");
                 });
 
@@ -748,7 +839,9 @@ namespace Backend.Migrations
                 {
                     b.Navigation("Classes");
 
-                    b.Navigation("Exams");
+                    b.Navigation("ExamGradeSubjects");
+
+                    b.Navigation("ExamGrades");
 
                     b.Navigation("SubjectGrade");
                 });
@@ -764,6 +857,8 @@ namespace Backend.Migrations
 
             modelBuilder.Entity("Backend.Models.Subject", b =>
                 {
+                    b.Navigation("ExamGradeSubjects");
+
                     b.Navigation("SubjectGrade");
 
                     b.Navigation("TeacherSubjectClass");

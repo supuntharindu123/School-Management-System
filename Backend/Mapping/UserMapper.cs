@@ -1,5 +1,12 @@
 ﻿using AutoMapper;
-using Backend.DTOs;
+using Backend.DTOs.Attendances;
+using Backend.DTOs.Exam;
+using Backend.DTOs.Grade;
+using Backend.DTOs.Promotion;
+using Backend.DTOs.Student;
+using Backend.DTOs.Subject;
+using Backend.DTOs.Teacher;
+using Backend.DTOs.User;
 using Backend.Models;
 using System.Runtime;
 
@@ -94,7 +101,7 @@ namespace Backend.Mapping
             CreateMap<StudentAttendanceUpdateDto, StudentAttendances>();
 
             CreateMap<Exam, ExamResDto>()
-                .ForMember(destination => destination.GradeName, opt => opt.MapFrom(src => src.Grade!.GradeName))
+                .ForMember(destination => destination.ExamType, opt => opt.MapFrom(src => src.ExamType))
                 .ForMember(destination => destination.AcademicYear, opt => opt.MapFrom(src => src.AcademicYear!.Year));
 
             CreateMap<ExamUpdateDto, Exam>();
@@ -103,26 +110,38 @@ namespace Backend.Mapping
 
             CreateMap<TeacherClassAssign, ClassTeacherDto>()
                 .ForMember(d => d.TeacherName,
-                    o => o.MapFrom(s => s.Teacher!.FullName));
+                    o => o.MapFrom(src => src.Teacher!.FullName));
 
             CreateMap<TeacherSubjectClass, ClassSubjectTeacherDto>()
                 .ForMember(d => d.SubjectName,
-                    o => o.MapFrom(s => s.Subject!.SubjectName))
+                    o => o.MapFrom(src => src.Subject!.SubjectName))
                 .ForMember(d => d.TeacherName,
-                    o => o.MapFrom(s => s.Teacher!.FullName));
+                    o => o.MapFrom(src => src.Teacher!.FullName));
 
             CreateMap<Class, ClassDetailsResDto>()
-                .ForMember(d => d.ClassId, o => o.MapFrom(s => s.Id))
-                .ForMember(d => d.ClassName, o => o.MapFrom(s => s.Name))
-                .ForMember(d => d.ClassTeachers, o => o.MapFrom(s => s.TeacherClassAssign))
-                .ForMember(d => d.SubjectTeachers, o => o.MapFrom(s => s.TeacherSubjectClass));
+                .ForMember(d => d.ClassId, o => o.MapFrom(src => src.Id))
+                .ForMember(d => d.ClassName, o => o.MapFrom(src => src.Name))
+                .ForMember(d => d.ClassTeachers, o => o.MapFrom(src => src.TeacherClassAssign))
+                .ForMember(d => d.SubjectTeachers, o => o.MapFrom(src => src.TeacherSubjectClass));
 
             CreateMap<Grade, GradeResDto>();
 
             CreateMap<Subject, SubjectGradeResDto>()
-                .ForMember(d => d.Grades, opt => opt.MapFrom(s => s.SubjectGrade!.Select(s => s.Grade)));
+                .ForMember(d => d.Grades, opt => opt.MapFrom(src => src.SubjectGrade!.Select(s => s.Grade)));
 
             CreateMap<SubjectGradeCreateDto, SubjectGrade>();
+
+            CreateMap<Exam, ExamDetailsResDto>()
+                .ForMember(d => d.Grades, opt => opt.MapFrom(src => src.ExamGrades));
+
+            CreateMap<ExamGrade, GradeExamResDto>()
+                .ForMember(des => des.Classes, opt => opt.MapFrom(src => src.Grade!.Classes))
+                .ForMember(des => des.Subjects, opt => opt.MapFrom(src => src.Exam!.ExamGradeSubjects));
+
+            CreateMap<ExamGradeSubject, SubjectResDto>()
+                .ForMember(d => d.Id, opt => opt.MapFrom(src => src.SubjectId))
+                .ForMember(d => d.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
+                .ForMember(d => d.ModuleCode, opt => opt.MapFrom(src => src.Subject!.ModuleCode));
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿using Backend.Helper;
 using Backend.Models;
-using Backend.DTOs;
+using Backend.DTOs.Grade;
 
 namespace Backend.Services.Interfaces
 {

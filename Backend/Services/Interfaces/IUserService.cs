@@ -1,4 +1,4 @@
-﻿using Backend.DTOs;
+﻿using Backend.DTOs.User;
 using Backend.Helper;
 using Backend.Models;
 

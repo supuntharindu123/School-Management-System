@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using Backend.Data;
-using Backend.DTOs;
+using Backend.DTOs.Promotion;
 using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;

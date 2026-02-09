@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Backend.DTOs;
+using Backend.DTOs.Attendances;
 using Backend.Helper;
 using Backend.Models;
 using Backend.Repositories.Interfaces;
