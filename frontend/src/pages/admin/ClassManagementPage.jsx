@@ -1,15 +1,15 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { getClasses } from "../../features/class/classSlice";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 
 function ClassManagementPage() {
   const [selectedGrade, setSelectedGrade] = useState(null);
-  // Teachers are handled elsewhere via Redux slices when needed
 
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const gradeList = useSelector((state) => state.grades);
   const grades = gradeList.grades;
@@ -45,15 +45,11 @@ function ClassManagementPage() {
     return pool;
   }, [classes, selectedGrade]);
 
-  // Removed assign-teacher flow in this view per request
-
   return (
     <div className="mx-auto max-w-7xl">
       <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">
-            Class Management
-          </h1>
+          <h1 className="text-3xl font-bold text-cyan-50">Class Management</h1>
           <p className="text-sm text-cyan-50">
             Manage grades, classes, and assign class teachers
           </p>
@@ -112,9 +108,6 @@ function ClassManagementPage() {
                       Class Teacher
                     </div>
                   </th>
-                  <th className="sticky top-0 z-10 border-b border-cyan-200 py-2 px-3 text-right font-semibold">
-                    Actions
-                  </th>
                 </tr>
               </thead>
               <tbody className="text-neutral-800">
@@ -123,6 +116,7 @@ function ClassManagementPage() {
                   .map((row) => (
                     <tr
                       key={row.id}
+                      onClick={() => navigate(`/classes/${row.id}`)}
                       className="odd:bg-neutral-50 hover:bg-cyan-50/50 transition"
                     >
                       <td className="border-b border-gray-200 py-2 px-3">
@@ -139,7 +133,7 @@ function ClassManagementPage() {
                       </td>
 
                       <td className="border-b border-gray-200 py-2 px-3">
-                        <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 px-2 py-0.5 text-xs">
+                        <span className="inline-flex items-center gap-1 rounded-full  text-cyan-700 px-2 py-0.5 text-md">
                           {Array.isArray(row.students)
                             ? row.students.length
                             : 0}{" "}
@@ -147,30 +141,23 @@ function ClassManagementPage() {
                         </span>
                       </td>
                       <td className="border-b border-gray-200 py-2 px-3">
-                        {row.classTeachers?.length ? (
+                        {row.classTeachers?.filter((t) => t?.isActive === true)
+                          .length ? (
                           <div className="flex flex-wrap gap-1.5">
-                            {row.classTeachers.map((t, idx) => (
-                              <span
-                                key={idx}
-                                className="inline-flex items-center gap-1 rounded-sm bg-cyan-50 text-cyan-700 border border-cyan-200 px-2 py-0.5 text-xs"
-                              >
-                                {t.teacherName}
-                              </span>
-                            ))}
+                            {row.classTeachers
+                              .filter((t) => t?.isActive === true)
+                              .map((t, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center gap-1 rounded-sm text-cyan-700 px-2 py-0.5 text-md"
+                                >
+                                  {t.role} - {t.teacherName}
+                                </span>
+                              ))}
                           </div>
                         ) : (
                           <span className="text-xs text-neutral-500">-</span>
                         )}
-                      </td>
-                      <td className="border-b border-gray-200 py-2 px-3">
-                        <div className="flex items-center justify-end">
-                          <Link
-                            to={`/classes/${encodeURIComponent(row.id)}`}
-                            className="inline-flex items-center gap-1 rounded-lg border border-cyan-200 bg-cyan-50 px-2.5 py-1.5 text-xs text-cyan-700 hover:bg-cyan-100 focus:outline-none focus:ring-2 focus:ring-cyan-300"
-                          >
-                            View
-                          </Link>
-                        </div>
                       </td>
                     </tr>
                   ))}

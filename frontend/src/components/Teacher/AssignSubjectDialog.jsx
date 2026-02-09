@@ -5,6 +5,8 @@ import { getAllGrades } from "../../features/grade/gradeSlice";
 import { getAllSubjects } from "../../features/subject/subjectSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
+import Button from "../CommonElements/Button";
+import { assignSubjectToTeacher } from "../../features/adminFeatures/teachers/teacherService";
 
 export default function AssignSubjectDialog({
   teacherId,
@@ -72,13 +74,14 @@ export default function AssignSubjectDialog({
     if (!validate()) return;
     setSaving(true);
     try {
-      await onSave({
+      await assignSubjectToTeacher({
         teacherId: Number(teacherId) || Number(form.teacherId),
         subjectId: Number(form.subjectId),
         classId: Number(form.classId) || Number(classId),
         isActive: Boolean(form.isActive),
         description: form.description || null,
       });
+      await onSave();
     } finally {
       setSaving(false);
     }
@@ -87,15 +90,13 @@ export default function AssignSubjectDialog({
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
       <div className="w-full max-w-lg rounded-xl bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-semibold text-neutral-900">
-            Assign Subject
-          </p>
+        <div className="flex items-center justify-between bg-cyan-800 rounded-t-xl px-4 py-3">
+          <p className="text-lg font-bold text-cyan-50">Assign Subject</p>
           <button
             onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-neutral-700 hover:bg-gray-100"
+            className="rounded px-2 py-1 text-lg text-cyan-50 hover:bg-cyan-700"
           >
-            Close
+            ✕
           </button>
         </div>
         <div className="p-4">
@@ -108,7 +109,7 @@ export default function AssignSubjectDialog({
                   <select
                     value={form.teacherId}
                     onChange={(e) => setField("teacherId", e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   >
                     <option value="">Select</option>
                     {teachers.map((t) => (
@@ -124,7 +125,7 @@ export default function AssignSubjectDialog({
                   <select
                     value={form.subjectId}
                     onChange={(e) => setField("subjectId", e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   >
                     <option value="">Select</option>
                     {subjects.map((s) => (
@@ -138,7 +139,7 @@ export default function AssignSubjectDialog({
                   <select
                     value={form.gradeId}
                     onChange={(e) => setField("gradeId", e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   >
                     <option value="">Select</option>
                     {grades.map((g) => (
@@ -152,7 +153,7 @@ export default function AssignSubjectDialog({
                   <select
                     value={form.classId}
                     onChange={(e) => setField("classId", e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   >
                     <option value="">Select</option>
                     {classes.map((c) => (
@@ -181,26 +182,25 @@ export default function AssignSubjectDialog({
                   value={form.description}
                   onChange={(e) => setField("description", e.target.value)}
                   rows={4}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </Field>
             </div>
           )}
         </div>
-        <div className="border-t px-4 py-3 flex justify-end gap-2">
+        <div className=" px-4 py-3 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
           >
             Cancel
           </button>
-          <button
+          <Button
+            label={saving ? "Saving..." : "Save"}
             onClick={handleSave}
+            bgcolor="bg-cyan-800"
             disabled={saving}
-            className={`rounded-lg px-3 py-2 text-sm ${saving ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-          >
-            {saving ? "Saving..." : "Save"}
-          </button>
+          ></Button>
         </div>
       </div>
     </div>

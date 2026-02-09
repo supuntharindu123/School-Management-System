@@ -98,7 +98,7 @@ export default function AttendancePage() {
       {/* Header */}
       <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
-          <h1 className="text-2xl font-semibold text-cyan-50">Attendance</h1>
+          <h1 className="text-3xl font-bold text-cyan-50">Attendance</h1>
           <p className="text-sm text-cyan-50">
             Search and filter students to record attendance
           </p>
@@ -185,7 +185,7 @@ export default function AttendancePage() {
         )}
         <div className="max-h-[60vh] overflow-auto">
           <table className="w-full border-collapse text-sm">
-            <thead>
+            <thead className="sticky top-0">
               <tr className="text-left text-neutral-800 bg-cyan-500 rounded-lg">
                 <th className="border-b border-gray-100 py-2 px-3 sticky top-0">
                   <span className="inline-flex items-center gap-1">ID</span>

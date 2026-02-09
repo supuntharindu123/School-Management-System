@@ -1,21 +1,24 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { logout } from "../features/auth/authSlice";
 
 export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
-  const dashboardLink = user
-    ? user.role == 0
+  // Resolve dashboard route based on user role; ensure a valid string path
+  const dashboardLink =
+    user?.role === 0
       ? "/admin"
-      : user.role == 2
-        ? "/student/dashboard"
-        : "/teacher"
-    : "/teacher";
+      : user?.role === 1
+        ? "/teacher/dashboard"
+        : user?.role === 2
+          ? "/student/dashboard"
+          : "/";
+
   const isActive = (to) =>
-    location.pathname === to || location.pathname.startsWith(`${to}/`);
+    typeof to === "string" &&
+    (location.pathname === to || location.pathname.startsWith(`${to}/`));
 
   const items = [
     {
@@ -218,15 +221,6 @@ export default function Sidebar({ isOpen, onClose }) {
             </Link>
           );
         })}
-
-        <div className="mt-3 border-t border-cyan-800 pt-2">
-          <button
-            className="w-full rounded-lg border border-white/30 bg-transparent px-3 py-2 text-sm text-white hover:border-white hover:text-cyan-200"
-            onClick={() => logout()}
-          >
-            Logout
-          </button>
-        </div>
       </nav>
     </aside>
   );

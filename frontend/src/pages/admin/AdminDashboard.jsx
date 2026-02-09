@@ -5,8 +5,8 @@ import { GetAllStudents } from "../../features/adminFeatures/students/studentLis
 import { getClasses } from "../../features/class/classSlice";
 import { getTeachers } from "../../features/adminFeatures/teachers/teacherSlice";
 import { getStudentAttendance } from "../../features/attendances/attendanceSlice";
-import AddStudentDialog from "../../components/Student/AddStudentDialog";
-import AddTeacherDialog from "../../components/Teacher/AddTeacherDialog";
+import AddTeacherForm from "../../components/Teacher/AddTeacherForm";
+import AddStudentForm from "../../components/Student/AddStudentForm";
 import { useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
@@ -114,19 +114,19 @@ export default function AdminDashboard() {
     },
   ];
 
-  const activity = [
-    { date: "2026-01-10", event: "Student enrolled", user: "Admin" },
-    { date: "2026-01-09", event: "Class created", user: "Admin" },
-    { date: "2026-01-08", event: "Report generated", user: "Admin" },
-  ];
+  // const activity = [
+  //   { date: "2026-01-10", event: "Student enrolled", user: "Admin" },
+  //   { date: "2026-01-09", event: "Class created", user: "Admin" },
+  //   { date: "2026-01-08", event: "Report generated", user: "Admin" },
+  // ];
 
   return (
     <div className="mx-auto max-w-7xl">
-      <AddStudentDialog
+      <AddStudentForm
         open={openAddStudentModal}
         onClose={() => setOpenAddStudentModal(false)}
       />
-      <AddTeacherDialog
+      <AddTeacherForm
         open={openAddTeacherModal}
         onClose={() => setOpenAddTeacherModal(false)}
       />
@@ -147,7 +147,6 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
-
       {/* Stats */}
       <section className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {stats.map((s) => (
@@ -168,7 +167,6 @@ export default function AdminDashboard() {
           </div>
         ))}
       </section>
-
       {/* Quick actions */}
       <section className="mt-6 rounded-xl border border-cyan-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-medium text-neutral-800">Quick Actions</h2>
@@ -189,7 +187,6 @@ export default function AdminDashboard() {
           />
         </div>
       </section>
-
       {/* Management shortcuts */}
       <section className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
         {[
@@ -199,6 +196,7 @@ export default function AdminDashboard() {
         ].map((card) => (
           <div
             key={card.label}
+            onClick={() => navigate(card.to)}
             className="rounded-xl border border-cyan-200 bg-white p-4 hover:border-cyan-600 transition"
           >
             <div className="flex items-center justify-between">
@@ -215,8 +213,7 @@ export default function AdminDashboard() {
           </div>
         ))}
       </section>
-
-      {/* Recent activity */}
+      {/* Recent activity
       <section className="mt-6 rounded-xl border border-cyan-200 bg-white p-4 shadow-sm">
         <h2 className="text-sm font-medium text-neutral-800">
           Recent Activity
@@ -245,7 +242,7 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-      </section>
+      </section> */}
     </div>
   );
 }

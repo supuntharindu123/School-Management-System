@@ -13,5 +13,7 @@ namespace Backend.DTOs
 
         public List<GradeResDto>? Grades { get; set; }
 
+
+
     }
 }

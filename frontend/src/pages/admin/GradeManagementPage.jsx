@@ -20,7 +20,7 @@ export default function GradeManagementPage() {
   ];
 
   const filtered = grades.filter((g) =>
-    query ? String(g.number).includes(query) : true
+    query ? String(g.number).includes(query) : true,
   );
 
   const openAssign = (gradeId) => setModal({ open: true, gradeId });
@@ -28,8 +28,8 @@ export default function GradeManagementPage() {
   const saveAssign = (selected) => {
     setGrades((list) =>
       list.map((g) =>
-        g.id === modal.gradeId ? { ...g, subjects: selected } : g
-      )
+        g.id === modal.gradeId ? { ...g, subjects: selected } : g,
+      ),
     );
     closeAssign();
   };
@@ -136,7 +136,7 @@ function AssignSubjectsModal({ subjects, selected, onClose, onSave }) {
   const [picked, setPicked] = useState(selected);
   const toggle = (id) => {
     setPicked((list) =>
-      list.includes(id) ? list.filter((x) => x !== id) : [...list, id]
+      list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
     );
   };
 

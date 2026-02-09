@@ -30,7 +30,7 @@ namespace Backend.Repositories
         public async Task<Student?> GetStudentById(int id)
         {
             return await _context.Students
-                .Include(s=>s.User).Include(c=>c.Class).Include(s => s.AcademicYear)
+                .Include(s=>s.User).Include(c=>c.Class).ThenInclude(s => s.Grade).Include(s => s.AcademicYear)
                 .FirstOrDefaultAsync(s => s.Id == id);
         }
 

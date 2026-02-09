@@ -4,8 +4,6 @@ export default function ClassOverview({
   classes = [],
   classStatuses = {},
   onManage,
-  onFinalizeAll,
-  canFinalizeAll,
 }) {
   const totals = classes.length;
 
@@ -45,11 +43,11 @@ export default function ClassOverview({
         <Stat label="Completed" value={countByStatus("Completed")} />
         <Stat label="In Progress" value={countByStatus("In Progress")} />
 
-        <div className="rounded-xl border border-gray-200 bg-white p-4">
+        <div className="rounded-xl border border-cyan-200 bg-white p-4 shadow-md">
           <p className="text-xs text-neutral-600">Overall Progress</p>
           <div className="mt-1 h-2 rounded bg-gray-100">
             <div
-              className="h-2 rounded bg-teal-600"
+              className="h-2 rounded bg-cyan-600"
               style={{ width: `${overallPct}%` }}
             />
           </div>
@@ -58,17 +56,6 @@ export default function ClassOverview({
           </p>
         </div>
       </div>
-
-      {canFinalizeAll && (
-        <div className="flex justify-end">
-          <button
-            onClick={onFinalizeAll}
-            className="rounded-lg bg-purple-600 px-3 py-2 text-sm text-white hover:bg-purple-700"
-          >
-            Finalize All Classes
-          </button>
-        </div>
-      )}
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {classes.map((c) => {
@@ -81,7 +68,7 @@ export default function ClassOverview({
           return (
             <div
               key={key}
-              className="rounded-xl border border-gray-200 bg-white p-4"
+              className="rounded-xl border border-gray-200 bg-white p-4 shadow-md"
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-neutral-900">
@@ -102,7 +89,7 @@ export default function ClassOverview({
 
               <div className="mt-2 h-2 rounded bg-gray-100">
                 <div
-                  className="h-2 rounded bg-teal-600"
+                  className="h-2 rounded bg-cyan-600"
                   style={{ width: `${pct}%` }}
                 />
               </div>
@@ -110,7 +97,7 @@ export default function ClassOverview({
               <div className="mt-3 flex justify-end">
                 <button
                   onClick={() => onManage(c)}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  className="rounded-lg border border-gray-200 bg-cyan-600 px-3 py-1.5 text-sm text-white hover:bg-cyan-500"
                 >
                   Manage
                 </button>
@@ -124,7 +111,7 @@ export default function ClassOverview({
 }
 
 const Stat = ({ label, value }) => (
-  <div className="rounded-xl border border-gray-200 bg-white p-4">
+  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
     <p className="text-xs text-neutral-600">{label}</p>
     <p className="text-xl font-semibold text-neutral-900">{value}</p>
   </div>

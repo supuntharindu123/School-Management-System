@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useParams, Link, useLocation } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   getTeacherById,
-  assignClassToTeacher,
   assignSubjectToTeacher,
   terminateClassAssignment,
   terminateSubjectAssignment,
@@ -10,25 +9,32 @@ import {
 import AssignClassDialog from "../../components/Teacher/AssignClassDialog";
 import AssignSubjectDialog from "../../components/Teacher/AssignSubjectDialog";
 import EditTeacherDialog from "../../components/Teacher/EditTeacherDialog";
-import DeleteTeacherDialog from "../../components/Teacher/DeleteTeacherDialog";
-import Modal from "../../components/modal";
+import ConfirmDialog from "../../components/ConfirmDialog";
+import Button from "../../components/CommonElements/Button";
+import SuccessAlert from "../../components/SuccessAlert";
+import ErrorAlert from "../../components/ErrorAlert";
+import ConfirmTerminate from "../../components/ConfirmTerminate";
+import { deleteTeacher } from "../../features/adminFeatures/teachers/teacherService";
 
 export default function TeacherProfilePage() {
   const { id } = useParams();
-  const location = useLocation();
+  // Helper to extract readable error messages from server responses
+  const errMsg = (err, fallback) => {
+    const data = err?.response?.data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object")
+      return data.message || data.title || fallback;
+    return err?.message || fallback;
+  };
   const [teacher, setTeacher] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [assignOpen, setAssignOpen] = useState(false);
-  const [assignError, setAssignError] = useState(null);
   const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
-  const [assignSubjectError, setAssignSubjectError] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [initialAssign, setInitialAssign] = useState({
-    gradeId: null,
-    classId: null,
-  });
+  const [busyDelete, setBusyDelete] = useState(false);
+
   const [confirmClass, setConfirmClass] = useState({
     open: false,
     id: null,
@@ -42,6 +48,17 @@ export default function TeacherProfilePage() {
   });
   const [busyTerminateClass, setBusyTerminateClass] = useState(false);
   const [busyTerminateSubject, setBusyTerminateSubject] = useState(false);
+  const [errors, setErrors] = useState({ open: false, msg: "" });
+  const [success, setSuccess] = useState({ open: false, msg: "" });
+
+  const navigate = useNavigate();
+
+  const getInitials = (name) => {
+    if (!name) return "T";
+    const parts = String(name).trim().split(" ").filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -59,21 +76,6 @@ export default function TeacherProfilePage() {
       mounted = false;
     };
   }, [id]);
-
-  // Auto-open Assign Class dialog from query params and preselect grade/class
-  useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const shouldOpen = params.get("assign") === "class";
-    const classIdParam = params.get("classId");
-    const gradeIdParam = params.get("gradeId");
-    if (shouldOpen) {
-      setAssignOpen(true);
-      setInitialAssign({
-        gradeId: gradeIdParam ? Number(gradeIdParam) : null,
-        classId: classIdParam ? Number(classIdParam) : null,
-      });
-    }
-  }, [location.search]);
 
   if (loading) {
     return (
@@ -101,53 +103,105 @@ export default function TeacherProfilePage() {
 
   return (
     <>
-      <div>
-        <header className="mb-4 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-neutral-900">
-              Teacher Profile
-            </h1>
-            <p className="text-sm text-neutral-700">
-              Detailed information and assignments
-            </p>
+      <div className="mx-auto max-w-7xl">
+        <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-cyan-400/20 blur-2xl" />
+          <div className="flex items-center gap-4">
+            <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-base font-bold">
+              {getInitials(teacher.fullName)}
+            </span>
+            <div>
+              <h1 className="text-3xl font-bold text-cyan-50">
+                {teacher.fullName || "Teacher Profile"}
+              </h1>
+              <p className="text-sm text-cyan-50/90">
+                {(teacher.user && teacher.user.email) ||
+                  "Detailed information and assignments"}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
-            <Link
-              to="/teachers"
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-700"
-            >
-              Back to List
-            </Link>
+            <Button
+              bgcolor="bg-cyan-600"
+              label="Back"
+              onClick={() => navigate("/teachers")}
+            ></Button>
 
-            <button
+            <Button
               onClick={() => setAssignOpen(true)}
-              className="rounded-lg bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-700"
-            >
-              Assign Class
-            </button>
-            <button
+              bgcolor="bg-cyan-600"
+              label="Assign Class"
+            ></Button>
+            <Button
               onClick={() => setAssignSubjectOpen(true)}
-              className="rounded-lg bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-700"
-            >
-              Assign Subject
-            </button>
+              bgcolor="bg-cyan-600"
+              label=" Assign Subject"
+            ></Button>
 
-            <button
+            <Button
               onClick={() => setEditOpen(true)}
-              className="rounded-lg bg-teal-600 px-3 py-2 text-sm text-white hover:bg-teal-700"
-            >
-              Edit Profile
-            </button>
-            <button
+              bgcolor="bg-cyan-600"
+              label="Edit Profile"
+            ></Button>
+            <Button
               onClick={() => setDeleteOpen(true)}
-              className="rounded-lg bg-rose-600 px-3 py-2 text-sm text-white hover:bg-rose-700"
-            >
-              Delete
-            </button>
+              label="Delete"
+              bgcolor="bg-red-600"
+            ></Button>
           </div>
         </header>
 
         {/* Identity */}
+        {/* Quick stats */}
+        <section className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
+              {Array.isArray(teacher.classAssignments)
+                ? teacher.classAssignments.filter((a) => a.isActive).length
+                : 0}
+            </span>
+            <div>
+              <div className="text-sm font-semibold text-neutral-900">
+                Active Classes
+              </div>
+              <div className="text-xs text-neutral-600">
+                Current assignments
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
+              {Array.isArray(teacher.subjectClasses)
+                ? teacher.subjectClasses.filter((s) => s.isActive).length
+                : 0}
+            </span>
+            <div>
+              <div className="text-sm font-semibold text-neutral-900">
+                Active Subjects
+              </div>
+              <div className="text-xs text-neutral-600">
+                Current assignments
+              </div>
+            </div>
+          </div>
+          <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
+              {(Array.isArray(teacher.classAssignments)
+                ? teacher.classAssignments.length
+                : 0) +
+                (Array.isArray(teacher.subjectClasses)
+                  ? teacher.subjectClasses.length
+                  : 0)}
+            </span>
+            <div>
+              <div className="text-sm font-semibold text-neutral-900">
+                Total Assignments
+              </div>
+              <div className="text-xs text-neutral-600">All-time count</div>
+            </div>
+          </div>
+        </section>
+
         <section className="mb-4 grid gap-3 sm:grid-cols-3">
           <Info label="Full Name" value={teacher.fullName} />
           <Info label="Email" value={user.email} />
@@ -163,7 +217,7 @@ export default function TeacherProfilePage() {
 
         {/* Address */}
         <section className="mb-4">
-          <div className="rounded-xl border border-gray-200 bg-white p-4">
+          <div className="rounded-xl border border-cyan-200 bg-white p-4">
             <p className="text-xs text-neutral-600">Address</p>
             <p className="text-sm font-semibold text-neutral-900">
               {teacher.address || "-"}
@@ -174,11 +228,6 @@ export default function TeacherProfilePage() {
         {/* Assignments */}
         <section className="grid gap-3 sm:grid-cols-2">
           <Card title="Class Assignments">
-            {assignError && (
-              <div className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                {assignError}
-              </div>
-            )}
             {Array.isArray(teacher.classAssignments) &&
             teacher.classAssignments.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -188,7 +237,7 @@ export default function TeacherProfilePage() {
                   .map((a) => (
                     <div
                       key={a.id}
-                      className={`rounded-lg p-3 ${a.isActive ? "border border-teal-200 bg-teal-50" : "border border-gray-200 bg-white"}`}
+                      className={`rounded-lg p-3 ${a.isActive ? "border border-cyan-200 bg-cyan-50" : "border border-gray-200 bg-white"}`}
                     >
                       <p className="text-sm font-semibold text-neutral-900">
                         {a.className || "-"}
@@ -196,11 +245,13 @@ export default function TeacherProfilePage() {
                       <p className="text-xs text-neutral-700">
                         Role: {a.role || "-"}
                       </p>
-                      <p
-                        className={`text-xs ${a.isActive ? "text-teal-700" : "text-neutral-700"}`}
-                      >
-                        Status: {a.isActive ? "Active" : "Inactive"}
-                      </p>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${a.isActive ? "bg-cyan-50 text-cyan-700 border-cyan-200" : "bg-neutral-50 text-neutral-600 border-neutral-200"}`}
+                        >
+                          Status: {a.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                       <p className="text-xs text-neutral-700">
                         Created:{" "}
                         {a.createdDate
@@ -223,7 +274,7 @@ export default function TeacherProfilePage() {
                       {a.isActive ? (
                         <div className="mt-2 flex gap-2">
                           <button
-                            className="rounded-lg border border-teal-600 bg-white px-3 py-1 text-xs text-teal-700 hover:bg-teal-50"
+                            className="rounded-lg border border-cyan-600 bg-white px-3 py-1 text-xs text-cyan-700 hover:bg-cyan-50"
                             onClick={() =>
                               setConfirmClass({
                                 open: true,
@@ -244,11 +295,6 @@ export default function TeacherProfilePage() {
             )}
           </Card>
           <Card title="Subject Assignments">
-            {assignSubjectError && (
-              <div className="mb-2 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-800">
-                {assignSubjectError}
-              </div>
-            )}
             {Array.isArray(teacher.subjectClasses) &&
             teacher.subjectClasses.length > 0 ? (
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -258,7 +304,7 @@ export default function TeacherProfilePage() {
                   .map((s) => (
                     <div
                       key={s.id}
-                      className={`rounded-lg p-3 ${s.isActive ? "border border-teal-200 bg-teal-50" : "border border-gray-200 bg-white"}`}
+                      className={`rounded-lg p-3 ${s.isActive ? "border border-cyan-200 bg-cyan-50" : "border border-gray-200 bg-white"}`}
                     >
                       <p className="text-sm font-semibold text-neutral-900">
                         {s.subjectName || s.subject || "-"}
@@ -266,11 +312,13 @@ export default function TeacherProfilePage() {
                       <p className="text-xs text-neutral-700">
                         Class: {s.className || "-"}
                       </p>
-                      <p
-                        className={`text-xs ${s.isActive ? "text-teal-700" : "text-neutral-700"}`}
-                      >
-                        Status: {s.isActive ? "Active" : "Inactive"}
-                      </p>
+                      <div className="mt-1">
+                        <span
+                          className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs border ${s.isActive ? "bg-cyan-50 text-cyan-700 border-cyan-200" : "bg-neutral-50 text-neutral-600 border-neutral-200"}`}
+                        >
+                          Status: {s.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </div>
                       <p className="text-xs text-neutral-700">
                         Start:{" "}
                         {s.startDate && s.startDate !== "0001-01-01T00:00:00"
@@ -292,7 +340,7 @@ export default function TeacherProfilePage() {
                       {s.isActive ? (
                         <div className="mt-2 flex gap-2">
                           <button
-                            className="rounded-lg border border-teal-600 bg-white px-3 py-1 text-xs text-teal-700 hover:bg-teal-50"
+                            className="rounded-lg border border-cyan-600 bg-white px-3 py-1 text-xs text-cyan-700 hover:bg-cyan-50"
                             onClick={() =>
                               setConfirmSubject({
                                 open: true,
@@ -318,18 +366,18 @@ export default function TeacherProfilePage() {
       {assignOpen && (
         <AssignClassDialog
           teacherId={id}
-          initialGradeId={initialAssign.gradeId}
-          initialClassNameId={initialAssign.classId}
           onClose={() => setAssignOpen(false)}
-          onSave={async (payload) => {
+          onSave={async () => {
             try {
-              setAssignError(null);
-              await assignClassToTeacher(payload);
               const data = await getTeacherById(id);
               setTeacher(data);
+              setSuccess({ open: true, msg: "Class assigned successfully" });
               setAssignOpen(false);
             } catch (err) {
-              setAssignError("Failed to assign class. Please try again.");
+              setErrors({
+                open: true,
+                msg: errMsg(err, "Failed to assign class. Please try again."),
+              });
             }
           }}
         />
@@ -343,17 +391,37 @@ export default function TeacherProfilePage() {
             const data = await getTeacherById(id);
             setTeacher(data);
             setEditOpen(false);
+            setSuccess({
+              open: true,
+              msg: "Teacher profile updated successfully",
+            });
           }}
         />
       )}
       {deleteOpen && (
-        <DeleteTeacherDialog
+        <ConfirmDialog
           open={deleteOpen}
-          onClose={() => setDeleteOpen(false)}
-          teacher={teacher}
-          onDeleted={() => {
-            setDeleteOpen(false);
-            window.location.href = "/teachers";
+          title="Delete Teacher"
+          message={`Are you sure you want to delete "${teacher.fullName || "this teacher"}"? This action cannot be undone.`}
+          cancelLabel="Cancel"
+          confirmLabel="Delete"
+          busy={busyDelete}
+          onCancel={() => setDeleteOpen(false)}
+          onConfirm={async () => {
+            try {
+              setBusyDelete(true);
+              await deleteTeacher(teacher.id);
+              setSuccess({ open: true, msg: "Teacher deleted successfully" });
+              setDeleteOpen(false);
+              navigate("/teachers");
+            } catch (err) {
+              setErrors({
+                open: true,
+                msg: errMsg(err, "Failed to delete teacher."),
+              });
+            } finally {
+              setBusyDelete(false);
+            }
           }}
         />
       )}
@@ -361,17 +429,20 @@ export default function TeacherProfilePage() {
         <AssignSubjectDialog
           teacherId={id}
           onClose={() => setAssignSubjectOpen(false)}
-          onSave={async (payload) => {
+          onSave={async () => {
             try {
-              setAssignSubjectError(null);
-              await assignSubjectToTeacher(payload);
               const data = await getTeacherById(id);
+              setSuccess({
+                open: true,
+                msg: "Subject assigned successfully",
+              });
               setTeacher(data);
               setAssignSubjectOpen(false);
             } catch (err) {
-              setAssignSubjectError(
-                "Failed to assign subject. Please try again.",
-              );
+              setErrors({
+                open: true,
+                msg: errMsg(err, "Failed to assign subject. Please try again."),
+              });
             }
           }}
         />
@@ -379,7 +450,7 @@ export default function TeacherProfilePage() {
 
       {/* Confirm terminate class assignment */}
       {confirmClass.open && (
-        <ConfirmClassTerminate
+        <ConfirmTerminate
           open={confirmClass.open}
           name={confirmClass.name}
           busy={busyTerminateClass}
@@ -390,9 +461,16 @@ export default function TeacherProfilePage() {
               await terminateClassAssignment(confirmClass.id);
               const data = await getTeacherById(id);
               setTeacher(data);
+              setSuccess({
+                open: true,
+                msg: "Class assignment terminated successfully",
+              });
               setConfirmClass({ open: false, id: null, name: "" });
             } catch (err) {
-              setAssignError("Failed to terminate assignment.");
+              setErrors({
+                open: true,
+                msg: errMsg(err, "Failed to terminate assignment."),
+              });
             } finally {
               setBusyTerminateClass(false);
             }
@@ -402,7 +480,7 @@ export default function TeacherProfilePage() {
 
       {/* Confirm terminate subject assignment */}
       {confirmSubject.open && (
-        <ConfirmSubjectTerminate
+        <ConfirmTerminate
           open={confirmSubject.open}
           subject={confirmSubject.subject}
           className={confirmSubject.className}
@@ -420,6 +498,10 @@ export default function TeacherProfilePage() {
               setBusyTerminateSubject(true);
               await terminateSubjectAssignment(confirmSubject.id);
               const data = await getTeacherById(id);
+              setSuccess({
+                open: true,
+                msg: "Subject assignment terminated successfully",
+              });
               setTeacher(data);
               setConfirmSubject({
                 open: false,
@@ -428,20 +510,35 @@ export default function TeacherProfilePage() {
                 className: "",
               });
             } catch (err) {
-              setAssignSubjectError("Failed to terminate subject assignment.");
+              setErrors({
+                open: true,
+                msg: errMsg(err, "Failed to terminate subject assignment."),
+              });
             } finally {
               setBusyTerminateSubject(false);
             }
           }}
         />
       )}
+
+      <SuccessAlert
+        isOpen={success.open}
+        message={success.msg}
+        onClose={() => setSuccess({ open: false, msg: "" })}
+      />
+
+      <ErrorAlert
+        isOpen={errors.open}
+        message={errors.msg}
+        onClose={() => setErrors({ open: false, msg: "" })}
+      />
     </>
   );
 }
 
 function Info({ label, value }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-3">
+    <div className="rounded-xl border border-cyan-200 bg-white p-3">
       <p className="text-xs text-neutral-600">{label}</p>
       <p className="text-sm font-semibold text-neutral-900">{value || "-"}</p>
     </div>
@@ -450,84 +547,9 @@ function Info({ label, value }) {
 
 function Card({ title, children }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="rounded-xl border border-cyan-200 bg-white p-4">
       <p className="mb-2 text-sm font-semibold text-neutral-900">{title}</p>
       {children}
     </div>
-  );
-}
-
-// Confirmation Modals
-// Class terminate confirm
-function ConfirmClassTerminate({ open, name, onCancel, onConfirm, busy }) {
-  return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      title="Terminate Class Assignment"
-      footer={
-        <>
-          <button
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-neutral-400"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-          <button
-            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "Terminating..." : "Confirm"}
-          </button>
-        </>
-      }
-    >
-      <p className="text-sm text-neutral-800">
-        Are you sure you want to terminate this class assignment
-        {name ? ` for ${name}` : ""}? This action cannot be undone.
-      </p>
-    </Modal>
-  );
-}
-
-// Subject terminate confirm
-function ConfirmSubjectTerminate({
-  open,
-  subject,
-  className,
-  onCancel,
-  onConfirm,
-  busy,
-}) {
-  return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      title="Terminate Subject Assignment"
-      footer={
-        <>
-          <button
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-neutral-400"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
-          <button
-            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "Terminating..." : "Confirm"}
-          </button>
-        </>
-      }
-    >
-      <p className="text-sm text-neutral-800">
-        Are you sure you want to terminate the subject assignment
-        {subject ? ` ${subject}` : ""}
-        {className ? ` for ${className}` : ""}? This action cannot be undone.
-      </p>
-    </Modal>
   );
 }

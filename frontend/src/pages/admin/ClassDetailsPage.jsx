@@ -2,13 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Button from "../../components/CommonElements/Button";
 import { getClassDetails } from "../../services/classes";
-import { assignClassToTeacher } from "../../features/adminFeatures/teachers/teacherService";
 import AssignClassDialog from "../../components/Teacher/AssignClassDialog";
 import AssignSubjectDialog from "../../components/Teacher/AssignSubjectDialog";
 import { useSelector } from "react-redux";
-import Modal from "../../components/modal";
+import ConfirmTerminate from "../../components/ConfirmTerminate";
+import ConfirmDialog from "../../components/ConfirmDialog";
 import {
-  assignSubjectToTeacher,
   getClassAssignmentsForTeacher,
   terminateClassAssignment,
   terminateSubjectAssignment,
@@ -18,11 +17,13 @@ import {
   GetClassAttendanceByDate,
   UpdateStudentAttendance,
 } from "../../features/attendances/attendanceService";
+import SuccessAlert from "../../components/SuccessAlert";
+import ErrorAlert from "../../components/ErrorAlert";
 
 function SummaryCard({ label, value }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-xs text-neutral-500">{label}</p>
+    <div className="rounded-xl border border-cyan-100 bg-white p-4 shadow-sm">
+      <p className="text-xs text-cyan-700">{label}</p>
       <p className="mt-1 text-xl font-semibold text-neutral-900">{value}</p>
     </div>
   );
@@ -50,13 +51,15 @@ export default function ClassDetailsPage() {
   const [todayAttendanceExists, setTodayAttendanceExists] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
-  const [assigning, setAssigning] = useState(false);
-  const [assignError, setAssignError] = useState(null);
   const [classHistoryOpen, setClassHistoryOpen] = useState(false);
   const [subjectHistoryOpen, setSubjectHistoryOpen] = useState(false);
   const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
-  const [assignSubjectError, setAssignSubjectError] = useState(null);
   const [terminatingKey, setTerminatingKey] = useState(null);
+  const [confirmEdit, setConfirmEdit] = useState({
+    open: false,
+    payload: null,
+  });
+  const [busyEdit, setBusyEdit] = useState(false);
   const [confirmClass, setConfirmClass] = useState({
     open: false,
     teacherId: null,
@@ -70,6 +73,8 @@ export default function ClassDetailsPage() {
   });
   const [busyTerminateClass, setBusyTerminateClass] = useState(false);
   const [busyTerminateSubject, setBusyTerminateSubject] = useState(false);
+  const [success, setSuccess] = useState({ open: false, msg: "" });
+  const [errors, setErrors] = useState({ open: false, msg: "" });
 
   const navigate = useNavigate();
 
@@ -77,24 +82,26 @@ export default function ClassDetailsPage() {
 
   useEffect(() => {
     let isMounted = true;
-    setLoading(true);
-    getClassDetails(id)
-      .then((data) => {
+    const loadDetails = async () => {
+      setLoading(true);
+      try {
+        const data = await getClassDetails(id);
         if (isMounted) {
           setDetails(data);
           setLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (isMounted) {
           setError(
             err?.response?.data ||
-              err.message ||
+              err?.message ||
               "Failed to load class details",
           );
           setLoading(false);
         }
-      });
+      }
+    };
+    loadDetails();
     return () => {
       isMounted = false;
     };
@@ -104,23 +111,25 @@ export default function ClassDetailsPage() {
   useEffect(() => {
     if (!details?.classId || tab !== "attendance") return;
     let isMounted = true;
-    setViewLoading(true);
-    setViewError(null);
-    GetClassAttendanceByDate(details.classId, viewDate)
-      .then((data) => {
+    const loadAttendanceView = async () => {
+      setViewLoading(true);
+      setViewError(null);
+      try {
+        const data = await GetClassAttendanceByDate(details.classId, viewDate);
         if (isMounted) {
           setAttendanceView(Array.isArray(data) ? data : []);
           setViewLoading(false);
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         if (isMounted) {
           setViewError(
             err?.response?.data || err?.message || "Failed to load attendance",
           );
           setViewLoading(false);
         }
-      });
+      }
+    };
+    loadAttendanceView();
     return () => {
       isMounted = false;
     };
@@ -130,17 +139,22 @@ export default function ClassDetailsPage() {
   useEffect(() => {
     if (!details?.classId) return;
     let isMounted = true;
-    GetClassAttendanceByDate(details.classId, getTodayLocalISO())
-      .then((data) => {
+    const checkToday = async () => {
+      try {
+        const data = await GetClassAttendanceByDate(
+          details.classId,
+          getTodayLocalISO(),
+        );
         if (isMounted) {
           setTodayAttendanceExists(
             Array.isArray(data) ? data.length > 0 : !!data,
           );
         }
-      })
-      .catch(() => {
+      } catch {
         // ignore errors for existence check
-      });
+      }
+    };
+    checkToday();
     return () => {
       isMounted = false;
     };
@@ -160,6 +174,9 @@ export default function ClassDetailsPage() {
   const classTeachers = details.classTeachers || [];
   const subjectTeachers = details.subjectTeachers || [];
   const activeClassTeacher = classTeachers.find((t) => t.isActive);
+  const activeClassTeachersCount = classTeachers.filter(
+    (t) => t.isActive,
+  ).length;
 
   const ViewStdDetails = (studentId) => {
     navigate(`/students/${studentId}`);
@@ -214,30 +231,28 @@ export default function ClassDetailsPage() {
   return (
     <div className="mx-auto max-w-7xl">
       {/* Header */}
-      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
+      <header className="mb-4 flex items-center justify-between bg-gradient-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 shadow-md">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-2xl font-bold text-cyan-50">
             {details.className || `Class ${details.classId}`}
           </h1>
-          <p className="text-sm text-neutral-700">Grade: {details.gradeId}</p>
+          <p className="text-sm text-cyan-100">Grade: {details.gradeId}</p>
         </div>
         <div className="flex items-center gap-2">
           {user.role === 0 && (
             <>
               <Link
                 to={`/teachers?assign=class&classId=${encodeURIComponent(details.classId)}`}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
               >
                 Back
               </Link>
-              <Button
-                label={
-                  activeClassTeacher
-                    ? "Change Class Teacher"
-                    : "Assign Class Teacher"
-                }
-                onClick={() => setAssignOpen(true)}
-              />
+              {activeClassTeachersCount < 2 && (
+                <Button
+                  label="Assign Class Teacher"
+                  onClick={() => setAssignOpen(true)}
+                />
+              )}
 
               <Button
                 label="Assign Subject Teacher"
@@ -249,15 +264,15 @@ export default function ClassDetailsPage() {
       </header>
 
       {/* Tabs */}
-      <nav className="rounded-xl border border-gray-200 bg-white p-2">
-        <div className="flex gap-2">
+      <nav className="rounded-xl bg-white p-2 shadow-sm mb-4">
+        <div className="flex">
           <button
             type="button"
             onClick={() => setTab("details")}
-            className={`px-3 py-2 text-sm rounded-lg ${
+            className={`px-3 py-2 text-sm rounded-l-lg ${
               tab === "details"
-                ? "bg-teal-600 text-white"
-                : "bg-white border border-gray-200 text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                ? "bg-cyan-600 text-white"
+                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
             }`}
           >
             Class Details
@@ -265,10 +280,10 @@ export default function ClassDetailsPage() {
           <button
             type="button"
             onClick={() => setTab("students")}
-            className={`px-3 py-2 text-sm rounded-lg ${
+            className={`px-3 py-2 text-sm  ${
               tab === "students"
-                ? "bg-teal-600 text-white"
-                : "bg-white border border-gray-200 text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                ? "bg-cyan-600 text-white"
+                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
             }`}
           >
             Students
@@ -276,10 +291,10 @@ export default function ClassDetailsPage() {
           <button
             type="button"
             onClick={() => setTab("attendance")}
-            className={`px-3 py-2 text-sm rounded-lg ${
+            className={`px-3 py-2 text-sm rounded-r-lg ${
               tab === "attendance"
-                ? "bg-teal-600 text-white"
-                : "bg-white border border-gray-200 text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                ? "bg-cyan-600 text-white"
+                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
             }`}
           >
             Attendance
@@ -290,7 +305,7 @@ export default function ClassDetailsPage() {
       {tab === "details" && (
         <>
           {/* Summary cards */}
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+          <section className="grid grid-cols-1 gap-3 sm:grid-cols-4 mb-4">
             <SummaryCard label="Students" value={students.length} />
             <SummaryCard label="Subjects" value={subjectTeachers.length} />
             <SummaryCard label="Class Teachers" value={classTeachers.length} />
@@ -301,15 +316,15 @@ export default function ClassDetailsPage() {
           </section>
 
           {/* Class Teachers */}
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <div className="flex items-center justify-between border-b px-4 py-3">
-              <p className="text-sm font-semibold text-neutral-900">
+          <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
+              <p className="text-md font-semibold text-neutral-900">
                 Class Teachers
               </p>
               {classTeachers.some((t) => !t.isActive) && (
                 <button
                   type="button"
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  className="rounded-lg border border-cyan-100 bg-cyan-600 px-3 py-2 text-sm text-white hover:border-cyan-500 hover:text-cyan-50"
                   onClick={() => setClassHistoryOpen((v) => !v)}
                 >
                   {classHistoryOpen ? "Hide History" : "Show History"}
@@ -323,7 +338,7 @@ export default function ClassDetailsPage() {
                   .map((t) => (
                     <div
                       key={`${t.teacherId}-${t.role}`}
-                      className="rounded-lg border border-gray-200 p-3 text-sm"
+                      className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
                     >
                       <p className="font-medium text-neutral-900">
                         {t.teacherName}
@@ -334,7 +349,7 @@ export default function ClassDetailsPage() {
                         <div className="mt-2">
                           <button
                             type="button"
-                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `ct-${t.teacherId}` ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `ct-${t.teacherId}` ? "bg-cyan-300 text-white" : "bg-cyan-600 text-white hover:bg-cyan-700"}`}
                             disabled={terminatingKey === `ct-${t.teacherId}`}
                             onClick={() =>
                               setConfirmClass({
@@ -353,14 +368,14 @@ export default function ClassDetailsPage() {
                     </div>
                   ))}
                 {classTeachers.filter((t) => t.isActive).length === 0 && (
-                  <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-700">
+                  <div className="rounded-lg border border-cyan-100 p-3 text-sm text-neutral-700">
                     No active class teacher assignments.
                   </div>
                 )}
               </div>
             </div>
             {classHistoryOpen && (
-              <div className="border-t px-4 py-3">
+              <div className="border-t border-cyan-100 px-4 py-3">
                 <p className="text-sm font-semibold text-neutral-900">
                   History
                 </p>
@@ -370,7 +385,7 @@ export default function ClassDetailsPage() {
                     .map((t) => (
                       <div
                         key={`${t.teacherId}-${t.role}-hist`}
-                        className="rounded-lg border border-gray-200 p-3 text-sm"
+                        className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
                       >
                         <p className="font-medium text-neutral-900">
                           {t.teacherName}
@@ -385,15 +400,15 @@ export default function ClassDetailsPage() {
           </section>
 
           {/* Subject Teachers */}
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <div className="flex items-center justify-between border-b px-4 py-3">
+          <section className="rounded-xl border border-cyan-100 bg-white shadow-md mt-4">
+            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
               <p className="text-sm font-semibold text-neutral-900">
                 Subject Teachers
               </p>
               {subjectTeachers.some((st) => !st.isActive) && (
                 <button
                   type="button"
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                  className="rounded-lg border border-cyan-100 bg-cyan-600 px-3 py-2 text-sm text-white hover:border-cyan-500 hover:text-cyan-50"
                   onClick={() => setSubjectHistoryOpen((v) => !v)}
                 >
                   {subjectHistoryOpen ? "Hide History" : "Show History"}
@@ -407,7 +422,7 @@ export default function ClassDetailsPage() {
                   .map((st) => (
                     <div
                       key={`${st.subjectId}-${st.teacherId}`}
-                      className="rounded-lg border border-gray-200 p-3 text-sm"
+                      className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
                     >
                       <p className="font-medium text-neutral-900">
                         {st.subjectName}
@@ -420,7 +435,7 @@ export default function ClassDetailsPage() {
                         <div className="mt-2">
                           <button
                             type="button"
-                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `st-${st.teacherId}-${st.subjectId}` ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
+                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `st-${st.teacherId}-${st.subjectId}` ? "bg-cyan-300 text-white" : "bg-cyan-600 text-white hover:bg-cyan-700"}`}
                             disabled={
                               terminatingKey ===
                               `st-${st.teacherId}-${st.subjectId}`
@@ -444,14 +459,14 @@ export default function ClassDetailsPage() {
                     </div>
                   ))}
                 {subjectTeachers.filter((st) => st.isActive).length === 0 && (
-                  <div className="rounded-lg border border-gray-200 p-3 text-sm text-neutral-700">
+                  <div className="rounded-lg border border-cyan-100 p-3 text-sm text-neutral-700">
                     No active subject teacher assignments.
                   </div>
                 )}
               </div>
             </div>
             {subjectHistoryOpen && (
-              <div className="border-t px-4 py-3">
+              <div className="border-t border-cyan-100 px-4 py-3">
                 <p className="text-sm font-semibold text-neutral-900">
                   History
                 </p>
@@ -461,7 +476,7 @@ export default function ClassDetailsPage() {
                     .map((st) => (
                       <div
                         key={`${st.subjectId}-${st.teacherId}-hist`}
-                        className="rounded-lg border border-gray-200 p-3 text-sm"
+                        className="rounded-lg border border-cyan-100 p-3 text-sm"
                       >
                         <p className="font-medium text-neutral-900">
                           {st.subjectName}
@@ -480,8 +495,8 @@ export default function ClassDetailsPage() {
       )}
 
       {tab === "students" && (
-        <section className="rounded-xl border border-gray-200 bg-white">
-          <div className="flex items-center justify-between border-b px-4 py-3">
+        <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
+          <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
             <p className="text-sm font-semibold text-neutral-900">Students</p>
             <span className="text-xs text-neutral-600">
               Total: {students.length}
@@ -490,38 +505,38 @@ export default function ClassDetailsPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="text-left text-neutral-800">
-                  <th className="border-b border-gray-200 py-2 px-3">ID</th>
-                  <th className="border-b border-gray-200 py-2 px-3">
+                <tr className="text-left bg-cyan-50 text-cyan-800">
+                  <th className="border-b border-cyan-200 py-2 px-3">ID</th>
+                  <th className="border-b border-cyan-200 py-2 px-3">
                     Student ID
                   </th>
-                  <th className="border-b border-gray-200 py-2 px-3">Name</th>
-                  <th className="border-b border-gray-200 py-2 px-3">Gender</th>
-                  <th className="border-b border-gray-200 py-2 px-3">Status</th>
+                  <th className="border-b border-cyan-200 py-2 px-3">Name</th>
+                  <th className="border-b border-cyan-200 py-2 px-3">Gender</th>
+                  <th className="border-b border-cyan-200 py-2 px-3">Status</th>
                 </tr>
               </thead>
               <tbody className="text-neutral-800">
                 {students.map((s) => (
                   <tr
                     key={s.id}
-                    className="hover:bg-gray-50"
+                    className="hover:bg-cyan-50"
                     onClick={() => {
                       ViewStdDetails(s.id);
                     }}
                   >
-                    <td className="border-b border-gray-200 py-2 px-3">
+                    <td className="border-b border-cyan-100 py-2 px-3">
                       {s.id}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
+                    <td className="border-b border-cyan-100 py-2 px-3">
                       {s.studentIDNumber}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3 font-medium">
+                    <td className="border-b border-cyan-100 py-2 px-3 font-medium">
                       {s.fullName}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
+                    <td className="border-b border-cyan-100 py-2 px-3">
                       {s.gender}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
+                    <td className="border-b border-cyan-100 py-2 px-3">
                       {s.status}
                     </td>
                   </tr>
@@ -535,8 +550,8 @@ export default function ClassDetailsPage() {
       {tab === "attendance" && (
         <>
           {/* View selected day attendance */}
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <div className="flex items-center justify-between border-b px-4 py-3">
+          <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
+            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
               <p className="text-sm font-semibold text-neutral-900">
                 View Attendance
               </p>
@@ -551,7 +566,7 @@ export default function ClassDetailsPage() {
                     type="date"
                     value={viewDate}
                     onChange={(e) => setViewDate(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-600"
+                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   />
                 </div>
               </div>
@@ -566,25 +581,25 @@ export default function ClassDetailsPage() {
               <div className="overflow-x-auto">
                 <table className="w-full border-collapse text-sm">
                   <thead>
-                    <tr className="text-left text-neutral-800">
-                      <th className="border-b border-gray-200 py-2 px-3">ID</th>
-                      <th className="border-b border-gray-200 py-2 px-3">
+                    <tr className="text-left bg-cyan-600 text-cyan-50">
+                      <th className="border-b border-cyan-200 py-2 px-3">ID</th>
+                      <th className="border-b border-cyan-200 py-2 px-3">
                         Date
                       </th>
-                      <th className="border-b border-gray-200 py-2 px-3">
+                      <th className="border-b border-cyan-200 py-2 px-3">
                         Student
                       </th>
-                      <th className="border-b border-gray-200 py-2 px-3">
+                      <th className="border-b border-cyan-200 py-2 px-3">
                         Present
                       </th>
-                      <th className="border-b border-gray-200 py-2 px-3">
+                      <th className="border-b border-cyan-200 py-2 px-3">
                         Reason
                       </th>
-                      <th className="border-b border-gray-200 py-2 px-3">
+                      <th className="border-b border-cyan-200 py-2 px-3">
                         Teacher
                       </th>
                       {user?.role === 1 && (
-                        <th className="border-b border-gray-200 py-2 px-3">
+                        <th className="border-b border-cyan-200 py-2 px-3">
                           Actions
                         </th>
                       )}
@@ -594,18 +609,18 @@ export default function ClassDetailsPage() {
                     {(attendanceView || []).map((a) => (
                       <tr
                         key={`${a.id ?? a.Id}-${a.date ?? a.Date}`}
-                        className="hover:bg-gray-50"
+                        className="hover:bg-cyan-50"
                       >
-                        <td className="border-b border-gray-200 py-2 px-3">
+                        <td className="border-b border-cyan-100 py-2 px-3">
                           {a.id ?? a.Id}
                         </td>
-                        <td className="border-b border-gray-200 py-2 px-3">
+                        <td className="border-b border-cyan-100 py-2 px-3">
                           {a.date ?? a.Date}
                         </td>
-                        <td className="border-b border-gray-200 py-2 px-3 font-medium">
+                        <td className="border-b border-cyan-100 py-2 px-3 font-medium">
                           {a.studentName ?? a.StudentName}
                         </td>
-                        <td className="border-b border-gray-200 py-2 px-3">
+                        <td className="border-b border-cyan-100 py-2 px-3">
                           {editingId === (a.id ?? a.Id) ? (
                             <input
                               type="checkbox"
@@ -641,7 +656,7 @@ export default function ClassDetailsPage() {
                             "No"
                           )}
                         </td>
-                        <td className="border-b border-gray-200 py-2 px-3">
+                        <td className="border-b border-cyan-100 py-2 px-3">
                           {editingId === (a.id ?? a.Id) ? (
                             <input
                               type="text"
@@ -670,23 +685,23 @@ export default function ClassDetailsPage() {
                                   a.IsPresent
                                 )
                               }
-                              className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                              className="block w-full rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm disabled:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                             />
                           ) : (
                             (a.reason ?? a.Reason ?? "-")
                           )}
                         </td>
-                        <td className="border-b border-gray-200 py-2 px-3">
+                        <td className="border-b border-cyan-100 py-2 px-3">
                           {a.teacherName ?? a.TeacherName ?? "-"}
                         </td>
                         {user?.role === 1 && (
-                          <td className="border-b border-gray-200 py-2 px-3">
+                          <td className="border-b border-cyan-100 py-2 px-3">
                             {editingId === (a.id ?? a.Id) ? (
                               <div className="flex gap-2">
                                 <button
                                   type="button"
-                                  className="rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-                                  onClick={async () => {
+                                  className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
+                                  onClick={() => {
                                     const idVal = a.id ?? a.Id;
                                     const isPresent = !!(
                                       editValues[idVal]?.isPresent ??
@@ -700,33 +715,27 @@ export default function ClassDetailsPage() {
                                         a.Reason ??
                                         null);
                                     const dateVal = a.date ?? a.Date;
-                                    try {
-                                      await UpdateStudentAttendance(idVal, {
+                                    const studentName =
+                                      a.studentName ??
+                                      a.StudentName ??
+                                      "the student";
+                                    setConfirmEdit({
+                                      open: true,
+                                      payload: {
+                                        idVal,
                                         isPresent,
                                         reason,
-                                        date: String(dateVal),
-                                      });
-                                      setEditingId(null);
-                                      setEditValues((prev) => ({
-                                        ...prev,
-                                        [idVal]: undefined,
-                                      }));
-                                      // refresh current view
-                                      setViewDate((d) => d);
-                                    } catch (e) {
-                                      alert(
-                                        e?.response?.data ||
-                                          e?.message ||
-                                          "Failed to update attendance",
-                                      );
-                                    }
+                                        dateVal,
+                                        studentName,
+                                      },
+                                    });
                                   }}
                                 >
                                   Save
                                 </button>
                                 <button
                                   type="button"
-                                  className="rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                                  className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
                                   onClick={() => setEditingId(null)}
                                 >
                                   Cancel
@@ -735,7 +744,7 @@ export default function ClassDetailsPage() {
                             ) : (a.date ?? a.Date) === getTodayLocalISO() ? (
                               <button
                                 type="button"
-                                className="rounded-lg border border-gray-200 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                                className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
                                 title="Edit attendance"
                                 onClick={() => setEditingId(a.id ?? a.Id)}
                               >
@@ -765,7 +774,7 @@ export default function ClassDetailsPage() {
           {/* Mark today's attendance (hidden if already marked) */}
           {user?.role === 1 ? (
             todayAttendanceExists || todayMarked ? (
-              <section className="rounded-xl border border-gray-200 bg-white">
+              <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
                 <div className="px-4 py-3">
                   <p className="text-sm text-neutral-800">
                     Today's attendance is already marked. The marking list is
@@ -779,7 +788,6 @@ export default function ClassDetailsPage() {
                 teacherId={user?.teacherId}
                 onSuccess={() => {
                   setTodayMarked(true);
-                  // refresh today's view if user is viewing today
                   if (viewDate === getTodayLocalISO()) {
                     setViewDate(getTodayLocalISO());
                   }
@@ -796,18 +804,14 @@ export default function ClassDetailsPage() {
           classNameId={details.classId}
           isTeacher={false}
           onClose={() => setAssignOpen(false)}
-          onSave={async (payload) => {
+          onSave={async () => {
             try {
-              setAssignError(null);
-              setAssigning(true);
-              await assignClassToTeacher(payload);
+              setSuccess({ open: true, msg: "Class Assign Successfully!" });
               const refreshed = await getClassDetails(id);
               setDetails(refreshed);
               setAssignOpen(false);
             } catch (err) {
-              setAssignError("Failed to assign class. Please try again.");
-            } finally {
-              setAssigning(false);
+              setErrors({ open: false, msg: err?.response?.data });
             }
           }}
         />
@@ -819,17 +823,14 @@ export default function ClassDetailsPage() {
           gradeId={details.gradeId}
           classId={details.classId}
           onClose={() => setAssignSubjectOpen(false)}
-          onSave={async (payload) => {
+          onSave={async () => {
             try {
-              setAssignSubjectError(null);
-              await assignSubjectToTeacher(payload);
+              setSuccess({ open: true, msg: "Subject Assign Successfully!" });
               const refreshed = await getClassDetails(id);
               setDetails(refreshed);
               setAssignSubjectOpen(false);
             } catch (err) {
-              setAssignSubjectError(
-                "Failed to assign subject. Please try again.",
-              );
+              setErrors({ open: false, msg: err?.response?.data });
             }
           }}
         />
@@ -837,7 +838,7 @@ export default function ClassDetailsPage() {
 
       {/* Confirm terminate class assignment */}
       {confirmClass.open && (
-        <ConfirmClassTerminate
+        <ConfirmTerminate
           open={confirmClass.open}
           name={confirmClass.name}
           busy={busyTerminateClass}
@@ -847,18 +848,19 @@ export default function ClassDetailsPage() {
           onConfirm={async () => {
             try {
               setBusyTerminateClass(true);
+              setErrors({ open: false, msg: "" });
               await terminateClassForTeacher(confirmClass.teacherId);
+              setSuccess({ open: true, msg: "Class Assign Terminated!" });
               setConfirmClass({ open: false, teacherId: null, name: "" });
-            } finally {
-              setBusyTerminateClass(false);
+            } catch (error) {
+              setErrors({ open: true, msg: error?.response?.data });
             }
           }}
         />
       )}
 
-      {/* Confirm terminate subject assignment */}
       {confirmSubject.open && (
-        <ConfirmSubjectTerminate
+        <ConfirmTerminate
           open={confirmSubject.open}
           subject={confirmSubject.subject}
           className={confirmSubject.className}
@@ -875,16 +877,79 @@ export default function ClassDetailsPage() {
             try {
               setBusyTerminateSubject(true);
               await terminateSubjectForTeacher(null, confirmSubject.subjectId);
+              setSuccess({ open: true, msg: "Subject Assign Terminated!" });
               setConfirmSubject({
                 open: false,
                 subjectId: null,
                 subject: "",
                 className: "",
               });
+            } catch (err) {
+              setErrors({ open: true, msg: err?.response?.data });
             } finally {
               setBusyTerminateSubject(false);
             }
           }}
+        />
+      )}
+
+      {success.open && (
+        <SuccessAlert
+          isOpen={success.open}
+          message={success.msg}
+          onClose={() => setSuccess({ open: false, msg: "" })}
+        />
+      )}
+      {/* Confirm edit attendance (standalone, outside alerts) */}
+      {confirmEdit.open && (
+        <ConfirmDialog
+          open={confirmEdit.open}
+          title="Confirm Attendance Update"
+          message={`Save changes for ${confirmEdit.payload?.studentName} on ${String(confirmEdit.payload?.dateVal)}?`}
+          confirmLabel="Save"
+          cancelLabel="Cancel"
+          busy={busyEdit}
+          onCancel={() => setConfirmEdit({ open: false, payload: null })}
+          onConfirm={async () => {
+            try {
+              setBusyEdit(true);
+              const { idVal, isPresent, reason, dateVal } =
+                confirmEdit.payload || {};
+              await UpdateStudentAttendance(idVal, {
+                isPresent,
+                reason,
+                date: String(dateVal),
+              });
+              setSuccess({
+                open: true,
+                msg: "Attendance updated successfully.",
+              });
+              // reset editing state
+              setEditingId(null);
+              setEditValues((prev) => ({ ...prev, [idVal]: undefined }));
+              // refresh current view
+              setViewDate((d) => d);
+              setConfirmEdit({ open: false, payload: null });
+            } catch (e) {
+              setErrors({
+                open: true,
+                msg:
+                  e?.response?.data ||
+                  e?.message ||
+                  "Failed to update attendance",
+              });
+            } finally {
+              setBusyEdit(false);
+            }
+          }}
+        />
+      )}
+
+      {errors.open && (
+        <ErrorAlert
+          isOpen={errors.open}
+          message={errors.msg}
+          onClose={() => setErrors({ open: false, msg: "" })}
         />
       )}
     </div>
@@ -908,8 +973,10 @@ function TeacherAttendanceSection({ students, teacherId, onSuccess }) {
     return init;
   });
   const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState(null);
-  const [success, setSuccess] = useState("");
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [busyConfirm, setBusyConfirm] = useState(false);
+  const [markSuccess, setMarkSuccess] = useState({ open: false, msg: "" });
+  const [markError, setMarkError] = useState({ open: false, msg: "" });
 
   const allPresent = useMemo(() => {
     const ids = Object.keys(rows);
@@ -938,205 +1005,182 @@ function TeacherAttendanceSection({ students, teacherId, onSuccess }) {
     }));
   };
 
-  const onSubmit = async () => {
+  const buildPayload = () =>
+    (students || []).map((s) => ({
+      isPresent: !!rows[s.id]?.isPresent,
+      reason: rows[s.id]?.isPresent ? null : rows[s.id]?.reason || null,
+      date,
+      studentId: s.id,
+      teacherId: teacherId,
+    }));
+
+  const onSubmit = () => {
     if (!teacherId) {
-      setError("Missing teacher identity.");
+      setMarkError({ open: true, msg: "Missing teacher identity." });
       return;
     }
     setSubmitting(true);
-    setError(null);
-    setSuccess("");
-    try {
-      const payload = (students || []).map((s) => ({
-        isPresent: !!rows[s.id]?.isPresent,
-        reason: rows[s.id]?.isPresent ? null : rows[s.id]?.reason || null,
-        date,
-        studentId: s.id,
-        teacherId: teacherId,
-      }));
-      await MarkStudentAttendances(payload);
-      setSuccess("Attendance marked successfully.");
-      if (typeof onSuccess === "function") onSuccess();
-    } catch (e) {
-      setError(e?.response?.data || e?.message || "Failed to mark attendance.");
-    } finally {
-      setSubmitting(false);
-    }
+    setConfirmOpen(true);
   };
 
   return (
-    <section className="rounded-xl border border-gray-200 bg-white">
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <p className="text-sm font-semibold text-neutral-900">
-          Mark Attendance
-        </p>
-      </div>
-      <div className="p-4 space-y-3">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-          <div>
-            <label className="block text-sm font-medium text-neutral-800">
-              Date
-            </label>
-            <p className="mt-1 text-sm text-neutral-900">{date}</p>
-          </div>
-          <div className="flex items-end">
-            <button
-              type="button"
-              onClick={() => setAll(!allPresent)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-            >
-              {allPresent ? "Mark All Absent" : "Mark All Present"}
-            </button>
-          </div>
+    <>
+      <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
+        <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
+          <p className="text-sm font-semibold text-neutral-900">
+            Mark Attendance
+          </p>
         </div>
+        <div className="p-4 space-y-3">
+          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+            <div>
+              <label className="block text-sm font-medium text-neutral-800">
+                Date
+              </label>
+              <p className="mt-1 text-sm text-neutral-900">{date}</p>
+            </div>
+            <div className="flex items-end">
+              <button
+                type="button"
+                onClick={() => setAll(!allPresent)}
+                className="rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
+              >
+                {allPresent ? "Mark All Absent" : "Mark All Present"}
+              </button>
+            </div>
+          </div>
 
-        {error && <div className="text-sm text-rose-700">{String(error)}</div>}
-        {success && <div className="text-sm text-teal-700">{success}</div>}
+          {/* Alerts handled via modals below */}
 
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left text-neutral-800">
-                <th className="border-b border-gray-200 py-2 px-3">ID</th>
-                <th className="border-b border-gray-200 py-2 px-3">Student</th>
-                <th className="border-b border-gray-200 py-2 px-3">Present</th>
-                <th className="border-b border-gray-200 py-2 px-3">
-                  Reason (if absent)
-                </th>
-              </tr>
-            </thead>
-            <tbody className="text-neutral-800">
-              {(students || []).map((s) => {
-                const r = rows[s.id] || { isPresent: true, reason: "" };
-                return (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {s.id}
-                    </td>
-                    <td className="border-b border-gray-200 py-2 px-3 font-medium">
-                      {s.fullName}
-                    </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      <input
-                        type="checkbox"
-                        checked={!!r.isPresent}
-                        onChange={(e) =>
-                          setCell(s.id, { isPresent: e.target.checked })
-                        }
-                      />
-                    </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      <input
-                        type="text"
-                        placeholder="Optional when absent"
-                        value={r.reason}
-                        onChange={(e) =>
-                          setCell(s.id, { reason: e.target.value })
-                        }
-                        disabled={!!r.isPresent}
-                        className="block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm disabled:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-teal-600"
-                      />
+          <div className="overflow-x-auto">
+            <table className="w-full border-collapse text-sm">
+              <thead>
+                <tr className="text-left text-neutral-800">
+                  <th className="border-b border-cyan-100 py-2 px-3">ID</th>
+                  <th className="border-b border-cyan-100 py-2 px-3">
+                    Student
+                  </th>
+                  <th className="border-b border-cyan-100 py-2 px-3">
+                    Present
+                  </th>
+                  <th className="border-b border-cyan-100 py-2 px-3">
+                    Reason (if absent)
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="text-neutral-800">
+                {(students || []).map((s) => {
+                  const r = rows[s.id] || { isPresent: true, reason: "" };
+                  return (
+                    <tr key={s.id} className="hover:bg-cyan-50">
+                      <td className="border-b border-cyan-100 py-2 px-3">
+                        {s.id}
+                      </td>
+                      <td className="border-b border-cyan-100 py-2 px-3 font-medium">
+                        {s.fullName}
+                      </td>
+                      <td className="border-b border-cyan-100 py-2 px-3">
+                        <input
+                          type="checkbox"
+                          checked={!!r.isPresent}
+                          onChange={(e) =>
+                            setCell(s.id, { isPresent: e.target.checked })
+                          }
+                        />
+                      </td>
+                      <td className="border-b border-cyan-100 py-2 px-3">
+                        <input
+                          type="text"
+                          placeholder="Optional when absent"
+                          value={r.reason}
+                          onChange={(e) =>
+                            setCell(s.id, { reason: e.target.value })
+                          }
+                          disabled={!!r.isPresent}
+                          className="block w-full rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm disabled:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+                {(!students || students.length === 0) && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="py-8 text-center text-neutral-600"
+                    >
+                      No students to display.
                     </td>
                   </tr>
-                );
-              })}
-              {(!students || students.length === 0) && (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-neutral-600">
-                    No students to display.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-        <div className="flex justify-end">
-          <Button
-            label={submitting ? "Saving..." : "Submit Attendance"}
-            onClick={onSubmit}
-            disabled={submitting || !students?.length}
-          />
+          <div className="flex justify-end">
+            <Button
+              label={submitting ? "Saving..." : "Submit Attendance"}
+              onClick={onSubmit}
+              disabled={submitting || !students?.length}
+            />
+          </div>
         </div>
-      </div>
-    </section>
-  );
-}
+      </section>
 
-function ConfirmClassTerminate({ open, name, busy, onCancel, onConfirm }) {
-  return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      title="Terminate Class Assignment"
-      footer={
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-            onClick={onCancel}
-            disabled={busy}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "Terminating..." : "Confirm"}
-          </button>
-        </div>
-      }
-    >
-      <p className="text-sm text-neutral-800">
-        Are you sure you want to terminate the class assignment for
-        <span className="font-semibold"> {name} </span>?
-      </p>
-    </Modal>
-  );
-}
+      {/* Confirm mark attendance */}
+      {confirmOpen && (
+        <ConfirmDialog
+          open={confirmOpen}
+          title="Confirm Mark Attendance"
+          message={`Mark attendance for ${students?.length ?? 0} students on ${date}?`}
+          confirmLabel="Mark"
+          cancelLabel="Cancel"
+          busy={busyConfirm}
+          onCancel={() => {
+            setConfirmOpen(false);
+            setSubmitting(false);
+          }}
+          onConfirm={async () => {
+            try {
+              setBusyConfirm(true);
+              const payload = buildPayload();
+              await MarkStudentAttendances(payload);
+              setMarkSuccess({
+                open: true,
+                msg: "Attendance marked successfully.",
+              });
+              if (typeof onSuccess === "function") onSuccess();
+              setConfirmOpen(false);
+            } catch (e) {
+              setMarkError({
+                open: true,
+                msg:
+                  e?.response?.data ||
+                  e?.message ||
+                  "Failed to mark attendance.",
+              });
+            } finally {
+              setBusyConfirm(false);
+              setSubmitting(false);
+            }
+          }}
+        />
+      )}
 
-function ConfirmSubjectTerminate({
-  open,
-  subject,
-  className,
-  busy,
-  onCancel,
-  onConfirm,
-}) {
-  return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      title="Terminate Subject Assignment"
-      footer={
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-            onClick={onCancel}
-            disabled={busy}
-          >
-            Cancel
-          </button>
-          <button
-            type="button"
-            className={`rounded-lg px-3 py-2 text-sm ${busy ? "bg-teal-300 text-white" : "bg-teal-600 text-white hover:bg-teal-700"}`}
-            onClick={onConfirm}
-            disabled={busy}
-          >
-            {busy ? "Terminating..." : "Confirm"}
-          </button>
-        </div>
-      }
-    >
-      <p className="text-sm text-neutral-800">
-        Are you sure you want to terminate the{" "}
-        <span className="font-semibold">{subject}</span> assignment for class
-        <span className="font-semibold"> {className}</span>?
-      </p>
-    </Modal>
+      {markSuccess.open && (
+        <SuccessAlert
+          isOpen={markSuccess.open}
+          message={markSuccess.msg}
+          onClose={() => setMarkSuccess({ open: false, msg: "" })}
+        />
+      )}
+      {markError.open && (
+        <ErrorAlert
+          isOpen={markError.open}
+          message={markError.msg}
+          onClose={() => setMarkError({ open: false, msg: "" })}
+        />
+      )}
+    </>
   );
 }

@@ -3,6 +3,8 @@ import { useSelector } from "react-redux";
 import { useNavigate, Link } from "react-router-dom";
 import { GetStudentById } from "../../features/adminFeatures/students/studentService";
 import { GetAttendanceByStudent } from "../../features/attendances/attendanceService";
+import Info from "../../components/CommonElements/Info";
+import SummaryCard from "../../components/CommonElements/SummaryCard";
 
 export default function StudentDashboard() {
   const { user } = useSelector((s) => s.auth);
@@ -53,23 +55,32 @@ export default function StudentDashboard() {
       .slice(0, 10);
   }, [attendance]);
 
+  const getInitials = (name) => {
+    if (!name) return "T";
+    const parts = String(name).trim().split(" ").filter(Boolean);
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+  };
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between bg-gradient-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-3xl font-bold text-cyan-50">
             Student Dashboard{student?.fullName ? ` — ${student.fullName}` : ""}
           </h1>
-          <p className="text-sm text-neutral-700">
+          <p className="text-sm text-cyan-50">
             Overview of your class, attendance, and recent activity
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Link
             to={`/students/${user?.studentId ?? ""}`}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-700"
+            className="rounded-lg px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-700"
           >
-            View Profile
+            <span className="inline-flex h-14 w-14 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-2xl font-semibold mr-2">
+              {getInitials(student?.fullName)}
+            </span>
           </Link>
         </div>
       </div>
@@ -154,24 +165,6 @@ export default function StudentDashboard() {
           {error}
         </div>
       )}
-    </div>
-  );
-}
-
-function SummaryCard({ title, value }) {
-  return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <p className="text-xs text-neutral-600">{title}</p>
-      <p className="text-2xl font-semibold text-neutral-900">{value}</p>
-    </div>
-  );
-}
-
-function Info({ label, value }) {
-  return (
-    <div className="rounded-lg border border-gray-200 p-3">
-      <p className="text-xs text-neutral-600">{label}</p>
-      <p className="text-sm font-semibold text-neutral-900">{value ?? "-"}</p>
     </div>
   );
 }

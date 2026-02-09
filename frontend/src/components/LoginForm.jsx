@@ -92,7 +92,6 @@ export default function LoginForm({ onLogin }) {
         <div className="flex w-full">
           <Button
             type={"submit"}
-            onClick={handleSubmit}
             label="Sign in"
             bgcolor={"w-full bg-cyan-700"}
           />

@@ -6,9 +6,23 @@ import { getAllGrades } from "../../features/grade/gradeSlice";
 import {
   addSubject,
   assignSubjectGrades,
+  deleteSubject,
 } from "../../features/subject/subjectService";
+import AddSubjectModal from "../../components/Subject/AddSubjectModal";
+import AssignGradesModal from "../../components/Subject/AssignGradesModal";
+import SuccessAlert from "../../components/SuccessAlert";
+import ErrorAlert from "../../components/ErrorAlert";
+import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function SubjectManagementPage() {
+  // Helper to extract a user-friendly error message
+  const errMsg = (err, fallback) => {
+    const data = err?.response?.data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object")
+      return data.message || data.title || fallback;
+    return err?.message || fallback;
+  };
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [addModal, setAddModal] = useState({ open: false });
@@ -18,6 +32,14 @@ export default function SubjectManagementPage() {
   });
   const [subjects, setSubjects] = useState([]);
   const [assignSubmitting, setAssignSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState(null); // kept for UI disable if needed
+  const [success, setSuccess] = useState({ open: false, msg: "" });
+  const [errors, setErrors] = useState({ open: false, msg: "" });
+  const [confirmDelete, setConfirmDelete] = useState({
+    open: false,
+    subject: null,
+  });
+  const [busyConfirm, setBusyConfirm] = useState(false);
 
   const dispatch = useDispatch();
 
@@ -56,17 +78,13 @@ export default function SubjectManagementPage() {
     try {
       const res = await addSubject(payload);
       console.log("Added subject:", res);
-      setSubjects((list) => [
-        {
-          id: payload.ModuleCode.toLowerCase(),
-          subjectName: payload.SubjectName,
-          moduleCode: payload.ModuleCode.toUpperCase(),
-          grades: [],
-        },
-        ...list,
-      ]);
+      // Refresh from API to ensure correct server IDs and data
+      await dispatch(getAllSubjects());
+      setSuccess({ open: true, msg: "Subject added successfully." });
+      setErrors({ open: false, msg: "" });
     } catch (err) {
-      alert(err?.response?.data || err?.message || "Failed to add subject");
+      setErrors({ open: true, msg: errMsg(err, "Failed to add subject") });
+      setSuccess({ open: false, msg: "" });
     }
     closeAdd();
   };
@@ -84,12 +102,14 @@ export default function SubjectManagementPage() {
       await assignSubjectGrades(payload);
       await dispatch(getAllSubjects());
       closeAssign();
+      setSuccess({ open: true, msg: "Grades assigned successfully." });
+      setErrors({ open: false, msg: "" });
     } catch (err) {
-      alert(
-        err?.response?.data ||
-          err?.message ||
-          "Failed to assign subject to grades",
-      );
+      setErrors({
+        open: true,
+        msg: errMsg(err, "Failed to assign subject to grades"),
+      });
+      setSuccess({ open: false, msg: "" });
     } finally {
       setAssignSubmitting(false);
     }
@@ -99,15 +119,38 @@ export default function SubjectManagementPage() {
     subjects.find((s) => s.id === assignModal.subjectId)?.grades || []
   ).map((g) => g.id);
 
+  const startDeleteSubject = (row) => {
+    if (!row?.id) return;
+    setConfirmDelete({ open: true, subject: row });
+  };
+
+  const confirmDeleteSubject = async () => {
+    const row = confirmDelete.subject;
+    if (!row?.id) return;
+    try {
+      setBusyConfirm(true);
+      await deleteSubject(row.id);
+      await dispatch(getAllSubjects());
+      setSuccess({ open: true, msg: "Subject deleted successfully." });
+      setErrors({ open: false, msg: "" });
+      setConfirmDelete({ open: false, subject: null });
+    } catch (err) {
+      setErrors({ open: true, msg: errMsg(err, "Failed to delete subject") });
+      setSuccess({ open: false, msg: "" });
+    } finally {
+      setBusyConfirm(false);
+    }
+  };
+
   return (
     <div>
       {/* Header */}
-      <header className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
         <div>
-          <h1 className="text-2xl font-semibold text-neutral-900">
+          <h1 className="text-3xl font-bold text-cyan-50">
             Subject Management
           </h1>
-          <p className="text-sm text-neutral-700">
+          <p className="text-sm text-cyan-50">
             Manage subjects and assign them to grades
           </p>
         </div>
@@ -130,13 +173,15 @@ export default function SubjectManagementPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-sm">
               <thead>
-                <tr className="text-left text-neutral-800">
-                  <th className="border-b border-gray-200 py-2 px-3">Name</th>
+                <tr className="text-left text-neutral-800 bg-cyan-600 rounded-t-lg">
+                  <th className="border-b border-gray-200 py-2 px-3 rounded-tl-lg">
+                    Name
+                  </th>
                   <th className="border-b border-gray-200 py-2 px-3">Code</th>
                   <th className="border-b border-gray-200 py-2 px-3">
                     Assigned Grades
                   </th>
-                  <th className="border-b border-gray-200 py-2 px-3 text-right">
+                  <th className="border-b border-gray-200 py-2 px-3 text-right rounded-tr-lg">
                     Actions
                   </th>
                 </tr>
@@ -159,10 +204,29 @@ export default function SubjectManagementPage() {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => openAssign(row)}
-                          className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-teal-600 hover:text-teal-600"
+                          className="rounded-lg border border-cyan-100 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
                         >
                           Assign to Grades
                         </button>
+                        {(row.grades?.length ?? 0) === 0 && (
+                          <button
+                            onClick={() => startDeleteSubject(row)}
+                            className={`rounded-lg p-2 text-xs ${
+                              confirmDelete.open &&
+                              confirmDelete.subject?.id === row.id
+                                ? " text-rose-400 bg-white"
+                                : " bg-white text-rose-700 hover:border-rose-600 hover:text-rose-600"
+                            }`}
+                            aria-label="Delete subject"
+                            title="Delete subject"
+                            disabled={
+                              confirmDelete.open &&
+                              confirmDelete.subject?.id === row.id
+                            }
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -195,124 +259,37 @@ export default function SubjectManagementPage() {
           submitting={assignSubmitting}
         />
       )}
+
+      {success.open && (
+        <SuccessAlert
+          isOpen={success.open}
+          message={success.msg}
+          onClose={() => setSuccess({ open: false, msg: "" })}
+        />
+      )}
+      {errors.open && (
+        <ErrorAlert
+          isOpen={errors.open}
+          message={errors.msg}
+          onClose={() => setErrors({ open: false, msg: "" })}
+        />
+      )}
+
+      {confirmDelete.open && (
+        <ConfirmDialog
+          open={confirmDelete.open}
+          title="Delete Subject"
+          message={`Are you sure you want to delete subject "${confirmDelete.subject?.subjectName}"? This action cannot be undone.`}
+          cancelLabel="Cancel"
+          confirmLabel="Delete"
+          busy={busyConfirm}
+          onCancel={() => setConfirmDelete({ open: false, subject: null })}
+          onConfirm={() => {
+            confirmDeleteSubject();
+            setConfirmDelete({ open: false, subject: null });
+          }}
+        />
+      )}
     </div>
-  );
-}
-
-function ModalShell({ title, children, onClose, footer }) {
-  return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-      <div className="w-full max-w-lg rounded-xl bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b px-4 py-3">
-          <p className="text-sm font-semibold text-neutral-900">{title}</p>
-          <button
-            onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-neutral-700 hover:bg-gray-100"
-          >
-            Close
-          </button>
-        </div>
-        <div className="p-4">{children}</div>
-        <div className="border-t px-4 py-3 flex justify-end gap-2">
-          {footer}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function AddSubjectModal({ onClose, onSave }) {
-  const [SubjectName, setSubjectName] = useState("");
-  const [ModuleCode, setModuleCode] = useState("");
-
-  return (
-    <ModalShell
-      title="Add Subject"
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-          >
-            Cancel
-          </button>
-          <Button
-            label="Add"
-            onClick={() => onSave({ SubjectName, ModuleCode })}
-          />
-        </>
-      }
-    >
-      <div className="space-y-3">
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Subject Name
-          </label>
-          <input
-            value={SubjectName}
-            onChange={(e) => setSubjectName(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-neutral-800">
-            Code
-          </label>
-          <input
-            value={ModuleCode}
-            onChange={(e) => setModuleCode(e.target.value)}
-            className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-        </div>
-      </div>
-    </ModalShell>
-  );
-}
-
-function AssignGradesModal({ grades, selected, onClose, onSave, submitting }) {
-  const [picked, setPicked] = useState(selected);
-  const toggle = (id) => {
-    setPicked((list) =>
-      list.includes(id) ? list.filter((x) => x !== id) : [...list, id],
-    );
-  };
-
-  return (
-    <ModalShell
-      title="Assign Subject to Grades"
-      onClose={onClose}
-      footer={
-        <>
-          <button
-            onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-teal-600 hover:text-teal-600"
-          >
-            Cancel
-          </button>
-          <Button
-            label={submitting ? "Saving..." : "Save"}
-            onClick={() => onSave(picked)}
-            disabled={submitting}
-          />
-        </>
-      }
-    >
-      <div className="grid grid-cols-3 gap-2">
-        {grades.map((g) => (
-          <label
-            key={g.id}
-            className="flex items-center gap-2 text-sm text-neutral-800"
-          >
-            <input
-              type="checkbox"
-              checked={picked.includes(g.id)}
-              onChange={() => toggle(g.id)}
-            />
-            Grade {g.gradeName}
-          </label>
-        ))}
-      </div>
-    </ModalShell>
   );
 }

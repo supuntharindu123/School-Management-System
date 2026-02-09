@@ -45,7 +45,7 @@ export default function PromotionRow({
   };
 
   return (
-    <tr className="hover:bg-gray-50">
+    <tr className="hover:bg-cyan-50">
       {/* Student Name */}
       <td className="border-b border-gray-200 py-2 px-3">
         <div className="truncate max-w-[220px] text-neutral-800">
@@ -70,7 +70,7 @@ export default function PromotionRow({
               classNameId: null,
             })
           }
-          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:bg-gray-100 disabled:text-neutral-500"
+          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:bg-gray-100 disabled:text-neutral-500"
         >
           <option value="">Select</option>
           {STATUS.map((s) => (
@@ -90,7 +90,7 @@ export default function PromotionRow({
           className={`w-full rounded-lg border px-2 py-1.5 text-sm ${
             locked || !isPromoted
               ? "border-gray-200 bg-gray-100 text-neutral-500"
-              : "border-gray-200 bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+              : "border-gray-200 bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
           }`}
         >
           <option value="">Select</option>
@@ -111,7 +111,7 @@ export default function PromotionRow({
           className={`w-full rounded-lg border px-2 py-1.5 text-sm ${
             locked || !isPromoted
               ? "border-gray-200 bg-gray-100 text-neutral-500"
-              : "border-gray-200 bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+              : "border-gray-200 bg-white text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
           }`}
         >
           <option value="">Select</option>
@@ -130,7 +130,7 @@ export default function PromotionRow({
           disabled={locked}
           onChange={(e) => update({ description: e.target.value })}
           placeholder="Optional notes"
-          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 disabled:bg-gray-100 disabled:text-neutral-500"
+          className="w-full rounded-lg border border-gray-200 bg-white px-2 py-1.5 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-400 disabled:bg-gray-100 disabled:text-neutral-500"
         />
       </td>
     </tr>

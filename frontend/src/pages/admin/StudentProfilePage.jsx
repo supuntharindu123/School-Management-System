@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { GetStudentById } from "../../features/adminFeatures/students/studentService";
-import EditStudentDialog from "../../components/Student/EditStudentDialog";
+
 import DeleteStudentDialog from "../../components/Student/DeleteStudentDialog";
 import { useSelector } from "react-redux";
 import { GetAttendanceByStudent } from "../../features/attendances/attendanceService";
+import EditStudentForm from "../../components/Student/EditStudentForm";
 
 export default function StudentProfilePage() {
   const { id } = useParams();
@@ -103,14 +104,11 @@ export default function StudentProfilePage() {
 
   return (
     <div className="mx-auto max-w-7xl">
-      <EditStudentDialog
+      <EditStudentForm
         open={openEdit}
         onClose={() => setOpenEdit(false)}
         student={selectedStudent}
-        onSaved={() => {
-          setOpenEdit(false);
-          fetchStudent();
-        }}
+        onSaved={fetchStudent()}
       />
       <DeleteStudentDialog
         open={openDelete}

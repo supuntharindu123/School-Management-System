@@ -14,4 +14,8 @@ export async function addSubject(payload) {
   const res = await api.post("/subject", payload);
   return res.data;
 }
-``;
+
+export async function deleteSubject(subjectId) {
+  const res = await api.delete(`/subject/${subjectId}`);
+  return res.data ?? true;
+}

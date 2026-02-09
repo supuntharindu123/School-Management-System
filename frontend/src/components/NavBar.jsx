@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout as logoutAction } from "../features/auth/authSlice";
+import ConfirmDialog from "./ConfirmDialog";
+import SuccessAlert from "./SuccessAlert";
+import ErrorAlert from "./ErrorAlert";
 import logo from "../assets/logo.png";
 
 export default function NavBar({ onToggleSidebar }) {
@@ -10,6 +13,10 @@ export default function NavBar({ onToggleSidebar }) {
   const { user } = useSelector((state) => state.auth);
   const [open, setOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
+  const [confirmLogout, setConfirmLogout] = useState(false);
+  const [busyLogout, setBusyLogout] = useState(false);
+  const [logoutSuccess, setLogoutSuccess] = useState({ open: false, msg: "" });
+  const [logoutError, setLogoutError] = useState({ open: false, msg: "" });
   const menuRef = useRef(null);
   const notifications = [
     { id: 1, text: "Staff meeting at 3 PM in Room 201.", time: "Today" },
@@ -63,9 +70,8 @@ export default function NavBar({ onToggleSidebar }) {
   }, []);
 
   const handleLogout = () => {
-    dispatch(logoutAction());
-    setOpen(false);
-    navigate("/");
+    // Show confirmation dialog instead of logging out immediately
+    setConfirmLogout(true);
   };
 
   return (
@@ -221,6 +227,52 @@ export default function NavBar({ onToggleSidebar }) {
           </div>
         </div>
       </div>
+      {/* Confirm Logout */}
+      {confirmLogout && (
+        <ConfirmDialog
+          open={confirmLogout}
+          title="Logout"
+          message="Are you sure you want to logout?"
+          cancelLabel="Cancel"
+          confirmLabel="Logout"
+          busy={busyLogout}
+          onCancel={() => setConfirmLogout(false)}
+          onConfirm={async () => {
+            try {
+              setBusyLogout(true);
+              await dispatch(logoutAction());
+              setLogoutSuccess({ open: true, msg: "Logged out successfully." });
+              setConfirmLogout(false);
+              setOpen(false);
+              setNotifOpen(false);
+              navigate("/");
+            } catch (err) {
+              setLogoutError({
+                open: true,
+                msg: err?.response?.data || err?.message || "Failed to logout.",
+              });
+            } finally {
+              setBusyLogout(false);
+            }
+          }}
+        />
+      )}
+
+      {/* Logout Alerts */}
+      {logoutSuccess.open && (
+        <SuccessAlert
+          isOpen={logoutSuccess.open}
+          message={logoutSuccess.msg}
+          onClose={() => setLogoutSuccess({ open: false, msg: "" })}
+        />
+      )}
+      {logoutError.open && (
+        <ErrorAlert
+          isOpen={logoutError.open}
+          message={logoutError.msg}
+          onClose={() => setLogoutError({ open: false, msg: "" })}
+        />
+      )}
     </nav>
   );
 }

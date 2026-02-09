@@ -25,13 +25,16 @@ import AdminRoute from "../routes/AdminRoute";
 import AttendancePage from "../pages/admin/AttendancePage";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import StudentDashboard from "../pages/student/StudentDashboard";
+import SubjectDetailsPage from "../pages/admin/SubjectDetailsPage";
+import GuestPage from "../pages/GuestPage";
 
 export default function RouteConfig() {
   return (
     <BrowserRouter>
       <Routes>
         {/* Public */}
-        <Route path="/" element={<LoginPage />} />
+        <Route path="/" element={<GuestPage />} />
+        <Route path="/login" element={<LoginPage />} />
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
@@ -51,6 +54,7 @@ export default function RouteConfig() {
             <Route path="/teachers" element={<TeacherListPage />} />
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
             <Route path="/attendance" element={<AttendancePage />} />
+            <Route path="/subject/:id" element={<SubjectDetailsPage />} />
 
             {/* teacher only */}
 

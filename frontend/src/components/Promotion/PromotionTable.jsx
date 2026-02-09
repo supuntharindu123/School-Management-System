@@ -3,7 +3,7 @@ import PromotionRow from "./PromotionRow";
 
 export default function PromotionTable(props) {
   return (
-    <section className="rounded-xl border border-gray-200 bg-white">
+    <section className="rounded-xl border border-gray-200 bg-white shadow-md">
       <div className="overflow-x-auto">
         <table className="w-full border-collapse text-sm">
           <thead>

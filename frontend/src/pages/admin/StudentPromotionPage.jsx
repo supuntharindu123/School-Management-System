@@ -6,6 +6,9 @@ import PromotionFilterTabs from "../../components/Promotion/PromotionFilterTabs"
 import PromotionTable from "../../components/Promotion/PromotionTable";
 import PromotionSummary from "../../components/Promotion/PromotionSummary";
 import ClassOverview from "../../components/Promotion/ClassOverview";
+import ConfirmationModal from "../../components/Promotion/ConfirmationModal";
+import SuccessAlert from "../../components/SuccessAlert";
+import ErrorAlert from "../../components/ErrorAlert";
 
 import { savePromotions } from "../../features/adminFeatures/promotion/promotionService";
 import { getClassesByGrade } from "../../features/class/classService";
@@ -17,6 +20,14 @@ const EXCLUDED_STATUSES = ["Completed", "Leaving"];
 
 export default function StudentPromotionPage() {
   const dispatch = useDispatch();
+  // Helper to stringify backend errors safely
+  const errMsg = (err, fallback) => {
+    const data = err?.response?.data;
+    if (typeof data === "string") return data;
+    if (data && typeof data === "object")
+      return data.message || data.title || fallback;
+    return err?.message || fallback;
+  };
 
   /* =========================
      Redux State
@@ -34,6 +45,9 @@ export default function StudentPromotionPage() {
   const [finalized, setFinalized] = useState({});
   const [filter, setFilter] = useState("all");
   const [saving, setSaving] = useState(false);
+  const [success, setSuccess] = useState({ open: false, msg: "" });
+  const [errors, setErrors] = useState({ open: false, msg: "" });
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const pendingCount = useMemo(
     () => Object.values(promotions).filter((p) => !!p?.status).length,
     [promotions],
@@ -93,6 +107,22 @@ export default function StudentPromotionPage() {
   ========================= */
   const classes = classesByGrade[context.gradeId] || [];
 
+  // Lookups for confirmation modal
+  const gradesLookup = useMemo(() => {
+    const m = {};
+    grades.forEach((g) => (m[g.id] = g));
+    return m;
+  }, [grades]);
+  const classesLookup = useMemo(() => {
+    const m = {};
+    Object.values(classesByGrade).forEach((arr) => {
+      arr.forEach((c) => {
+        m[c.classNameId ?? c.id] = c;
+      });
+    });
+    return m;
+  }, [classesByGrade]);
+
   /* ---------- Class Status ---------- */
   const classStatuses = useMemo(() => {
     const map = {};
@@ -145,9 +175,6 @@ export default function StudentPromotionPage() {
       );
   }, [students, context.classLabel, context.yearId, promotions, filter]);
 
-  /* =========================
-     Save Promotions
-  ========================= */
   const saveAll = async () => {
     if (!context.yearId) return;
 
@@ -174,37 +201,34 @@ export default function StudentPromotionPage() {
     try {
       setSaving(true);
       await savePromotions(payload);
-
-      // ✅ refresh DB state
       dispatch(GetAllStudents());
-
-      // ✅ reset UI
       setPromotions({});
+      setSuccess({ open: true, msg: "Promotions saved successfully." });
+      setErrors({ open: false, msg: "" });
+      setConfirmOpen(false);
     } catch (err) {
-      console.error("Save failed", err);
+      setErrors({ open: true, msg: errMsg(err, "Failed to save promotions.") });
+      setSuccess({ open: false, msg: "" });
     } finally {
       setSaving(false);
     }
   };
 
-  /* =========================
-     UI
-  ========================= */
   return (
     <div>
-      <header className="mb-4">
-        <h1 className="text-2xl font-semibold text-neutral-900">
-          Student Promotion
-        </h1>
-        <p className="text-sm text-neutral-700">
-          Overview and class-by-class review
-        </p>
+      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden shadow-md">
+        <div>
+          <h1 className="text-3xl font-bold text-cyan-50">Student Promotion</h1>
+          <p className="text-sm text-cyan-50">
+            Overview and class-by-class review
+          </p>
+        </div>
       </header>
 
       <PromotionHeader {...context} />
 
       {/* Controls */}
-      <section className="mb-4 rounded-xl border border-gray-200 bg-white p-3">
+      <section className="mb-4 rounded-xl border border-gray-200 bg-white p-3 shadow-md">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex flex-1 flex-wrap items-center gap-2">
             <div className="flex items-center gap-2">
@@ -225,7 +249,7 @@ export default function StudentPromotionPage() {
                   }));
                   setMode("overview");
                 }}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
               >
                 {grades.map((g) => (
                   <option key={g.id} value={g.id}>
@@ -251,7 +275,7 @@ export default function StudentPromotionPage() {
                       classLabel: cls?.name ?? "",
                     }));
                   }}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-teal-600"
+                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
                 >
                   {classes.map((c) => (
                     <option
@@ -271,8 +295,8 @@ export default function StudentPromotionPage() {
               onClick={() => setMode("overview")}
               className={`px-3 py-1.5 text-sm ${
                 mode === "overview"
-                  ? "rounded-md bg-teal-600 text-white"
-                  : "text-neutral-800 hover:text-teal-700"
+                  ? "rounded-md bg-cyan-600 text-white"
+                  : "text-neutral-800 hover:text-cyan-700"
               }`}
             >
               Overview
@@ -281,8 +305,8 @@ export default function StudentPromotionPage() {
               onClick={() => setMode("class")}
               className={`px-3 py-1.5 text-sm ${
                 mode === "class"
-                  ? "rounded-md bg-teal-600 text-white"
-                  : "text-neutral-800 hover:text-teal-700"
+                  ? "rounded-md bg-cyan-600 text-white"
+                  : "text-neutral-800 hover:text-cyan-700"
               }`}
             >
               Class
@@ -315,7 +339,7 @@ export default function StudentPromotionPage() {
           <PromotionFilterTabs active={filter} onChange={setFilter} />
 
           {visibleStudents.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-neutral-600">
+            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-neutral-600 shadow-md">
               No students to display for this class and filter.
             </div>
           ) : (
@@ -346,20 +370,20 @@ export default function StudentPromotionPage() {
                 className={`rounded-lg border px-4 py-2 text-sm ${
                   pendingCount === 0 || saving
                     ? "cursor-not-allowed border-gray-200 bg-white text-neutral-400"
-                    : "border-gray-200 bg-white text-neutral-800 hover:border-teal-600 hover:text-teal-700"
+                    : "border-gray-200 bg-white text-neutral-700 hover:bg-gray-50"
                 }`}
               >
                 Reset Changes
               </button>
               <button
-                onClick={saveAll}
+                onClick={() => setConfirmOpen(true)}
                 disabled={
                   saving || pendingCount === 0 || finalized[context.classId]
                 }
                 className={`rounded-lg px-4 py-2 text-sm ${
                   saving || pendingCount === 0 || finalized[context.classId]
-                    ? "cursor-not-allowed bg-teal-300 text-white"
-                    : "bg-teal-600 text-white hover:bg-teal-700"
+                    ? "cursor-not-allowed bg-cyan-300 text-white"
+                    : "bg-cyan-600 text-white hover:bg-cyan-700"
                 }`}
               >
                 {saving ? "Saving..." : "Save Promotions"}
@@ -371,6 +395,37 @@ export default function StudentPromotionPage() {
             <PromotionSummary promotions={Object.values(promotions)} />
           </div>
         </>
+      )}
+      {/* Alerts */}
+      {success.open && (
+        <SuccessAlert
+          isOpen={success.open}
+          message={success.msg}
+          onClose={() => setSuccess({ open: false, msg: "" })}
+        />
+      )}
+      {errors.open && (
+        <ErrorAlert
+          isOpen={errors.open}
+          message={errors.msg}
+          onClose={() => setErrors({ open: false, msg: "" })}
+        />
+      )}
+
+      {/* Confirmation */}
+      {confirmOpen && (
+        <ConfirmationModal
+          open={confirmOpen}
+          onClose={() => setConfirmOpen(false)}
+          context={context}
+          promotions={promotions}
+          gradesLookup={gradesLookup}
+          classesLookup={classesLookup}
+          onConfirm={() => {
+            saveAll();
+            setConfirmOpen(false);
+          }}
+        />
       )}
     </div>
   );

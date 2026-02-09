@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 import { useNavigate } from "react-router-dom";
-import AddStudentDialog from "../../components/Student/AddStudentDialog";
+import AddStudentForm from "../../components/Student/AddStudentForm";
 import { getClassesByGrade } from "../../features/class/classService";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 
@@ -18,7 +18,6 @@ export default function StudentListPage() {
   const studentList = useSelector((state) => state.studentList);
   const gradesState = useSelector((state) => state.grades);
   const grades = gradesState.grades;
-  const yearsState = useSelector((state) => state.years);
 
   const [openAdd, setOpenAdd] = useState(false);
 
@@ -70,17 +69,13 @@ export default function StudentListPage() {
   const downloadExcel = () => {
     window.location.href = "http://localhost:5037/api/student/exportStudents";
   };
-  const onExportPdf = () => {};
 
   return (
     <div className="mx-auto max-w-7xl">
-      <AddStudentDialog
-        open={openAdd}
-        onClose={() => setOpenAdd(false)}
-        onAdded={() => {
-          dispatch(GetAllStudents());
-        }}
-      />
+      {openAdd && (
+        <AddStudentForm isOpen={openAdd} isClose={() => setOpenAdd(false)} />
+      )}
+
       <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
         <div>
           <h1 className="text-3xl font-bold text-cyan-50">Student Dashboard</h1>
@@ -89,12 +84,6 @@ export default function StudentListPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
-          {/* <button
-            onClick={onExportPdf}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-          >
-            Export PDF
-          </button> */}
           <button
             onClick={downloadExcel}
             className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
@@ -229,7 +218,7 @@ export default function StudentListPage() {
       <section className="mt-4 rounded-2xl border border-gray-200 bg-white">
         <div className="max-h-[60vh] overflow-auto rounded-md">
           <table className="w-full border-collapse text-sm">
-            <thead className=" rounded-xl">
+            <thead className=" rounded-xl sticky top-0">
               <tr className="text-left text-neutral-800 bg-cyan-500 rounded-xl">
                 <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
                   Name
