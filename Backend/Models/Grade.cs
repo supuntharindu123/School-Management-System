@@ -11,6 +11,8 @@ namespace Backend.Models
 
         public ICollection<SubjectGrade>? SubjectGrade {  get; set; }
 
+        public ICollection<Marks>? Marks { get; set; }
+
         public ICollection<Class>? Classes { get; set; }
 
         public ICollection<ExamGrade>? ExamGrades {  get; set; }

@@ -58,11 +58,34 @@ namespace Backend.Repositories
             await _context.SaveChangesAsync();
         }
 
+        public async Task<List<ExamGrade>> GetGradeByExamId(int examId)
+        {
+            return await _context.ExamGrades.Where(e => e.ExamId == examId).ToListAsync();
+        }
+
+        public async Task DeleteAssignGradeForExam(List<ExamGrade> examGrades)
+        {
+            _context.ExamGrades.RemoveRange(examGrades);
+            await _context.SaveChangesAsync();
+        }
+
         public Task<bool> CheckAssignGradesForExam(int examId, int gradeId, int subjectId)
         {
             var exist = _context.ExamGradeSubjects.AnyAsync(e => e.ExamId == examId && e.GradeId == gradeId && e.SubjectId == subjectId);
 
             return exist;
+        }
+
+        public async Task<List<ExamGradeSubject>> GetSubjectAssignsGradesAndExam(int examId, int gradeId)
+        {
+            return await _context.ExamGradeSubjects.Where(e => e.ExamId == examId && e.GradeId == gradeId).ToListAsync();
+
+        }
+
+        public async Task DeleteSubjectsAssignGradesForExam(List<ExamGradeSubject> examGradeSubject)
+        {
+            _context.ExamGradeSubjects.RemoveRange(examGradeSubject);
+            await _context.SaveChangesAsync();
         }
 
         public async Task AssignSubjectsForExam(ExamGradeSubject examGradeSubject)
@@ -78,11 +101,8 @@ namespace Backend.Repositories
 
             var map = _mapper.Map<ExamDetailsResDto>(exam);
 
-            
-
             return map;
         }
-
 
 
     }

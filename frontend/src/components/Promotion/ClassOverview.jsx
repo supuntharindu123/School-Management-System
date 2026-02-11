@@ -68,7 +68,7 @@ export default function ClassOverview({
           return (
             <div
               key={key}
-              className="rounded-xl border border-gray-200 bg-white p-4 shadow-md"
+              className="rounded-xl border-t-4 border-cyan-600 bg-white p-4 shadow-md"
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-semibold text-neutral-900">

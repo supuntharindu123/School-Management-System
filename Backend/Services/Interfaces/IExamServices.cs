@@ -16,9 +16,9 @@ namespace Backend.Services.Interfaces
 
         public Task<Result<List<ExamResDto>>> GetExams();
 
-        public Task<Result> AssignGradesForExam(List<ExamGrade> examGrades);
+        public Task<Result> AssignGradesForExam(int examId, List<int> gradeId);
 
-        public Task<Result> AssignSubjectsForExam(List<ExamGradeSubject> examGradeSubjects);
+        public Task<Result> AssignSubjectsForExam(int examId, int gradeId, List<int> subjectIds);
 
         public Task<Result<ExamDetailsResDto>> ExamDetails(int id);
     }

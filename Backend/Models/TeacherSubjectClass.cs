@@ -26,6 +26,5 @@ namespace Backend.Models
 
         public Class? Class { get; set; }
 
-        public ICollection<Marks>? Marks { get; set; }
     }
 }

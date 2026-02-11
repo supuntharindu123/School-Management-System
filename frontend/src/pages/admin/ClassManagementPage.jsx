@@ -174,10 +174,10 @@ function GradeCard({ grade, classCount, studentCount, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="group relative w-full rounded-xl border border-cyan-200 bg-white/90 p-4 text-left shadow-sm transition transform hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-cyan-300"
+      className="group relative w-full rounded-xl border-t-4 border-cyan-600 bg-white/90 p-4 text-left shadow-sm transition transform hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-cyan-300 cursor-pointer"
     >
       {/* Decorative accent */}
-      <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full bg-cyan-200 blur-2xl opacity-30 group-hover:opacity-40" />
+      <div className="pointer-events-none absolute -top-6 -right-6 h-24 w-24 rounded-full  opacity-30 group-hover:opacity-40" />
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">

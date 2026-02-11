@@ -219,7 +219,7 @@ export default function StudentListPage() {
         <div className="max-h-[60vh] overflow-auto rounded-md">
           <table className="w-full border-collapse text-sm">
             <thead className=" rounded-xl sticky top-0">
-              <tr className="text-left text-neutral-800 bg-cyan-500 rounded-xl">
+              <tr className="text-left text-neutral-800 bg-cyan-600 rounded-xl">
                 <th className="border-b border-cyan-200 py-2 px-3 sticky top-0">
                   Name
                 </th>

@@ -81,9 +81,9 @@ namespace Backend.Controllers
         }
 
         [HttpPost("assign/grade")]
-        public async Task<IActionResult> AssignGradesForExam(List<ExamGrade> examGrades)
+        public async Task<IActionResult> AssignGradesForExam( [FromBody] AssignExamGradeReqDto dto)
         {
-            var res = await _services.AssignGradesForExam(examGrades);
+            var res = await _services.AssignGradesForExam(dto.ExamId,dto.GradeIds);
 
             if (!res.IsSuccess)
             {
@@ -94,9 +94,9 @@ namespace Backend.Controllers
         }
 
         [HttpPost("assign/subject")]
-        public async Task<IActionResult> AssignSubjectsForExam(List<ExamGradeSubject> examGradeSubjects)
+        public async Task<IActionResult> AssignSubjectsForExam(AssignExamGradeSubjectReqDto dto)
         {
-            var res = await _services.AssignSubjectsForExam(examGradeSubjects);
+            var res = await _services.AssignSubjectsForExam(dto.ExamId,dto.GradeId,dto.SubjectIds);
 
             if (!res.IsSuccess)
             {

@@ -2,6 +2,7 @@
 using Backend.DTOs.Attendances;
 using Backend.DTOs.Exam;
 using Backend.DTOs.Grade;
+using Backend.DTOs.Marks;
 using Backend.DTOs.Promotion;
 using Backend.DTOs.Student;
 using Backend.DTOs.Subject;
@@ -136,12 +137,17 @@ namespace Backend.Mapping
 
             CreateMap<ExamGrade, GradeExamResDto>()
                 .ForMember(des => des.Classes, opt => opt.MapFrom(src => src.Grade!.Classes))
-                .ForMember(des => des.Subjects, opt => opt.MapFrom(src => src.Exam!.ExamGradeSubjects));
+                .ForMember(des => des.Subjects, opt => opt.MapFrom(src => src.Exam!.ExamGradeSubjects.Where(s=>s.GradeId==src.GradeId)));
 
             CreateMap<ExamGradeSubject, SubjectResDto>()
                 .ForMember(d => d.Id, opt => opt.MapFrom(src => src.SubjectId))
                 .ForMember(d => d.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
                 .ForMember(d => d.ModuleCode, opt => opt.MapFrom(src => src.Subject!.ModuleCode));
+
+            CreateMap<Marks, MarkResDto>();
+
+
+
         }
     }
 }

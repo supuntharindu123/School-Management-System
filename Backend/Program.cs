@@ -59,6 +59,8 @@ builder.Services.AddScoped<IStudentAttendantRepo,StudentAttendantRepo > ();
 builder.Services.AddScoped<IStudentAttendantService,StudentAttendantService>();
 builder.Services.AddScoped<IExamRepo,ExamRepo>();
 builder.Services.AddScoped<IExamServices,ExamServices>();
+builder.Services.AddScoped<IMarksRepo,MarksRepo>();
+builder.Services.AddScoped<IMarksService,MarksService>();
 
 
 //authentications

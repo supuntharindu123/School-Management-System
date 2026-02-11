@@ -20,11 +20,19 @@ namespace Backend.Repositories.Interfaces
 
         public Task AssignGradesForExam(ExamGrade examGrade);
 
+        public Task<List<ExamGrade>> GetGradeByExamId(int examId);
+
+        public Task DeleteAssignGradeForExam(List<ExamGrade> examGrades);
+
         public Task AssignSubjectsForExam(ExamGradeSubject examGradeSubject);
 
         public Task<ExamDetailsResDto?> ExamDetails(int id);
 
         public Task<bool> CheckAssignGradesForExam(int examId, int gradeId, int subjectId);
+
+        public Task DeleteSubjectsAssignGradesForExam(List<ExamGradeSubject> examGradeSubject);
+
+        public Task<List<ExamGradeSubject>> GetSubjectAssignsGradesAndExam(int examId, int gradeId);
 
 
     }

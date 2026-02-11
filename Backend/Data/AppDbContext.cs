@@ -181,9 +181,9 @@ namespace Backend.Data
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Marks>()
-                .HasOne(m=>m.TeacherSubjectClasses)
+                .HasOne(m=>m.Teacher)
                 .WithMany(ts=>ts.Marks)
-                .HasForeignKey(m=>m.TeacherSubjectClassId)
+                .HasForeignKey(m=>m.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
 
             modelBuilder.Entity<Exam>()
@@ -220,6 +220,18 @@ namespace Backend.Data
                 .HasOne(egs => egs.Subject)
                 .WithMany(g => g.ExamGradeSubjects)
                 .HasForeignKey(egs => egs.SubjectId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<Marks>()
+                .HasOne(g => g.Grades)
+                .WithMany(m=>m.Marks)
+                .HasForeignKey(g => g.GradeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+             modelBuilder.Entity<Marks>()
+                .HasOne(c=>c.Class)
+                .WithMany(m=>m.Marks)
+                .HasForeignKey(c => c.ClassId)
                 .OnDelete(DeleteBehavior.Restrict);
 
         }

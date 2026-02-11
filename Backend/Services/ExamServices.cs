@@ -33,6 +33,8 @@ namespace Backend.Services
                 return Result.Failure("Exam Not found");
             }
 
+            await _repo.DeleteExam(res);
+
             return Result.Success();
         }
 
@@ -80,55 +82,66 @@ namespace Backend.Services
             return Result.Success();
         }
 
-        public async Task<Result> AssignGradesForExam(List<ExamGrade> examGrades)
+        public async Task<Result> AssignGradesForExam(int examId,List<int> gradeIds)
         {
             using var Transaction=await _repo.BeginTransactionAsync();
 
             try
             {
-                foreach(var eg in examGrades)
+                var res = await _repo.GetGradeByExamId(examId);
+
+                await _repo.DeleteAssignGradeForExam(res);
+
+                foreach(var eg in gradeIds)
                 {
-                    await _repo.AssignGradesForExam(eg);
+                    var exam = new ExamGrade
+                    {
+                        ExamId = examId,
+                        GradeId = eg
+                    };
+                    await _repo.AssignGradesForExam(exam);
                 }
 
                 await Transaction.CommitAsync();
                 return Result.Success();
 
             }
-            catch
+            catch(Exception ex)
             {
                 await Transaction.RollbackAsync();
-                return Result.Failure("Failed to assign grade for exam!");
+                return Result.Failure($"Failed to assign grade: {ex.Message} {ex.InnerException?.Message}");
 
             }
         }
 
-        public async Task<Result> AssignSubjectsForExam(List<ExamGradeSubject> examGradeSubjects)
+        public async Task<Result> AssignSubjectsForExam(int examId, int gradeId,List<int> subjectIds)
         {
             using var Transaction = await _repo.BeginTransactionAsync();
 
             try
             {
-                foreach (var eg in examGradeSubjects)
-                {
-                    if(!await _repo.CheckAssignGradesForExam(eg.ExamId, eg.GradeId, eg.SubjectId)){
-                        await _repo.AssignSubjectsForExam(eg);
-                    }
-                    
-                }
+                var res = await _repo.GetSubjectAssignsGradesAndExam(examId, gradeId);
 
+                await _repo.DeleteSubjectsAssignGradesForExam(res);
+
+                foreach (var subjectId in subjectIds)
+                {
+                    if(!await _repo.CheckAssignGradesForExam(examId, gradeId, subjectId)){
+                        var exam = new ExamGradeSubject();
+                        exam.ExamId = examId;
+                        exam.GradeId = gradeId;
+                        exam.SubjectId = subjectId;
+                        await _repo.AssignSubjectsForExam(exam);
+                    }  
+                }
                 await Transaction.CommitAsync();
                 return Result.Success();
-
             }
             catch
             {
                 await Transaction.RollbackAsync();
                 return Result.Failure("Failed to assign grade for exam!");
-
             }
-
-
         }
 
         public async Task<Result<ExamDetailsResDto>> ExamDetails(int id)

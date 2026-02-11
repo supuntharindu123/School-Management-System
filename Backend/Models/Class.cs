@@ -24,5 +24,7 @@ namespace Backend.Models
         public ICollection<TeacherClassAssign>? TeacherClassAssign {  get; set; }
         [JsonIgnore]
         public ICollection<TeacherSubjectClass>? TeacherSubjectClass { get; set; }
+
+        public ICollection<Marks>? Marks { get; set; }
     }
 }

@@ -20,7 +20,7 @@ const EXCLUDED_STATUSES = ["Completed", "Leaving"];
 
 export default function StudentPromotionPage() {
   const dispatch = useDispatch();
-  // Helper to stringify backend errors safely
+
   const errMsg = (err, fallback) => {
     const data = err?.response?.data;
     if (typeof data === "string") return data;
@@ -29,16 +29,10 @@ export default function StudentPromotionPage() {
     return err?.message || fallback;
   };
 
-  /* =========================
-     Redux State
-  ========================= */
   const { students } = useSelector((s) => s.studentList);
   const { grades } = useSelector((s) => s.grades);
   const { years } = useSelector((s) => s.years);
 
-  /* =========================
-     Local State
-  ========================= */
   const [mode, setMode] = useState("overview");
   const [classesByGrade, setClassesByGrade] = useState({});
   const [promotions, setPromotions] = useState({});
@@ -62,18 +56,12 @@ export default function StudentPromotionPage() {
     classLabel: "",
   });
 
-  /* =========================
-     Initial Load
-  ========================= */
   useEffect(() => {
     dispatch(GetAllStudents());
     dispatch(getAllGrades());
     dispatch(getAllYears());
   }, [dispatch]);
 
-  /* =========================
-     Load Classes by Grade
-  ========================= */
   useEffect(() => {
     if (!grades.length || !years.length) return;
 
@@ -102,9 +90,6 @@ export default function StudentPromotionPage() {
     })();
   }, [grades, years]);
 
-  /* =========================
-     Derived Data
-  ========================= */
   const classes = classesByGrade[context.gradeId] || [];
 
   // Lookups for confirmation modal
@@ -123,7 +108,6 @@ export default function StudentPromotionPage() {
     return m;
   }, [classesByGrade]);
 
-  /* ---------- Class Status ---------- */
   const classStatuses = useMemo(() => {
     const map = {};
 
@@ -159,10 +143,10 @@ export default function StudentPromotionPage() {
   const visibleStudents = useMemo(() => {
     return students
       .filter((s) => {
-        // ❌ already completed / leaving in DB
+        // already completed / leaving in DB
         if (EXCLUDED_STATUSES.includes(s.status)) return false;
 
-        // ❌ marked completed / leaving in UI
+        // marked completed / leaving in UI
         if (EXCLUDED_STATUSES.includes(promotions[s.id]?.status)) return false;
 
         return (

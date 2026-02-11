@@ -28,6 +28,8 @@ import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import StudentDashboard from "../pages/student/StudentDashboard";
 import SubjectDetailsPage from "../pages/admin/SubjectDetailsPage";
 import GuestPage from "../pages/GuestPage";
+import ExamAssignPage from "../pages/admin/AssignGradeSubjectForExam";
+import ExamGradeDetailsPage from "../pages/admin/ExamGradeDetailsPage";
 
 export default function RouteConfig() {
   return (
@@ -57,6 +59,11 @@ export default function RouteConfig() {
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
             <Route path="/attendance" element={<AttendancePage />} />
             <Route path="/subject/:id" element={<SubjectDetailsPage />} />
+            <Route path="/exams/:id/assign" element={<ExamAssignPage />} />
+            <Route
+              path="/exams/:examId/grades/:gradeId"
+              element={<ExamGradeDetailsPage />}
+            />
 
             {/* teacher only */}
 
