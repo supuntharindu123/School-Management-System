@@ -60,7 +60,9 @@ namespace Backend.Mapping
                 .ForMember(dest => dest.ClassName,
                     opt => opt.MapFrom(src => src.Class!.Name))
                 .ForMember(dest => dest.SubjectName,
-                    opt => opt.MapFrom(src => src.Subject!.SubjectName));
+                    opt => opt.MapFrom(src => src.Subject!.SubjectName))
+                .ForMember(dest => dest.GradeId,
+                    opt => opt.MapFrom(src => src.Class!.GradeId));
 
             CreateMap<TeacherUpdateDto, Teacher>();
 
@@ -102,49 +104,74 @@ namespace Backend.Mapping
             CreateMap<StudentAttendanceUpdateDto, StudentAttendances>();
 
             CreateMap<Exam, ExamResDto>()
-                .ForMember(destination => destination.ExamType, opt => opt.MapFrom(src => src.ExamType))
-                .ForMember(destination => destination.AcademicYear, opt => opt.MapFrom(src => src.AcademicYear!.Year));
+                .ForMember(d => d.AcademicYear,
+                    o => o.MapFrom(s => s.AcademicYear!.Year))
+                .ForMember(d => d.ExamGrades,
+                    o => o.MapFrom(s =>
+                        s.ExamGradeSubjects!
+                            .GroupBy(x => x.GradeId)
+                            .Select(g => new ExamSubjectDto
+                            {
+                                GradeId = g.Key,
+                                SubjectId = g.Select(x => x.SubjectId).ToList()
+                            })));
+
 
             CreateMap<ExamUpdateDto, Exam>();
 
             CreateMap<Student, StudentBasicDto>();
 
             CreateMap<TeacherClassAssign, ClassTeacherDto>()
-                .ForMember(d => d.TeacherName,
-                    o => o.MapFrom(src => src.Teacher!.FullName));
+                .ForMember(des => des.TeacherName,
+                    opt => opt.MapFrom(src => src.Teacher!.FullName))
+                .ForMember(des=>des.CreatedDate,opt=>opt.MapFrom(src=>src.CreatedDate.ToString("yyyy-MM-dd")))
+                 .ForMember(des => des.UpdatedDate,
+                    opt => opt.MapFrom(src => src.UpdatedDate.ToString("yyyy-MM-dd")));
 
             CreateMap<TeacherSubjectClass, ClassSubjectTeacherDto>()
-                .ForMember(d => d.SubjectName,
-                    o => o.MapFrom(src => src.Subject!.SubjectName))
-                .ForMember(d => d.TeacherName,
-                    o => o.MapFrom(src => src.Teacher!.FullName));
+                .ForMember(des => des.SubjectName,
+                    opt => opt.MapFrom(src => src.Subject!.SubjectName))
+                .ForMember(des => des.TeacherName,
+                    opt => opt.MapFrom(src => src.Teacher!.FullName))
+                .ForMember(des => des.CreatedDate,
+                    opt => opt.MapFrom(src => src.StartDate.ToString("yyyy-MM-dd")))
+                .ForMember(des => des.UpdatedDate,
+                    opt => opt.MapFrom(src => src.EndDate.ToString("yyyy-MM-dd")));
 
             CreateMap<Class, ClassDetailsResDto>()
-                .ForMember(d => d.ClassId, o => o.MapFrom(src => src.Id))
-                .ForMember(d => d.ClassName, o => o.MapFrom(src => src.Name))
-                .ForMember(d => d.ClassTeachers, o => o.MapFrom(src => src.TeacherClassAssign))
-                .ForMember(d => d.SubjectTeachers, o => o.MapFrom(src => src.TeacherSubjectClass));
+                .ForMember(des => des.ClassId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(des => des.ClassName, opt => opt.MapFrom(src => src.Name))
+                .ForMember(des => des.ClassTeachers, opt => opt.MapFrom(src => src.TeacherClassAssign))
+                .ForMember(des => des.SubjectTeachers, opt => opt.MapFrom(src => src.TeacherSubjectClass));
 
             CreateMap<Grade, GradeResDto>();
 
             CreateMap<Subject, SubjectGradeResDto>()
-                .ForMember(d => d.Grades, opt => opt.MapFrom(src => src.SubjectGrade!.Select(s => s.Grade)));
+                .ForMember(des => des.Grades, opt => opt.MapFrom(src => src.SubjectGrade!.Select(s => s.Grade)));
 
             CreateMap<SubjectGradeCreateDto, SubjectGrade>();
 
             CreateMap<Exam, ExamDetailsResDto>()
-                .ForMember(d => d.Grades, opt => opt.MapFrom(src => src.ExamGrades));
+                .ForMember(des => des.Grades, opt => opt.MapFrom(src => src.ExamGrades))
+                .ForMember(des => des.AcademicYear, opt => opt.MapFrom(src => src.AcademicYear!.Year))
+                .ForMember(des => des.ExamType, opt => opt.MapFrom(src => src.ExamType))
+                .ForMember(des => des.TotalGrades, opt => opt.MapFrom(src => src.ExamGrades!.Select(e=>e.ExamId).Count()))
+                .ForMember(d => d.examDurationDays, opt => opt.MapFrom(s =>s.EndDate.DayNumber - s.StartDate.DayNumber))
+                .ForMember(d => d.TotalSubjects,opt => opt.MapFrom(s => s.ExamGradeSubjects!.Select(x => x.SubjectId).Distinct().Count()));
 
             CreateMap<ExamGrade, GradeExamResDto>()
                 .ForMember(des => des.Classes, opt => opt.MapFrom(src => src.Grade!.Classes))
-                .ForMember(des => des.Subjects, opt => opt.MapFrom(src => src.Exam!.ExamGradeSubjects.Where(s=>s.GradeId==src.GradeId)));
+                .ForMember(des => des.Subjects, opt => opt.MapFrom(src => src.Exam!.ExamGradeSubjects!.Where(s=>s.GradeId==src.GradeId)));
 
             CreateMap<ExamGradeSubject, SubjectResDto>()
-                .ForMember(d => d.Id, opt => opt.MapFrom(src => src.SubjectId))
-                .ForMember(d => d.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
-                .ForMember(d => d.ModuleCode, opt => opt.MapFrom(src => src.Subject!.ModuleCode));
+                .ForMember(des => des.Id, opt => opt.MapFrom(src => src.SubjectId))
+                .ForMember(des => des.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
+                .ForMember(des => des.ModuleCode, opt => opt.MapFrom(src => src.Subject!.ModuleCode));
 
-            CreateMap<Marks, MarkResDto>();
+            CreateMap<Marks, MarkResDto>()
+                .ForMember(des => des.AcademicYearId, opt => opt.MapFrom(src => src.Exam!.AcademicYearId))
+                .ForMember(des => des.StudentIDNumber, opt => opt.MapFrom(src => src.Student!.StudentIDNumber))
+                .ForMember(des => des.StudentName, opt => opt.MapFrom(src => src.Student!.FullName));
 
 
 

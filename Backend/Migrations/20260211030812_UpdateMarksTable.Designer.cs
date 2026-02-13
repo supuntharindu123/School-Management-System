@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260210174234_UpdatemarksTable")]
-    partial class UpdatemarksTable
+    [Migration("20260211030812_UpdateMarksTable")]
+    partial class UpdateMarksTable
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -213,6 +213,9 @@ namespace Backend.Migrations
                     b.Property<int>("StudentId")
                         .HasColumnType("int");
 
+                    b.Property<int>("SubjectId")
+                        .HasColumnType("int");
+
                     b.Property<int>("TeacherId")
                         .HasColumnType("int");
 
@@ -225,6 +228,8 @@ namespace Backend.Migrations
                     b.HasIndex("GradeId");
 
                     b.HasIndex("StudentId");
+
+                    b.HasIndex("SubjectId");
 
                     b.HasIndex("TeacherId");
 
@@ -671,6 +676,12 @@ namespace Backend.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("Backend.Models.Subject", "Subject")
+                        .WithMany("Marks")
+                        .HasForeignKey("SubjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
                     b.HasOne("Backend.Models.Teacher", "Teacher")
                         .WithMany("Marks")
                         .HasForeignKey("TeacherId")
@@ -684,6 +695,8 @@ namespace Backend.Migrations
                     b.Navigation("Grades");
 
                     b.Navigation("Student");
+
+                    b.Navigation("Subject");
 
                     b.Navigation("Teacher");
                 });
@@ -897,6 +910,8 @@ namespace Backend.Migrations
             modelBuilder.Entity("Backend.Models.Subject", b =>
                 {
                     b.Navigation("ExamGradeSubjects");
+
+                    b.Navigation("Marks");
 
                     b.Navigation("SubjectGrade");
 

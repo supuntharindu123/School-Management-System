@@ -1,5 +1,6 @@
 ﻿using Backend.DTOs.Student;
 using Backend.Helper;
+using Backend.Models;
 
 namespace Backend.Services.Interfaces
 {
@@ -15,6 +16,8 @@ namespace Backend.Services.Interfaces
         public Task<Result> UpdateStudent(int id,StudentUpdateDto dto);
 
         public byte[] ExportToExcel(List<StudentRes> studentRes);
+
+        public Task<Result<List<StudentBasicDto>>> GetStudentsByClass(int classId);
 
     }
 }

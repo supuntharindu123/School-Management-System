@@ -6,7 +6,6 @@ export default function Sidebar({ isOpen, onClose }) {
   const location = useLocation();
   const { user } = useSelector((state) => state.auth);
 
-  // Resolve dashboard route based on user role; ensure a valid string path
   const dashboardLink =
     user?.role === 0
       ? "/admin"
@@ -20,34 +19,47 @@ export default function Sidebar({ isOpen, onClose }) {
     typeof to === "string" &&
     (location.pathname === to || location.pathname.startsWith(`${to}/`));
 
-  const items = [
+  const mainItems = [
     {
       label: "Dashboard",
       to: dashboardLink,
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M12 3.75a.75.75 0 0 1 .47.167l7.5 6.25a.75.75 0 1 1-.94 1.166L12 5.21 4.97 11.333a.75.75 0 0 1-.94-1.166l7.5-6.25A.75.75 0 0 1 12 3.75Z" />
-          <path d="M4.5 10.5V19.5A1.5 1.5 0 0 0 6 21h3.75v-5.25h4.5V21H18a1.5 1.5 0 0 0 1.5-1.5V10.5L12 4.875 4.5 10.5Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
+          />
         </svg>
       ),
     },
+  ];
+
+  const managementItems = [
     {
       label: "Students",
       to: "/students",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M7.5 6a3 3 0 1 1 6 0 3 3 0 0 1-6 0Z" />
-          <path d="M3 20.25a7.5 7.5 0 1 1 15 0v.75H3v-.75Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+          />
         </svg>
       ),
     },
@@ -57,12 +69,17 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M6.75 3A2.25 2.25 0 0 0 4.5 5.25v13.5A2.25 2.25 0 0 0 6.75 21h10.5A2.25 2.25 0 0 0 19.5 18.75V5.25A2.25 2.25 0 0 0 17.25 3H6.75Z" />
-          <path d="M8.25 7.5h7.5v1.5h-7.5V7.5ZM8.25 11.25h7.5v1.5h-7.5v-1.5Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"
+          />
         </svg>
       ),
     },
@@ -72,12 +89,17 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M11.7 2.64a.75.75 0 0 1 .6 0l8.25 3.75a.75.75 0 0 1 0 1.36l-8.25 3.75a.75.75 0 0 1-.6 0L3.45 7.75a.75.75 0 0 1 0-1.36L11.7 2.64Z" />
-          <path d="M4.5 10.5v3.375a4.125 4.125 0 0 0 8.25 0V10.5" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M4.26 10.147a60.438 60.438 0 0 0-.491 6.347A48.62 48.62 0 0 1 12 20.904a48.62 48.62 0 0 1 8.232-4.41 60.46 60.46 0 0 0-.491-6.347m-15.482 0a50.636 50.636 0 0 0-2.425 4.708 5.25 5.25 0 0 0 3.926 7.244c.66.154 1.319.314 1.982.475m11.996-12.427a50.636 50.636 0 0 1 2.425 4.708 5.25 5.25 0 0 1-3.926 7.244c-.66.154-1.319.314-1.982.475m12-12.427a48.62 48.62 0 0 0-16.232 0M12 12.75l1.25 1.25"
+          />
         </svg>
       ),
     },
@@ -87,12 +109,17 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h13.5A2.25 2.25 0 0 1 21 6.75V9H3V6.75Z" />
-          <path d="M3 12h18v5.25A2.25 2.25 0 0 1 18.75 19.5H5.25A2.25 2.25 0 0 1 3 17.25V12Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3h1.5m3-6H15m-1.5 3H15m-1.5 3H15"
+          />
         </svg>
       ),
     },
@@ -102,12 +129,17 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M6.75 4.5A2.25 2.25 0 0 0 4.5 6.75v10.5A2.25 2.25 0 0 0 6.75 19.5h7.5A2.25 2.25 0 0 0 16.5 17.25V6.75A2.25 2.25 0 0 0 14.25 4.5h-7.5Z" />
-          <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75V18a1.5 1.5 0 0 1-1.5 1.5H18V7.5Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18c-2.305 0-4.408.867-6 2.292m0-14.25v14.25"
+          />
         </svg>
       ),
     },
@@ -117,111 +149,86 @@ export default function Sidebar({ isOpen, onClose }) {
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M4.5 4.5A2.25 2.25 0 0 1 6.75 2.25h7.5A2.25 2.25 0 0 1 16.5 4.5v15a.75.75 0 0 1-1.2.6L12 17.25l-3.3 2.85a.75.75 0 0 1-1.2-.6v-15Z" />
-          <path d="M18 7.5h.75A2.25 2.25 0 0 1 21 9.75v9.75A1.5 1.5 0 0 1 19.5 21H18V7.5Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V19.5a2.25 2.25 0 0 0 2.25 2.25h.75"
+          />
         </svg>
       ),
     },
     {
-      label: "Student Promotion",
+      label: "Student promotion",
       to: "/promotions",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
+          fill="none"
           viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-5 w-5"
+          strokeWidth={2}
+          stroke="currentColor"
+          className="w-5 h-5"
         >
-          <path d="M3 6.75A2.25 2.25 0 0 1 5.25 4.5h8.25a.75.75 0 0 1 .53.22l4.5 4.5a.75.75 0 0 1 .22.53v9.75A2.25 2.25 0 0 1 16.5 21H5.25A2.25 2.25 0 0 1 3 18.75V6.75Z" />
-          <path d="M12.75 8.25a.75.75 0 0 1 .75-.75h2.19l-2.94-2.94a.75.75 0 0 1 .53-1.28h-8.03A.75.75 0 0 0 6 3.75v.75h6.75a.75.75 0 0 1 .75.75v3Z" />
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M3 7.5L7.5 3m0 0L12 7.5M7.5 3v13.5m9-6l4.5 4.5m0 0l-4.5 4.5M21 15H7.5"
+          />
         </svg>
       ),
     },
-    // {
-    //   label: "Settings",
-    //   to: "/settings",
-    //   icon: (
-    //     <svg
-    //       xmlns="http://www.w3.org/2000/svg"
-    //       viewBox="0 0 24 24"
-    //       fill="currentColor"
-    //       className="h-5 w-5"
-    //     >
-    //       <path d="M10.5 2.25a.75.75 0 0 1 .75-.75h1.5a.75.75 0 0 1 .75.75v1.19a7.538 7.538 0 0 1 1.914.793l.842-.842a.75.75 0 0 1 1.06 0l1.06 1.06a.75.75 0 0 1 0 1.06l-.842.842c.33.594.594 1.23.793 1.914h1.19a.75.75 0 0 1 .75.75v1.5a.75.75 0 0 1-.75.75h-1.19a7.538 7.538 0 0 1-.793 1.914l.842.842a.75.75 0 0 1 0 1.06l-1.06 1.06a.75.75 0 0 1-1.06 0l-.842-.842a7.538 7.538 0 0 1-1.914.793v1.19a.75.75 0 0 1-.75.75h-1.5a.75.75 0 0 1-.75-.75v-1.19a7.538 7.538 0 0 1-1.914-.793l-.842.842a.75.75 0 0 1-1.06 0l-1.06-1.06a.75.75 0 0 1 0-1.06l.842-.842A7.538 7.538 0 0 1 6.84 13.5H5.65a.75.75 0 0 1-.75-.75v-1.5c0-.414.336-.75.75-.75h1.19a7.538 7.538 0 0 1 .793-1.914l-.842-.842a.75.75 0 0 1 0-1.06L7.85 4.38a.75.75 0 0 1 1.06 0l.842.842c.594-.33 1.23-.594 1.914-.793V2.25Z" />
-    //       <path d="M12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z" />
-    //     </svg>
-    //   ),
-    // },
   ];
+
+  const renderLink = (item) => {
+    const active = isActive(item.to);
+    return (
+      <Link
+        key={item.to}
+        to={item.to}
+        onClick={onClose}
+        className={`group flex items-center gap-3.5 rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 ${
+          active
+            ? "bg-cyan-600 text-white shadow-lg shadow-cyan-900/20"
+            : "text-slate-300 hover:bg-white/5 hover:text-white"
+        }`}
+      >
+        <span
+          className={`${active ? "text-white" : "text-slate-400 group-hover:text-cyan-400"} transition-colors`}
+        >
+          {item.icon}
+        </span>
+        {item.label}
+      </Link>
+    );
+  };
 
   return (
     <aside
       id="sidebar"
-      className={`fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] my-4 rounded-r-sm
-      bg-cyan-950 border-r border-cyan-800 text-white
-      transform transition-transform duration-300
-      ${isOpen ? "translate-x-0" : "-translate-x-full"}`}
+      className={`fixed top-16 left-0 z-40 w-64 h-[calc(100vh-4rem)] 
+      bg-cyan-950 border-r border-cyan-800/50 text-white
+      transform transition-all duration-300 ease-in-out
+      ${isOpen ? "translate-x-0 opacity-100" : "-translate-x-full opacity-0"}`}
       aria-label="Sidebar"
-      aria-hidden={!isOpen}
     >
-      {/* Brand
-      <div className="flex items-center gap-3 px-4 py-3 border-b">
-        <img src={logo} alt="School logo" className="h-7 w-7" />
-        <div className="leading-tight">
-          <p className="text-sm font-semibold text-neutral-900">
-            School Management
+      <div className="h-full overflow-y-auto py-6 px-3 custom-scrollbar">
+        {/* main section */}
+        <div className="space-y-1 mb-8">{mainItems.map(renderLink)}</div>
+
+        {/* management section */}
+        <div>
+          <p className="px-4 mb-3 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Management
           </p>
-          <p className="-mt-0.5 text-xs text-neutral-600">Navigation</p>
+          <div className="space-y-1">{managementItems.map(renderLink)}</div>
         </div>
-        <div className="ml-auto">
-          <button
-            onClick={onClose}
-            aria-label="Hide sidebar"
-            className="rounded px-2 py-1 text-xs font-medium text-neutral-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-cyan-600"
-          >
-            Hide
-          </button>
-        </div>
-      </div> */}
-      {/* Nav */}
-      <nav className="p-2 space-y-1 pt-6">
-        {items.map((item) => {
-          const active = isActive(item.to);
-          return (
-            <Link
-              key={item.to}
-              to={item.to}
-              onClick={onClose}
-              className={`group relative flex items-center gap-3 rounded-lg px-3 py-3 text-md font-semibold ${
-                active
-                  ? "bg-cyan-600 text-white"
-                  : "text-white/80 hover:bg-cyan-800"
-              }`}
-            >
-              {/* Active indicator */}
-              {/* <span
-                className={`absolute left-0 top-0 h-full w-1 rounded-r ${
-                  active
-                    ? "bg-cyan-600"
-                    : "bg-transparent group-hover:bg-cyan-700"
-                }`}
-              /> */}
-              <span
-                className={`text-white/70 group-hover:text-white ${
-                  active ? "text-white" : ""
-                }`}
-              >
-                {item.icon}
-              </span>
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      </div>
     </aside>
   );
 }

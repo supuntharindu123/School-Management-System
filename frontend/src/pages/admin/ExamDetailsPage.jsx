@@ -61,160 +61,212 @@ export default function ExamDetailsPage() {
   }, [exam]);
 
   if (!exam || loading) {
-    return <p className="text-sm text-neutral-700">Loading exam...</p>;
+    return (
+      <div className="p-20 text-center animate-pulse text-cyan-600 font-bold capitalize">
+        Loading exam details...
+      </div>
+    );
   }
 
   return (
-    <div className="space-y-6">
-      {/* ===== HEADER ===== */}
-      <header className="flex justify-between items-center rounded-2xl bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 p-6">
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      {/* ===== Header ===== */}
+      <header className="flex justify-between items-center rounded-3xl bg-linear-to-r from-cyan-900 via-cyan-800 to-cyan-900 p-8 shadow-lg">
         <div>
-          <h1 className="text-2xl font-bold text-white">{exam.title}</h1>
-          <p className="text-sm text-cyan-100">
-            Academic Year: {exam.academicYear ?? exam.academicYearId}
+          <h1 className="text-2xl font-bold text-white capitalize">
+            {exam.title}
+          </h1>
+          <p className="text-sm text-cyan-100 capitalize">
+            Academic year: {exam.academicYear}
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           {!isAfterEndDate && (
             <button
               onClick={() => navigate(`/exams/${examId}/assign`)}
-              className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-cyan-800 hover:border-teal-600 hover:text-teal-600"
+              className="rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-md hover:bg-white hover:text-cyan-900 transition-all capitalize"
             >
-              Assign Grades & Subjects
+              Assign grades & subjects
             </button>
           )}
 
           <button
             onClick={() => setDeleteConfirmOpen(true)}
-            className="bg-red-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-red-700"
+            className="bg-rose-500 text-white px-4 py-2 rounded-xl text-sm font-bold hover:bg-rose-600 transition-colors capitalize"
           >
-            Delete Exam
+            Delete exam
           </button>
         </div>
       </header>
 
-      {/* ===== EXAM INFO ===== */}
-      <section className="bg-white rounded-xl shadow-md p-4 space-y-2 border-t-4 border-cyan-600">
-        <Info label="Start Date" value={formatDate(exam.startDate)} />
-        <Info label="End Date" value={formatDate(exam.endDate)} />
-        <Info label="Description" value={exam.description || "—"} />
-      </section>
-
-      {/* ===== CREATIVE GRADE & SUBJECT OVERVIEW ===== */}
-      <section className="bg-white rounded-xl shadow-md p-4 border-t-4 border-cyan-600">
-        <h2 className="text-sm font-semibold text-neutral-900 mb-4">
-          Grade & Subject Overview
-        </h2>
-
-        {exam.grades?.length ? (
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ===== Exam Info ===== */}
+        <section className="lg:col-span-1 bg-white rounded-3xl shadow-sm p-6 space-y-4 border border-neutral-100">
+          <h2 className="text-lg font-bold text-neutral-600 capitalize tracking-wider">
+            General information
+          </h2>
           <div className="space-y-3">
-            {exam.grades.map((g) => {
-              const grade = grades.find((x) => x.id === g.gradeId);
-              const isOpen = openGrade === g.gradeId;
+            <Info label="Exam Type" value={exam.examType} />
+            <Info label="Start date" value={formatDate(exam.startDate)} />
+            <Info label="End date" value={formatDate(exam.endDate)} />
+            <Info label="Exam Duration Days" value={exam.examDurationDays} />
+            <Info label="Number Of Grades" value={exam.totalGrades} />
+            <Info label="Number Of Subjects" value={exam.totalSubjects} />
+            <Info label="Exam Year" value={exam.academicYear} />
+            <div className="pt-2 border-t border-neutral-50">
+              <p className="text-xs text-neutral-500 mb-1 capitalize">
+                Description
+              </p>
+              <p className="text-sm text-neutral-800 leading-relaxed">
+                {exam.description || "No description provided for this exam."}
+              </p>
+            </div>
+          </div>
+        </section>
 
-              const classList = g.classes || [];
-              const subjectList = (g.subjects || []).map((s) => {
-                const id = s.subjectId ?? s.id;
-                const name =
-                  s.subjectName ??
-                  subjects.find((x) => x.id === id)?.subjectName ??
-                  `Subject #${id}`;
-                return { id, name };
-              });
+        {/* ===== Grade & Subject Overview ===== */}
+        <section className="lg:col-span-2 bg-white rounded-3xl shadow-sm p-6 border border-neutral-100">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold text-neutral-600 capitalize tracking-wider">
+              Grade & subject overview
+            </h2>
+            <span className="text-[10px] font-bold bg-cyan-50 text-cyan-700 px-3 py-1 rounded-full capitalize">
+              {exam.grades?.length || 0} grades assigned
+            </span>
+          </div>
 
-              return (
-                <div
-                  key={g.gradeId}
-                  className="border-t-1 shadow-sm rounded-lg overflow-hidden border-cyan-600"
-                >
-                  {/* Grade Header */}
-                  <button
-                    onClick={() =>
-                      navigate(`/exams/${examId}/grades/${g.gradeId}`)
-                    }
-                    className="w-full flex justify-between items-center px-4 py-3 bg-gray-50 hover:bg-gray-100"
+          {exam.grades?.length ? (
+            <div className="space-y-3">
+              {exam.grades.map((g) => {
+                const grade = grades.find((x) => x.id === g.gradeId);
+                const isOpen = openGrade === g.gradeId;
+                const classList = g.classes || [];
+                const subjectList = (g.subjects || []).map((s) => {
+                  const id = s.subjectId ?? s.id;
+                  return {
+                    id,
+                    name:
+                      s.subjectName ??
+                      subjects.find((x) => x.id === id)?.subjectName ??
+                      `Subject #${id}`,
+                  };
+                });
+
+                return (
+                  <div
+                    key={g.gradeId}
+                    className="rounded-2xl border border-neutral-100 overflow-hidden"
                   >
-                    <span className="font-medium text-neutral-900">
-                      Grade {grade?.gradeName ?? g.gradeId}
-                    </span>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setOpenGrade(isOpen ? null : g.gradeId);
-                      }}
-                      className="text-cyan-700"
+                    {/* Grade Header */}
+                    <div
+                      className={`flex justify-between items-center px-5 py-4 cursor-pointer transition-colors ${
+                        isOpen
+                          ? "bg-cyan-50/50"
+                          : "bg-neutral-50/50 hover:bg-neutral-50"
+                      }`}
+                      onClick={() => setOpenGrade(isOpen ? null : g.gradeId)}
                     >
-                      {isOpen ? "▲" : "▼"}
-                    </button>
-                  </button>
-
-                  {/* Grade Content */}
-                  {isOpen && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-white">
-                      {/* Classes */}
-                      <div>
-                        <p className="text-xs font-semibold text-neutral-700 mb-2">
-                          Classes
-                        </p>
-                        {classList.length ? (
-                          <div className="flex flex-wrap gap-2">
-                            {classList.map((c) => (
-                              <span
-                                key={c.id}
-                                className="bg-gray-100 px-2 py-1 rounded text-xs"
-                              >
-                                {c.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-neutral-500">
-                            No classes assigned
-                          </p>
-                        )}
+                      <div className="flex items-center gap-3">
+                        <div className="w-2 h-2 rounded-full bg-cyan-600" />
+                        <span className="font-bold text-neutral-800 capitalize">
+                          Grade {grade?.gradeName ?? g.gradeId}
+                        </span>
                       </div>
-
-                      {/* Subjects */}
-                      <div>
-                        <p className="text-xs font-semibold text-neutral-700 mb-2">
-                          Subjects
-                        </p>
-                        {subjectList.length ? (
-                          <div className="flex flex-wrap gap-2">
-                            {subjectList.map((s) => (
-                              <span
-                                key={s.id}
-                                className="bg-cyan-50 text-cyan-800 px-2 py-1 rounded text-xs"
-                              >
-                                {s.name}
-                              </span>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className="text-xs text-neutral-500">
-                            No subjects assigned
-                          </p>
-                        )}
+                      <div className="flex items-center gap-4">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/exams/${examId}/grades/${g.gradeId}`);
+                          }}
+                          className="text-sm font-bold text-cyan-600 hover:underline capitalize"
+                        >
+                          View results
+                        </button>
+                        <span
+                          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+                        >
+                          <svg
+                            width="16"
+                            height="16"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                          >
+                            <path d="m6 9 6 6 6-6" />
+                          </svg>
+                        </span>
                       </div>
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        ) : (
-          <p className="text-sm text-neutral-600">
-            No grades assigned to this exam
-          </p>
-        )}
-      </section>
 
-      {/* ===== DIALOGS ===== */}
+                    {/* Grade Content */}
+                    {isOpen && (
+                      <div className="p-5 bg-white space-y-5 animate-in slide-in-from-top-2">
+                        <div>
+                          <p className="text-[10px] font-bold text-neutral-400 mb-2 capitalize">
+                            Assigned classes
+                          </p>
+                          {classList.length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {classList.map((c) => (
+                                <span
+                                  key={c.id}
+                                  className="bg-neutral-100 text-neutral-700 px-3 py-1 rounded-lg text-xs font-medium"
+                                >
+                                  {c.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-neutral-400 italic capitalize">
+                              No classes assigned
+                            </p>
+                          )}
+                        </div>
+
+                        <div>
+                          <p className="text-[10px] font-bold text-neutral-400 mb-2 capitalize">
+                            Exam subjects
+                          </p>
+                          {subjectList.length ? (
+                            <div className="flex flex-wrap gap-2">
+                              {subjectList.map((s) => (
+                                <span
+                                  key={s.id}
+                                  className="bg-cyan-50 text-cyan-700 px-3 py-1 rounded-lg text-xs font-bold capitalize"
+                                >
+                                  {s.name}
+                                </span>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-neutral-400 italic capitalize">
+                              No subjects assigned
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-12 border border-dashed border-neutral-200 rounded-2xl">
+              <p className="text-sm text-neutral-400 capitalize">
+                No grades assigned to this exam yet.
+              </p>
+            </div>
+          )}
+        </section>
+      </div>
+
+      {/* ===== Dialogs ===== */}
       <ConfirmDialog
         open={deleteConfirmOpen}
-        title="Delete Exam"
-        message="Are you sure? This action cannot be undone."
+        title="Delete exam"
+        message="Are you sure you want to remove this exam? This action cannot be undone."
         confirmLabel="Delete"
         cancelLabel="Cancel"
         busy={deleteBusy}
@@ -225,7 +277,7 @@ export default function ExamDetailsPage() {
             await deleteExam(examId);
             setSuccessOpen(true);
           } catch (err) {
-            setErrorMessage("Failed to delete exam");
+            setErrorMessage("Failed to delete exam. Please try again.");
             setErrorOpen(true);
           } finally {
             setDeleteBusy(false);
@@ -249,18 +301,22 @@ export default function ExamDetailsPage() {
   );
 }
 
-/* ===== SMALL COMPONENTS ===== */
+/* ===== Small Components ===== */
 
 function Info({ label, value }) {
   return (
-    <div className="flex justify-between text-sm">
-      <span className="text-neutral-600">{label}</span>
-      <span className="font-medium text-neutral-900">{value}</span>
+    <div className="flex justify-between items-center text-sm py-1">
+      <span className="text-neutral-500 capitalize">{label}</span>
+      <span className="font-bold text-neutral-800">{value}</span>
     </div>
   );
 }
 
 function formatDate(date) {
   if (!date) return "—";
-  return new Date(date).toISOString().split("T")[0];
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }

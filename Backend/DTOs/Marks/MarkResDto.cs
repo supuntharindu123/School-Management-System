@@ -14,6 +14,8 @@ namespace Backend.DTOs.Marks
 
         public int StudentId { get; set; }
 
+        public string? StudentName { get; set; }
+
         public int GradeId { get; set; }
 
         public int ClassId { get; set; }
@@ -21,6 +23,12 @@ namespace Backend.DTOs.Marks
         public int ExamId { get; set; }
 
         public int TeacherId { get; set; }
+
+        public int SubjectId {  get; set; }
+
+        public int AcademicYearId {  get; set; }
+
+        public string? StudentIDNumber { get; set; }
 
     }
 }

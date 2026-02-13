@@ -35,7 +35,7 @@ namespace Backend.Repositories
                 .Include(t => t.TeacherSubjectClass)
                     .ThenInclude(tsc => tsc.Subject)
                 .Include(t => t.TeacherSubjectClass)
-                    .ThenInclude(tsc => tsc.Class)
+                    .ThenInclude(tsc => tsc.Class).ThenInclude(c=>c.Grade)
                 .Include(t => t.TeacherSubjectClass)
                 .FirstOrDefaultAsync(t => t.Id == teacherId);
         }

@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { createStudent } from "../../features/adminFeatures/students/studentService";
 import { getClassesByGrade } from "../../features/class/classService";
 import { getAllGrades } from "../../features/grade/gradeSlice";
 import { getAllYears } from "../../features/year/yearSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
+
 import Button from "../CommonElements/Button";
-import Alert from "../CommonElements/Alert";
 import Modal from "../modal";
 import SuccessAlert from "../SuccessAlert";
 import ErrorAlert from "../ErrorAlert";
-import { GetAllStudents } from "../../features/adminFeatures/students/studentListSlice";
 
 export default function AddStudentForm({ isOpen, isClose }) {
   const [form, setForm] = useState({
@@ -29,79 +29,43 @@ export default function AddStudentForm({ isOpen, isClose }) {
     GuardianRelation: "",
     GuardianDate: "",
   });
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState({ open: false, msg: "" });
   const [success, setSuccess] = useState({ open: false, msg: "" });
   const [classes, setClasses] = useState([]);
 
   const dispatch = useDispatch();
-
-  const gradesList = useSelector((state) => state.grades);
-  const grades = gradesList.grades;
-  const yearsList = useSelector((state) => state.years);
-  const years = yearsList.years;
+  const grades = useSelector((state) => state.grades.grades);
+  const years = useSelector((state) => state.years.years);
 
   useEffect(() => {
     dispatch(getAllGrades());
     dispatch(getAllYears());
-    setLoading(false);
   }, [dispatch]);
 
   useEffect(() => {
-    (async () => {
-      try {
-        const gradeId = Number(form.GradeId) || 0;
-        const cls = await getClassesByGrade(gradeId);
-        setClasses(Array.isArray(cls) ? cls : []);
-        if (
-          !cls?.some(
-            (c) =>
-              String(
-                c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id,
-              ) === String(form.ClassNameId),
-          )
-        ) {
+    if (form.GradeId) {
+      (async () => {
+        try {
+          const cls = await getClassesByGrade(Number(form.GradeId));
+          setClasses(Array.isArray(cls) ? cls : []);
           setForm((prev) => ({ ...prev, ClassNameId: "" }));
+        } catch {
+          setClasses([]);
         }
-      } catch {
-        setClasses([]);
-      }
-    })();
+      })();
+    }
   }, [form.GradeId]);
 
-  function handleChange(e) {
+  const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((prev) => ({ ...prev, [name]: value }));
-  }
+  };
 
-  async function handleSubmit(e) {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError({ open: false, msg: "" });
-    setSuccess({ open: false, msg: "" });
-
-    const requiredFields = [
-      "Username",
-      "Email",
-      "PhoneNumber",
-      "Password",
-      "FullName",
-      "BirthDay",
-      "Address",
-      "City",
-      "Gender",
-      "GradeId",
-      "ClassNameId",
-      "GuardianName",
-      "GuardianDate",
-    ];
-    const missing = requiredFields.filter((f) => !String(form[f] || "").trim());
-    if (missing.length) {
-      setError({
-        open: true,
-        msg: `Please fill required fields: ${missing.join(", ")}`,
-      });
-      return;
-    }
+    setLoading(true);
 
     const payload = {
       ...form,
@@ -113,222 +77,175 @@ export default function AddStudentForm({ isOpen, isClose }) {
     };
 
     try {
-      setLoading(true);
       const message = await createStudent(payload);
-      setSuccess({ open: true, msg: message || "Student added successfully" });
+      setSuccess({
+        open: true,
+        msg: message || "Student enrolled successfully",
+      });
       dispatch(GetAllStudents());
-      // setForm((prev) => ({
-      //   ...Object.fromEntries(Object.keys(prev).map((k) => [k, ""])),
-      // }));
     } catch (err) {
-      console.log(`error`, err.response.data);
       const msg =
         err?.response?.data || err?.message || "Failed to add student";
       setError({ open: true, msg });
     } finally {
       setLoading(false);
     }
-  }
+  };
+
+  const inputClasses =
+    "mt-1.5 block w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-600/20 focus:border-cyan-600 transition-all";
+  const labelClasses = "block text-sm font-bold text-slate-700 ml-1";
 
   return (
     <>
-      <Modal open={isOpen} onClose={isClose} title="Add Student">
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h3 className="text-sm font-medium text-neutral-800">Account</h3>
-              <span className="text-xs text-neutral-500">Required</span>
+      <Modal open={isOpen} onClose={isClose} title="Enroll new student">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* account section */}
+          <section className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
+            <header className="bg-slate-50/50 px-5 py-3 border-b border-slate-100 flex justify-between items-center">
+              <h3 className="text-sm font-bold text-slate-800">
+                Account security
+              </h3>
+              <span className="text-sm font-medium text-cyan-600">
+                Step 1 of 4
+              </span>
             </header>
-            <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Username*
-                </label>
+                <label className={labelClasses}>Username*</label>
                 <input
                   name="Username"
                   value={form.Username}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                  placeholder="e.g., johndoe"
+                  className={inputClasses}
+                  placeholder="johndoe123"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Email*
-                </label>
+                <label className={labelClasses}>Email*</label>
                 <input
                   type="email"
                   name="Email"
                   value={form.Email}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                  placeholder="name@example.com"
+                  className={inputClasses}
+                  placeholder="email@example.com"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Phone Number*
-                </label>
+                <label className={labelClasses}>Phone number*</label>
                 <input
                   type="tel"
                   name="PhoneNumber"
                   value={form.PhoneNumber}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                  placeholder="e.g., +1 555 123 4567"
+                  className={inputClasses}
+                  placeholder="071 234 5678"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Password*
-                </label>
+                <label className={labelClasses}>Password*</label>
                 <input
                   type="password"
                   name="Password"
                   value={form.Password}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+                  className={inputClasses}
                   placeholder="••••••••"
                 />
               </div>
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h3 className="text-sm font-medium text-neutral-800">Personal</h3>
-              <span className="text-xs text-neutral-500">Required</span>
+          {/* personal section */}
+          <section className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
+            <header className="bg-slate-50/50 px-5 py-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-800">
+                Personal information
+              </h3>
             </header>
-            <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2">
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Full Name*
-                </label>
+            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <label className={labelClasses}>Full name*</label>
                 <input
                   name="FullName"
                   value={form.FullName}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+                  className={inputClasses}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Birth Day*
-                </label>
+                <label className={labelClasses}>Birth day*</label>
                 <input
                   type="date"
                   name="BirthDay"
                   value={form.BirthDay}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+                  className={inputClasses}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Address*
-                </label>
-                <input
-                  name="Address"
-                  value={form.Address}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  City*
-                </label>
-                <input
-                  name="City"
-                  value={form.City}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Gender*
-                </label>
+                <label className={labelClasses}>Gender*</label>
                 <select
                   name="Gender"
                   value={form.Gender}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+                  className={inputClasses}
                 >
                   <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
-                  <option value="Other">Other</option>
                 </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className={labelClasses}>Home address*</label>
+                <input
+                  name="Address"
+                  value={form.Address}
+                  onChange={handleChange}
+                  className={inputClasses}
+                />
               </div>
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h3 className="text-sm font-medium text-neutral-800">Academic</h3>
-              <span className="text-xs text-neutral-500">Required</span>
+          {/* academic section */}
+          <section className="rounded-2xl border border-slate-100 bg-white overflow-hidden shadow-sm">
+            <header className="bg-slate-50/50 px-5 py-3 border-b border-slate-100">
+              <h3 className="text-sm font-bold text-slate-800">
+                Academic placement
+              </h3>
             </header>
-            <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 p-5 md:grid-cols-2">
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Grade*
-                </label>
+                <label className={labelClasses}>Grade*</label>
                 <select
                   name="GradeId"
                   value={form.GradeId}
                   onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
+                  className={inputClasses}
                 >
                   <option value="">Select grade</option>
                   {grades.map((g) => (
                     <option key={g.id} value={g.id}>
-                      {g.gradeName ?? g.GradeName ?? `Grade ${g.id}`}
+                      {g.gradeName || `Grade ${g.id}`}
                     </option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Class*
-                </label>
+                <label className={labelClasses}>Class*</label>
                 <select
                   name="ClassNameId"
                   value={form.ClassNameId}
                   onChange={handleChange}
                   disabled={!form.GradeId}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600 disabled:bg-gray-100 disabled:text-gray-500"
+                  className={inputClasses}
                 >
                   <option value="">Select class</option>
                   {classes.map((c) => (
-                    <option
-                      key={c.id}
-                      value={
-                        c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id
-                      }
-                    >
-                      {c.name ??
-                        c.className ??
-                        c.ClassName ??
-                        `Class ${c.classNameID ?? c.classNameId ?? c.ClassNameId ?? c.id}`}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Academic Year (optional)
-                </label>
-                <select
-                  name="AcademicYearId"
-                  value={form.AcademicYearId}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                >
-                  <option value="">Select academic year</option>
-                  {years.map((y) => (
-                    <option key={y.id} value={y.id}>
-                      {y.year}
+                    <option key={c.id} value={c.classNameId || c.id}>
+                      {c.className || c.name}
                     </option>
                   ))}
                 </select>
@@ -336,73 +253,19 @@ export default function AddStudentForm({ isOpen, isClose }) {
             </div>
           </section>
 
-          <section className="rounded-xl border border-gray-200 bg-white">
-            <header className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-              <h3 className="text-sm font-medium text-neutral-800">Guardian</h3>
-              <span className="text-xs text-neutral-500">Required</span>
-            </header>
-            <div className="grid grid-cols-1 gap-3 px-4 py-4 md:grid-cols-3">
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Guardian Name*
-                </label>
-                <input
-                  name="GuardianName"
-                  value={form.GuardianName}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Relation (optional)
-                </label>
-                <input
-                  name="GuardianRelation"
-                  value={form.GuardianRelation}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                  placeholder="Parent / Relative"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-neutral-800">
-                  Guardian Date*
-                </label>
-                <input
-                  type="date"
-                  name="GuardianDate"
-                  value={form.GuardianDate}
-                  onChange={handleChange}
-                  className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600"
-                />
-              </div>
-            </div>
-          </section>
-
-          <div className="flex items-center justify-end gap-2">
-            <div className="flex-1">
-              {error.open && (
-                <Alert
-                  variant="error"
-                  message={error.msg}
-                  onClose={() => setError({ open: false, msg: "" })}
-                  className="mr-2"
-                />
-              )}
-              {success.open && (
-                <Alert
-                  variant="success"
-                  message={success.msg}
-                  onClose={() => setSuccess({ open: false, msg: "" })}
-                  className="mr-2"
-                />
-              )}
-            </div>
+          <div className="flex items-center justify-end gap-3 pt-4">
+            <button
+              type="button"
+              onClick={isClose}
+              className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-100 rounded-xl transition-all"
+            >
+              Cancel
+            </button>
             <Button
               type="submit"
               disabled={loading}
-              label={loading ? "Adding..." : "Add Student"}
+              label={loading ? "Enrolling..." : "Enroll student"}
+              bgcolor="bg-cyan-600 hover:bg-cyan-700 px-8 rounded-xl shadow-lg shadow-cyan-900/10"
             />
           </div>
         </form>

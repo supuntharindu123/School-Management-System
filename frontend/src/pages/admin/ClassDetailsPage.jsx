@@ -13,35 +13,34 @@ import {
   terminateSubjectAssignment,
 } from "../../features/adminFeatures/teachers/teacherService";
 import {
-  MarkStudentAttendances,
   GetClassAttendanceByDate,
   UpdateStudentAttendance,
 } from "../../features/attendances/attendanceService";
 import SuccessAlert from "../../components/SuccessAlert";
 import ErrorAlert from "../../components/ErrorAlert";
-
-function SummaryCard({ label, value }) {
-  return (
-    <div className="rounded-xl border border-cyan-100 bg-white p-4 shadow-sm">
-      <p className="text-xs text-cyan-700">{label}</p>
-      <p className="mt-1 text-xl font-semibold text-neutral-900">{value}</p>
-    </div>
-  );
-}
+import { getMarksByClass } from "../../features/Marks/markServices";
+import { getExams } from "../../features/exam/examService";
+import ClassExamMarksTab from "../../components/Class/ClassExamMarksTab";
+import ClassStudentsTab from "../../components/Class/ClassStudentsTab";
+import ClassDetailsTab from "../../components/Class/ClassDetailsTab";
+import ClassAttendanceTab from "../../components/Class/ClassAttendanceTab";
+import TeacherAttendanceSection from "../../components/Class/TeacherAttendanceSection";
 
 export default function ClassDetailsPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+
+  // basic state
   const [details, setDetails] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [assignOpen, setAssignOpen] = useState(false);
   const [tab, setTab] = useState("details");
+
+  // attendance state
   const getTodayLocalISO = () => {
     const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const da = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${da}`;
+    return d.toISOString().split("T")[0];
   };
   const [viewDate, setViewDate] = useState(() => getTodayLocalISO());
   const [attendanceView, setAttendanceView] = useState([]);
@@ -51,10 +50,18 @@ export default function ClassDetailsPage() {
   const [todayAttendanceExists, setTodayAttendanceExists] = useState(false);
   const [editingId, setEditingId] = useState(null);
   const [editValues, setEditValues] = useState({});
-  const [classHistoryOpen, setClassHistoryOpen] = useState(false);
-  const [subjectHistoryOpen, setSubjectHistoryOpen] = useState(false);
+
+  // exam marks state
+  const [marks, setMarks] = useState([]);
+  const [marksLoading, setMarksLoading] = useState(false);
+  const [marksError, setMarksError] = useState(null);
+  // exams metadata
+  const [exams, setExams] = useState([]);
+  const [examsError, setExamsError] = useState(null);
+
+  // dialog and busy states
+  const [assignOpen, setAssignOpen] = useState(false);
   const [assignSubjectOpen, setAssignSubjectOpen] = useState(false);
-  const [terminatingKey, setTerminatingKey] = useState(null);
   const [confirmEdit, setConfirmEdit] = useState({
     open: false,
     payload: null,
@@ -75,11 +82,51 @@ export default function ClassDetailsPage() {
   const [busyTerminateSubject, setBusyTerminateSubject] = useState(false);
   const [success, setSuccess] = useState({ open: false, msg: "" });
   const [errors, setErrors] = useState({ open: false, msg: "" });
+  const [allExams, setAllExams] = useState([]);
 
-  const navigate = useNavigate();
+  // derived data
+  const students = details?.students || [];
+  const classTeachers = details?.classTeachers || [];
+  const subjectTeachers = details?.subjectTeachers || [];
 
-  const { user } = useSelector((state) => state.auth);
+  const subjectNameById = useMemo(() => {
+    const map = {};
+    (subjectTeachers || []).forEach((st) => {
+      map[st.subjectId] = st.subjectName;
+    });
+    return map;
+  }, [subjectTeachers]);
 
+  const studentNameById = useMemo(() => {
+    const map = {};
+    (students || []).forEach((s) => {
+      map[s.id] = s.fullName;
+    });
+    return map;
+  }, [students]);
+
+  //load exam
+  useEffect(() => {
+    const loadExams = async () => {
+      try {
+        const data = await getExams(); // Using your examServices
+        setAllExams(data || []);
+      } catch (err) {
+        console.error("Failed to load exams", err);
+      }
+    };
+    loadExams();
+  }, []);
+
+  const examNameById = useMemo(() => {
+    const map = {};
+    allExams.forEach((ex) => {
+      map[ex.id] = ex.title;
+    });
+    return map;
+  }, [allExams]);
+
+  // load class details
   useEffect(() => {
     let isMounted = true;
     const loadDetails = async () => {
@@ -107,7 +154,54 @@ export default function ClassDetailsPage() {
     };
   }, [id]);
 
-  // Fetch attendance for selected view date
+  // load marks when tab changes
+  useEffect(() => {
+    if (!details?.classId || tab !== "marks") return;
+    let isMounted = true;
+    const loadMarks = async () => {
+      setMarksLoading(true);
+      setMarksError(null);
+      try {
+        const data = await getMarksByClass(details.classId);
+        if (isMounted) setMarks(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (isMounted)
+          setMarksError(
+            err?.response?.data || err?.message || "Failed to load marks",
+          );
+      } finally {
+        if (isMounted) setMarksLoading(false);
+      }
+    };
+    loadMarks();
+    return () => {
+      isMounted = false;
+    };
+  }, [details?.classId, tab]);
+
+  // load exams when viewing marks to identify grade-related exams
+  useEffect(() => {
+    if (!details?.gradeId || tab !== "marks") return;
+    let isMounted = true;
+    const loadExams = async () => {
+      setExamsError(null);
+      try {
+        const data = await getExams();
+        if (isMounted) setExams(Array.isArray(data) ? data : []);
+      } catch (err) {
+        if (isMounted)
+          setExamsError(
+            err?.response?.data || err?.message || "Failed to load exams",
+          );
+      }
+    };
+    loadExams();
+    return () => {
+      isMounted = false;
+    };
+  }, [details?.gradeId, tab]);
+
+  // load attendance view
   useEffect(() => {
     if (!details?.classId || tab !== "attendance") return;
     let isMounted = true;
@@ -135,7 +229,7 @@ export default function ClassDetailsPage() {
     };
   }, [details?.classId, tab, viewDate]);
 
-  // Check if today's attendance already exists
+  // check if today marked
   useEffect(() => {
     if (!details?.classId) return;
     let isMounted = true;
@@ -145,13 +239,12 @@ export default function ClassDetailsPage() {
           details.classId,
           getTodayLocalISO(),
         );
-        if (isMounted) {
+        if (isMounted)
           setTodayAttendanceExists(
             Array.isArray(data) ? data.length > 0 : !!data,
           );
-        }
       } catch {
-        // ignore errors for existence check
+        /* ignore */
       }
     };
     checkToday();
@@ -160,644 +253,188 @@ export default function ClassDetailsPage() {
     };
   }, [details?.classId, todayMarked]);
 
-  if (loading)
-    return (
-      <div className="text-sm text-neutral-700">Loading class details...</div>
-    );
-  if (error) return <div className="text-sm text-red-600">{String(error)}</div>;
-  if (!details)
-    return (
-      <div className="text-sm text-neutral-700">No details available.</div>
-    );
-
-  const students = details.students || [];
-  const classTeachers = details.classTeachers || [];
-  const subjectTeachers = details.subjectTeachers || [];
-  const activeClassTeacher = classTeachers.find((t) => t.isActive);
-  const activeClassTeachersCount = classTeachers.filter(
-    (t) => t.isActive,
-  ).length;
-
-  const ViewStdDetails = (studentId) => {
-    navigate(`/students/${studentId}`);
-  };
-
+  // termination logic
   const terminateClassForTeacher = async (teacherId) => {
-    const key = `ct-${teacherId}`;
-    setTerminatingKey(key);
-    try {
-      const assignments = await getClassAssignmentsForTeacher(teacherId);
-      const match = (assignments || []).find(
-        (a) =>
-          (a.classId ?? a.ClassId) === details.classId &&
-          (a.isActive ?? a.IsActive),
-      );
-      if (!match) {
-        alert("Active class assignment not found for this teacher.");
-        return;
-      }
-      await terminateClassAssignment(match.id ?? match.Id);
-      const refreshed = await getClassDetails(id);
-      setDetails(refreshed);
-    } catch (err) {
-      alert(
-        err?.response?.data ||
-          err?.message ||
-          "Failed to terminate class assignment.",
-      );
-    } finally {
-      setTerminatingKey(null);
-    }
+    const assignments = await getClassAssignmentsForTeacher(teacherId);
+    const match = (assignments || []).find(
+      (a) =>
+        (a.classId ?? a.ClassId) === details.classId &&
+        (a.isActive ?? a.IsActive),
+    );
+    if (!match) throw new Error("Active class assignment not found.");
+    await terminateClassAssignment(match.id ?? match.Id);
+    const refreshed = await getClassDetails(id);
+    setDetails(refreshed);
   };
 
   const terminateSubjectForTeacher = async (teacherId, subjectId) => {
-    const key = `st-${teacherId}-${subjectId}`;
-    setTerminatingKey(key);
-    try {
-      await terminateSubjectAssignment(subjectId);
-      const refreshed = await getClassDetails(id);
-      setDetails(refreshed);
-    } catch (err) {
-      alert(
-        err?.response?.data ||
-          err?.message ||
-          "Failed to terminate subject assignment.",
-      );
-    } finally {
-      setTerminatingKey(null);
-    }
+    await terminateSubjectAssignment(subjectId);
+    const refreshed = await getClassDetails(id);
+    setDetails(refreshed);
   };
 
+  if (loading)
+    return (
+      <div className="p-8 text-neutral-500 font-medium">
+        Loading class details...
+      </div>
+    );
+  if (error)
+    return <div className="p-8 text-red-500 font-bold">{String(error)}</div>;
+
   return (
-    <div className="mx-auto max-w-7xl">
-      {/* Header */}
-      <header className="mb-4 flex items-center justify-between bg-gradient-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 shadow-md">
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      {/* Header Section */}
+      <header className="bg-cyan-900 rounded-3xl p-8 text-white shadow-sm flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-          <h1 className="text-2xl font-bold text-cyan-50">
+          <h1 className="text-3xl font-bold capitalize">
             {details.className || `Class ${details.classId}`}
           </h1>
-          <p className="text-sm text-cyan-100">Grade: {details.gradeId}</p>
+          <p className="text-cyan-100 opacity-80 text-sm mt-1">
+            Grade {details.gradeId} • Management dashboard
+          </p>
         </div>
-        <div className="flex items-center gap-2">
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Link
+            to="/classes"
+            className="rounded-2xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white hover:bg-white hover:text-cyan-900 transition-colors"
+          >
+            Back to list
+          </Link>
           {user.role === 0 && (
             <>
-              <Link
-                to={`/teachers?assign=class&classId=${encodeURIComponent(details.classId)}`}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-              >
-                Back
-              </Link>
-              {activeClassTeachersCount < 2 && (
-                <Button
-                  label="Assign Class Teacher"
+              {classTeachers.filter((t) => t.isActive).length < 2 && (
+                <button
                   onClick={() => setAssignOpen(true)}
-                />
+                  className="bg-white text-cyan-900 px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-cyan-50 transition-colors shadow-sm"
+                >
+                  Assign class teacher
+                </button>
               )}
-
-              <Button
-                label="Assign Subject Teacher"
+              <button
                 onClick={() => setAssignSubjectOpen(true)}
-              />
+                className="bg-cyan-700 text-white px-6 py-2.5 rounded-2xl text-sm font-bold hover:bg-cyan-600 transition-colors border border-cyan-600 shadow-sm"
+              >
+                Assign subject teacher
+              </button>
             </>
           )}
         </div>
       </header>
 
-      {/* Tabs */}
-      <nav className="rounded-xl bg-white p-2 shadow-sm mb-4">
-        <div className="flex">
+      {/* Navigation Tabs */}
+      <nav className="flex flex-wrap p-1.5 bg-white border border-neutral-200 rounded-3xl w-fit shadow-sm">
+        {[
+          { id: "details", label: "Class details" },
+          { id: "students", label: "Students" },
+          { id: "attendance", label: "Attendance" },
+          { id: "marks", label: "Exam marks" },
+        ].map((t) => (
           <button
-            type="button"
-            onClick={() => setTab("details")}
-            className={`px-3 py-2 text-sm rounded-l-lg ${
-              tab === "details"
+            key={t.id}
+            onClick={() => setTab(t.id)}
+            className={`px-6 py-2.5 text-sm font-bold capitalize rounded-2xl transition-all ${
+              tab === t.id
                 ? "bg-cyan-600 text-white"
-                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
+                : "text-neutral-500 hover:text-cyan-700 hover:bg-cyan-50"
             }`}
           >
-            Class Details
+            {t.label}
           </button>
-          <button
-            type="button"
-            onClick={() => setTab("students")}
-            className={`px-3 py-2 text-sm  ${
-              tab === "students"
-                ? "bg-cyan-600 text-white"
-                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-            }`}
-          >
-            Students
-          </button>
-          <button
-            type="button"
-            onClick={() => setTab("attendance")}
-            className={`px-3 py-2 text-sm rounded-r-lg ${
-              tab === "attendance"
-                ? "bg-cyan-600 text-white"
-                : "bg-white border border-cyan-100 text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-            }`}
-          >
-            Attendance
-          </button>
-        </div>
+        ))}
       </nav>
 
-      {tab === "details" && (
-        <>
-          {/* Summary cards */}
-          <section className="grid grid-cols-1 gap-3 sm:grid-cols-4 mb-4">
-            <SummaryCard label="Students" value={students.length} />
-            <SummaryCard label="Subjects" value={subjectTeachers.length} />
-            <SummaryCard label="Class Teachers" value={classTeachers.length} />
-            <SummaryCard
-              label="Active Class Teacher"
-              value={activeClassTeacher ? activeClassTeacher.teacherName : "-"}
-            />
-          </section>
+      {/* Tab Content Area */}
+      <div className="bg-white rounded-3xl border border-neutral-200 shadow-sm overflow-hidden">
+        {tab === "details" && (
+          <ClassDetailsTab
+            students={students}
+            subjectTeachers={subjectTeachers}
+            classTeachers={classTeachers}
+            user={user}
+            details={details}
+            onRequestTerminateClass={(teacherId, name) =>
+              setConfirmClass({ open: true, teacherId, name })
+            }
+            onRequestTerminateSubject={(subjectId, subject) =>
+              setConfirmSubject({
+                open: true,
+                subjectId,
+                subject,
+                className: details.className,
+              })
+            }
+          />
+        )}
 
-          {/* Class Teachers */}
-          <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
-              <p className="text-md font-semibold text-neutral-900">
-                Class Teachers
-              </p>
-              {classTeachers.some((t) => !t.isActive) && (
-                <button
-                  type="button"
-                  className="rounded-lg border border-cyan-100 bg-cyan-600 px-3 py-2 text-sm text-white hover:border-cyan-500 hover:text-cyan-50"
-                  onClick={() => setClassHistoryOpen((v) => !v)}
-                >
-                  {classHistoryOpen ? "Hide History" : "Show History"}
-                </button>
-              )}
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {classTeachers
-                  .filter((t) => t.isActive)
-                  .map((t) => (
-                    <div
-                      key={`${t.teacherId}-${t.role}`}
-                      className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
-                    >
-                      <p className="font-medium text-neutral-900">
-                        {t.teacherName}
-                      </p>
-                      <p className="text-neutral-700">Role: {t.role}</p>
-                      <p className="text-neutral-700">Active: Yes</p>
-                      {user.role === 0 && (
-                        <div className="mt-2">
-                          <button
-                            type="button"
-                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `ct-${t.teacherId}` ? "bg-cyan-300 text-white" : "bg-cyan-600 text-white hover:bg-cyan-700"}`}
-                            disabled={terminatingKey === `ct-${t.teacherId}`}
-                            onClick={() =>
-                              setConfirmClass({
-                                open: true,
-                                teacherId: t.teacherId,
-                                name: t.teacherName,
-                              })
-                            }
-                          >
-                            {terminatingKey === `ct-${t.teacherId}`
-                              ? "Terminating..."
-                              : "Terminate"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                {classTeachers.filter((t) => t.isActive).length === 0 && (
-                  <div className="rounded-lg border border-cyan-100 p-3 text-sm text-neutral-700">
-                    No active class teacher assignments.
-                  </div>
-                )}
-              </div>
-            </div>
-            {classHistoryOpen && (
-              <div className="border-t border-cyan-100 px-4 py-3">
-                <p className="text-sm font-semibold text-neutral-900">
-                  History
-                </p>
-                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {classTeachers
-                    .filter((t) => !t.isActive)
-                    .map((t) => (
-                      <div
-                        key={`${t.teacherId}-${t.role}-hist`}
-                        className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
-                      >
-                        <p className="font-medium text-neutral-900">
-                          {t.teacherName}
-                        </p>
-                        <p className="text-neutral-700">Role: {t.role}</p>
-                        <p className="text-neutral-700">Status: Inactive</p>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-          </section>
+        {tab === "students" && (
+          <ClassStudentsTab
+            students={students}
+            onViewStudent={(id) => navigate(`/students/${id}`)}
+          />
+        )}
 
-          {/* Subject Teachers */}
-          <section className="rounded-xl border border-cyan-100 bg-white shadow-md mt-4">
-            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
-              <p className="text-sm font-semibold text-neutral-900">
-                Subject Teachers
-              </p>
-              {subjectTeachers.some((st) => !st.isActive) && (
-                <button
-                  type="button"
-                  className="rounded-lg border border-cyan-100 bg-cyan-600 px-3 py-2 text-sm text-white hover:border-cyan-500 hover:text-cyan-50"
-                  onClick={() => setSubjectHistoryOpen((v) => !v)}
-                >
-                  {subjectHistoryOpen ? "Hide History" : "Show History"}
-                </button>
-              )}
-            </div>
-            <div className="p-4">
-              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                {subjectTeachers
-                  .filter((st) => st.isActive)
-                  .map((st) => (
-                    <div
-                      key={`${st.subjectId}-${st.teacherId}`}
-                      className="rounded-lg border border-cyan-100 p-3 text-sm shadow-md"
-                    >
-                      <p className="font-medium text-neutral-900">
-                        {st.subjectName}
-                      </p>
-                      <p className="text-neutral-700">
-                        Teacher: {st.teacherName}
-                      </p>
-                      <p className="text-neutral-700">Active: Yes</p>
-                      {user.role === 0 && (
-                        <div className="mt-2">
-                          <button
-                            type="button"
-                            className={`rounded-lg px-3 py-1 text-xs ${terminatingKey === `st-${st.teacherId}-${st.subjectId}` ? "bg-cyan-300 text-white" : "bg-cyan-600 text-white hover:bg-cyan-700"}`}
-                            disabled={
-                              terminatingKey ===
-                              `st-${st.teacherId}-${st.subjectId}`
-                            }
-                            onClick={() =>
-                              setConfirmSubject({
-                                open: true,
-                                subjectId: st.subjectId,
-                                subject: st.subjectName,
-                                className: details.className,
-                              })
-                            }
-                          >
-                            {terminatingKey ===
-                            `st-${st.teacherId}-${st.subjectId}`
-                              ? "Terminating..."
-                              : "Terminate"}
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                {subjectTeachers.filter((st) => st.isActive).length === 0 && (
-                  <div className="rounded-lg border border-cyan-100 p-3 text-sm text-neutral-700">
-                    No active subject teacher assignments.
-                  </div>
-                )}
-              </div>
-            </div>
-            {subjectHistoryOpen && (
-              <div className="border-t border-cyan-100 px-4 py-3">
-                <p className="text-sm font-semibold text-neutral-900">
-                  History
-                </p>
-                <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
-                  {subjectTeachers
-                    .filter((st) => !st.isActive)
-                    .map((st) => (
-                      <div
-                        key={`${st.subjectId}-${st.teacherId}-hist`}
-                        className="rounded-lg border border-cyan-100 p-3 text-sm"
-                      >
-                        <p className="font-medium text-neutral-900">
-                          {st.subjectName}
-                        </p>
-                        <p className="text-neutral-700">
-                          Teacher: {st.teacherName}
-                        </p>
-                        <p className="text-neutral-700">Status: Inactive</p>
-                      </div>
-                    ))}
-                </div>
-              </div>
-            )}
-          </section>
-        </>
-      )}
+        {tab === "attendance" && (
+          <ClassAttendanceTab
+            viewDate={viewDate}
+            setViewDate={setViewDate}
+            attendanceView={attendanceView}
+            viewLoading={viewLoading}
+            viewError={viewError}
+            user={user}
+            editingId={editingId}
+            setEditingId={setEditingId}
+            editValues={editValues}
+            setEditValues={setEditValues}
+            getTodayLocalISO={getTodayLocalISO}
+            onRequestSaveEdit={(payload) =>
+              setConfirmEdit({ open: true, payload })
+            }
+            students={students}
+            teacherId={user?.teacherId}
+            TeacherAttendanceSection={TeacherAttendanceSection}
+            todayAttendanceExists={todayAttendanceExists || todayMarked}
+            onTeacherAttendanceSuccess={() => {
+              setTodayMarked(true);
+              if (viewDate === getTodayLocalISO())
+                setViewDate(getTodayLocalISO());
+            }}
+          />
+        )}
 
-      {tab === "students" && (
-        <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
-          <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
-            <p className="text-sm font-semibold text-neutral-900">Students</p>
-            <span className="text-xs text-neutral-600">
-              Total: {students.length}
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="text-left bg-cyan-50 text-cyan-800">
-                  <th className="border-b border-cyan-200 py-2 px-3">ID</th>
-                  <th className="border-b border-cyan-200 py-2 px-3">
-                    Student ID
-                  </th>
-                  <th className="border-b border-cyan-200 py-2 px-3">Name</th>
-                  <th className="border-b border-cyan-200 py-2 px-3">Gender</th>
-                  <th className="border-b border-cyan-200 py-2 px-3">Status</th>
-                </tr>
-              </thead>
-              <tbody className="text-neutral-800">
-                {students.map((s) => (
-                  <tr
-                    key={s.id}
-                    className="hover:bg-cyan-50"
-                    onClick={() => {
-                      ViewStdDetails(s.id);
-                    }}
-                  >
-                    <td className="border-b border-cyan-100 py-2 px-3">
-                      {s.id}
-                    </td>
-                    <td className="border-b border-cyan-100 py-2 px-3">
-                      {s.studentIDNumber}
-                    </td>
-                    <td className="border-b border-cyan-100 py-2 px-3 font-medium">
-                      {s.fullName}
-                    </td>
-                    <td className="border-b border-cyan-100 py-2 px-3">
-                      {s.gender}
-                    </td>
-                    <td className="border-b border-cyan-100 py-2 px-3">
-                      {s.status}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+        {/* ... inside ClassDetailsPage return ... */}
+        {tab === "marks" && (
+          <ClassExamMarksTab
+            marks={(() => {
+              if (!Array.isArray(allExams) || !details?.gradeId) return marks;
 
-      {tab === "attendance" && (
-        <>
-          {/* View selected day attendance */}
-          <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
-            <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
-              <p className="text-sm font-semibold text-neutral-900">
-                View Attendance
-              </p>
-            </div>
-            <div className="p-4 space-y-3">
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-                <div>
-                  <label className="block text-sm font-medium text-neutral-800">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={viewDate}
-                    onChange={(e) => setViewDate(e.target.value)}
-                    className="mt-1 block w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                  />
-                </div>
-              </div>
-              {viewLoading && (
-                <div className="text-sm text-neutral-700">
-                  Loading attendance...
-                </div>
-              )}
-              {viewError && (
-                <div className="text-sm text-rose-700">{String(viewError)}</div>
-              )}
-              <div className="overflow-x-auto">
-                <table className="w-full border-collapse text-sm">
-                  <thead>
-                    <tr className="text-left bg-cyan-600 text-cyan-50">
-                      <th className="border-b border-cyan-200 py-2 px-3">ID</th>
-                      <th className="border-b border-cyan-200 py-2 px-3">
-                        Date
-                      </th>
-                      <th className="border-b border-cyan-200 py-2 px-3">
-                        Student
-                      </th>
-                      <th className="border-b border-cyan-200 py-2 px-3">
-                        Present
-                      </th>
-                      <th className="border-b border-cyan-200 py-2 px-3">
-                        Reason
-                      </th>
-                      <th className="border-b border-cyan-200 py-2 px-3">
-                        Teacher
-                      </th>
-                      {user?.role === 1 && (
-                        <th className="border-b border-cyan-200 py-2 px-3">
-                          Actions
-                        </th>
-                      )}
-                    </tr>
-                  </thead>
-                  <tbody className="text-neutral-800">
-                    {(attendanceView || []).map((a) => (
-                      <tr
-                        key={`${a.id ?? a.Id}-${a.date ?? a.Date}`}
-                        className="hover:bg-cyan-50"
-                      >
-                        <td className="border-b border-cyan-100 py-2 px-3">
-                          {a.id ?? a.Id}
-                        </td>
-                        <td className="border-b border-cyan-100 py-2 px-3">
-                          {a.date ?? a.Date}
-                        </td>
-                        <td className="border-b border-cyan-100 py-2 px-3 font-medium">
-                          {a.studentName ?? a.StudentName}
-                        </td>
-                        <td className="border-b border-cyan-100 py-2 px-3">
-                          {editingId === (a.id ?? a.Id) ? (
-                            <input
-                              type="checkbox"
-                              checked={
-                                !!(
-                                  editValues[a.id ?? a.Id]?.isPresent ??
-                                  a.isPresent ??
-                                  a.IsPresent
-                                )
-                              }
-                              onChange={(e) =>
-                                setEditValues((prev) => ({
-                                  ...prev,
-                                  [a.id ?? a.Id]: {
-                                    ...(prev[a.id ?? a.Id] || {
-                                      isPresent: !!(a.isPresent ?? a.IsPresent),
-                                      reason: a.reason ?? a.Reason ?? "",
-                                    }),
-                                    isPresent: e.target.checked,
-                                    reason: e.target.checked
-                                      ? ""
-                                      : (prev[a.id ?? a.Id]?.reason ??
-                                        a.reason ??
-                                        a.Reason ??
-                                        ""),
-                                  },
-                                }))
-                              }
-                            />
-                          ) : (a.isPresent ?? a.IsPresent) ? (
-                            "Yes"
-                          ) : (
-                            "No"
-                          )}
-                        </td>
-                        <td className="border-b border-cyan-100 py-2 px-3">
-                          {editingId === (a.id ?? a.Id) ? (
-                            <input
-                              type="text"
-                              value={String(
-                                editValues[a.id ?? a.Id]?.reason ??
-                                  a.reason ??
-                                  a.Reason ??
-                                  "",
-                              )}
-                              onChange={(e) =>
-                                setEditValues((prev) => ({
-                                  ...prev,
-                                  [a.id ?? a.Id]: {
-                                    ...(prev[a.id ?? a.Id] || {
-                                      isPresent: !!(a.isPresent ?? a.IsPresent),
-                                      reason: a.reason ?? a.Reason ?? "",
-                                    }),
-                                    reason: e.target.value,
-                                  },
-                                }))
-                              }
-                              disabled={
-                                !!(
-                                  editValues[a.id ?? a.Id]?.isPresent ??
-                                  a.isPresent ??
-                                  a.IsPresent
-                                )
-                              }
-                              className="block w-full rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm disabled:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                            />
-                          ) : (
-                            (a.reason ?? a.Reason ?? "-")
-                          )}
-                        </td>
-                        <td className="border-b border-cyan-100 py-2 px-3">
-                          {a.teacherName ?? a.TeacherName ?? "-"}
-                        </td>
-                        {user?.role === 1 && (
-                          <td className="border-b border-cyan-100 py-2 px-3">
-                            {editingId === (a.id ?? a.Id) ? (
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-                                  onClick={() => {
-                                    const idVal = a.id ?? a.Id;
-                                    const isPresent = !!(
-                                      editValues[idVal]?.isPresent ??
-                                      a.isPresent ??
-                                      a.IsPresent
-                                    );
-                                    const reason = isPresent
-                                      ? null
-                                      : (editValues[idVal]?.reason ??
-                                        a.reason ??
-                                        a.Reason ??
-                                        null);
-                                    const dateVal = a.date ?? a.Date;
-                                    const studentName =
-                                      a.studentName ??
-                                      a.StudentName ??
-                                      "the student";
-                                    setConfirmEdit({
-                                      open: true,
-                                      payload: {
-                                        idVal,
-                                        isPresent,
-                                        reason,
-                                        dateVal,
-                                        studentName,
-                                      },
-                                    });
-                                  }}
-                                >
-                                  Save
-                                </button>
-                                <button
-                                  type="button"
-                                  className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-                                  onClick={() => setEditingId(null)}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            ) : (a.date ?? a.Date) === getTodayLocalISO() ? (
-                              <button
-                                type="button"
-                                className="rounded-lg border border-cyan-100 bg-white px-3 py-1 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-                                title="Edit attendance"
-                                onClick={() => setEditingId(a.id ?? a.Id)}
-                              >
-                                Edit
-                              </button>
-                            ) : null}
-                          </td>
-                        )}
-                      </tr>
-                    ))}
-                    {(!attendanceView || attendanceView.length === 0) && (
-                      <tr>
-                        <td
-                          colSpan={6}
-                          className="py-8 text-center text-neutral-600"
-                        >
-                          No records found.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </section>
+              // Correctly identify exams that contain this gradeId
+              const allowedExamIds = new Set(
+                allExams
+                  .filter((e) =>
+                    e.examGrades?.some(
+                      (g) => String(g.gradeId) === String(details.gradeId),
+                    ),
+                  )
+                  .map((e) => String(e.id)),
+              );
 
-          {/* Mark today's attendance (hidden if already marked) */}
-          {user?.role === 1 ? (
-            todayAttendanceExists || todayMarked ? (
-              <section className="rounded-xl border border-gray-200 bg-white shadow-sm">
-                <div className="px-4 py-3">
-                  <p className="text-sm text-neutral-800">
-                    Today's attendance is already marked. The marking list is
-                    hidden.
-                  </p>
-                </div>
-              </section>
-            ) : (
-              <TeacherAttendanceSection
-                students={students}
-                teacherId={user?.teacherId}
-                onSuccess={() => {
-                  setTodayMarked(true);
-                  if (viewDate === getTodayLocalISO()) {
-                    setViewDate(getTodayLocalISO());
-                  }
-                }}
-              />
-            )
-          ) : null}
-        </>
-      )}
+              return (marks || []).filter((m) =>
+                allowedExamIds.has(String(m.examId)),
+              );
+            })()}
+            marksLoading={marksLoading}
+            studentNameById={studentNameById}
+            subjectNameById={subjectNameById}
+            examNameById={examNameById}
+            allExams={allExams}
+            gradeId={details?.gradeId}
+          />
+        )}
+      </div>
 
+      {/* Assign Class Teacher Modal */}
       {assignOpen && (
         <AssignClassDialog
           gradeId={details.gradeId}
@@ -805,18 +442,15 @@ export default function ClassDetailsPage() {
           isTeacher={false}
           onClose={() => setAssignOpen(false)}
           onSave={async () => {
-            try {
-              setSuccess({ open: true, msg: "Class Assign Successfully!" });
-              const refreshed = await getClassDetails(id);
-              setDetails(refreshed);
-              setAssignOpen(false);
-            } catch (err) {
-              setErrors({ open: false, msg: err?.response?.data });
-            }
+            setSuccess({ open: true, msg: "Class assigned successfully!" });
+            const refreshed = await getClassDetails(id);
+            setDetails(refreshed);
+            setAssignOpen(false);
           }}
         />
       )}
 
+      {/* Assign Subject Modal */}
       {assignSubjectOpen && (
         <AssignSubjectDialog
           isTeacher={false}
@@ -824,19 +458,15 @@ export default function ClassDetailsPage() {
           classId={details.classId}
           onClose={() => setAssignSubjectOpen(false)}
           onSave={async () => {
-            try {
-              setSuccess({ open: true, msg: "Subject Assign Successfully!" });
-              const refreshed = await getClassDetails(id);
-              setDetails(refreshed);
-              setAssignSubjectOpen(false);
-            } catch (err) {
-              setErrors({ open: false, msg: err?.response?.data });
-            }
+            setSuccess({ open: true, msg: "Subject assigned successfully!" });
+            const refreshed = await getClassDetails(id);
+            setDetails(refreshed);
+            setAssignSubjectOpen(false);
           }}
         />
       )}
 
-      {/* Confirm terminate class assignment */}
+      {/* Confirm Class Termination */}
       {confirmClass.open && (
         <ConfirmTerminate
           open={confirmClass.open}
@@ -848,17 +478,22 @@ export default function ClassDetailsPage() {
           onConfirm={async () => {
             try {
               setBusyTerminateClass(true);
-              setErrors({ open: false, msg: "" });
               await terminateClassForTeacher(confirmClass.teacherId);
-              setSuccess({ open: true, msg: "Class Assign Terminated!" });
+              setSuccess({ open: true, msg: "Class assignment terminated!" });
               setConfirmClass({ open: false, teacherId: null, name: "" });
             } catch (error) {
-              setErrors({ open: true, msg: error?.response?.data });
+              setErrors({
+                open: true,
+                msg: error?.response?.data || "Termination failed",
+              });
+            } finally {
+              setBusyTerminateClass(false);
             }
           }}
         />
       )}
 
+      {/* Confirm Subject Termination */}
       {confirmSubject.open && (
         <ConfirmTerminate
           open={confirmSubject.open}
@@ -877,7 +512,7 @@ export default function ClassDetailsPage() {
             try {
               setBusyTerminateSubject(true);
               await terminateSubjectForTeacher(null, confirmSubject.subjectId);
-              setSuccess({ open: true, msg: "Subject Assign Terminated!" });
+              setSuccess({ open: true, msg: "Subject assignment terminated!" });
               setConfirmSubject({
                 open: false,
                 subjectId: null,
@@ -885,7 +520,10 @@ export default function ClassDetailsPage() {
                 className: "",
               });
             } catch (err) {
-              setErrors({ open: true, msg: err?.response?.data });
+              setErrors({
+                open: true,
+                msg: err?.response?.data || "Termination failed",
+              });
             } finally {
               setBusyTerminateSubject(false);
             }
@@ -893,51 +531,30 @@ export default function ClassDetailsPage() {
         />
       )}
 
-      {success.open && (
-        <SuccessAlert
-          isOpen={success.open}
-          message={success.msg}
-          onClose={() => setSuccess({ open: false, msg: "" })}
-        />
-      )}
-      {/* Confirm edit attendance (standalone, outside alerts) */}
+      {/* Attendance Update Confirmation */}
       {confirmEdit.open && (
         <ConfirmDialog
           open={confirmEdit.open}
-          title="Confirm Attendance Update"
-          message={`Save changes for ${confirmEdit.payload?.studentName} on ${String(confirmEdit.payload?.dateVal)}?`}
-          confirmLabel="Save"
+          title="Update attendance"
+          message={`Confirm update for ${confirmEdit.payload?.studentName}?`}
+          confirmLabel="Update"
           cancelLabel="Cancel"
           busy={busyEdit}
           onCancel={() => setConfirmEdit({ open: false, payload: null })}
           onConfirm={async () => {
             try {
               setBusyEdit(true);
-              const { idVal, isPresent, reason, dateVal } =
-                confirmEdit.payload || {};
+              const { idVal, isPresent, reason, dateVal } = confirmEdit.payload;
               await UpdateStudentAttendance(idVal, {
                 isPresent,
                 reason,
                 date: String(dateVal),
               });
-              setSuccess({
-                open: true,
-                msg: "Attendance updated successfully.",
-              });
-              // reset editing state
+              setSuccess({ open: true, msg: "Attendance updated." });
               setEditingId(null);
-              setEditValues((prev) => ({ ...prev, [idVal]: undefined }));
-              // refresh current view
-              setViewDate((d) => d);
               setConfirmEdit({ open: false, payload: null });
             } catch (e) {
-              setErrors({
-                open: true,
-                msg:
-                  e?.response?.data ||
-                  e?.message ||
-                  "Failed to update attendance",
-              });
+              setErrors({ open: true, msg: "Failed to update attendance" });
             } finally {
               setBusyEdit(false);
             }
@@ -945,6 +562,14 @@ export default function ClassDetailsPage() {
         />
       )}
 
+      {/* Alert Feedback */}
+      {success.open && (
+        <SuccessAlert
+          isOpen={success.open}
+          message={success.msg}
+          onClose={() => setSuccess({ open: false, msg: "" })}
+        />
+      )}
       {errors.open && (
         <ErrorAlert
           isOpen={errors.open}
@@ -953,234 +578,5 @@ export default function ClassDetailsPage() {
         />
       )}
     </div>
-  );
-}
-
-function TeacherAttendanceSection({ students, teacherId, onSuccess }) {
-  const getTodayLocalISO = () => {
-    const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const da = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${da}`;
-  };
-  const [date] = useState(() => getTodayLocalISO());
-  const [rows, setRows] = useState(() => {
-    const init = {};
-    (students || []).forEach((s) => {
-      init[s.id] = { isPresent: true, reason: "" };
-    });
-    return init;
-  });
-  const [submitting, setSubmitting] = useState(false);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const [busyConfirm, setBusyConfirm] = useState(false);
-  const [markSuccess, setMarkSuccess] = useState({ open: false, msg: "" });
-  const [markError, setMarkError] = useState({ open: false, msg: "" });
-
-  const allPresent = useMemo(() => {
-    const ids = Object.keys(rows);
-    if (!ids.length) return false;
-    return ids.every((id) => rows[id].isPresent === true);
-  }, [rows]);
-
-  const setAll = (present) => {
-    const next = {};
-    Object.keys(rows).forEach((id) => {
-      next[id] = {
-        isPresent: !!present,
-        reason: present ? "" : rows[id]?.reason || "",
-      };
-    });
-    setRows(next);
-  };
-
-  const setCell = (studentId, patch) => {
-    setRows((r) => ({
-      ...r,
-      [studentId]: {
-        ...(r[studentId] || { isPresent: true, reason: "" }),
-        ...patch,
-      },
-    }));
-  };
-
-  const buildPayload = () =>
-    (students || []).map((s) => ({
-      isPresent: !!rows[s.id]?.isPresent,
-      reason: rows[s.id]?.isPresent ? null : rows[s.id]?.reason || null,
-      date,
-      studentId: s.id,
-      teacherId: teacherId,
-    }));
-
-  const onSubmit = () => {
-    if (!teacherId) {
-      setMarkError({ open: true, msg: "Missing teacher identity." });
-      return;
-    }
-    setSubmitting(true);
-    setConfirmOpen(true);
-  };
-
-  return (
-    <>
-      <section className="rounded-xl border border-cyan-100 bg-white shadow-sm">
-        <div className="flex items-center justify-between border-b border-cyan-100 px-4 py-3">
-          <p className="text-sm font-semibold text-neutral-900">
-            Mark Attendance
-          </p>
-        </div>
-        <div className="p-4 space-y-3">
-          <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
-            <div>
-              <label className="block text-sm font-medium text-neutral-800">
-                Date
-              </label>
-              <p className="mt-1 text-sm text-neutral-900">{date}</p>
-            </div>
-            <div className="flex items-end">
-              <button
-                type="button"
-                onClick={() => setAll(!allPresent)}
-                className="rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
-              >
-                {allPresent ? "Mark All Absent" : "Mark All Present"}
-              </button>
-            </div>
-          </div>
-
-          {/* Alerts handled via modals below */}
-
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
-              <thead>
-                <tr className="text-left text-neutral-800">
-                  <th className="border-b border-cyan-100 py-2 px-3">ID</th>
-                  <th className="border-b border-cyan-100 py-2 px-3">
-                    Student
-                  </th>
-                  <th className="border-b border-cyan-100 py-2 px-3">
-                    Present
-                  </th>
-                  <th className="border-b border-cyan-100 py-2 px-3">
-                    Reason (if absent)
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="text-neutral-800">
-                {(students || []).map((s) => {
-                  const r = rows[s.id] || { isPresent: true, reason: "" };
-                  return (
-                    <tr key={s.id} className="hover:bg-cyan-50">
-                      <td className="border-b border-cyan-100 py-2 px-3">
-                        {s.id}
-                      </td>
-                      <td className="border-b border-cyan-100 py-2 px-3 font-medium">
-                        {s.fullName}
-                      </td>
-                      <td className="border-b border-cyan-100 py-2 px-3">
-                        <input
-                          type="checkbox"
-                          checked={!!r.isPresent}
-                          onChange={(e) =>
-                            setCell(s.id, { isPresent: e.target.checked })
-                          }
-                        />
-                      </td>
-                      <td className="border-b border-cyan-100 py-2 px-3">
-                        <input
-                          type="text"
-                          placeholder="Optional when absent"
-                          value={r.reason}
-                          onChange={(e) =>
-                            setCell(s.id, { reason: e.target.value })
-                          }
-                          disabled={!!r.isPresent}
-                          className="block w-full rounded-lg border border-cyan-100 bg-white px-3 py-2 text-sm disabled:bg-cyan-50 focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-                {(!students || students.length === 0) && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="py-8 text-center text-neutral-600"
-                    >
-                      No students to display.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              label={submitting ? "Saving..." : "Submit Attendance"}
-              onClick={onSubmit}
-              disabled={submitting || !students?.length}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* Confirm mark attendance */}
-      {confirmOpen && (
-        <ConfirmDialog
-          open={confirmOpen}
-          title="Confirm Mark Attendance"
-          message={`Mark attendance for ${students?.length ?? 0} students on ${date}?`}
-          confirmLabel="Mark"
-          cancelLabel="Cancel"
-          busy={busyConfirm}
-          onCancel={() => {
-            setConfirmOpen(false);
-            setSubmitting(false);
-          }}
-          onConfirm={async () => {
-            try {
-              setBusyConfirm(true);
-              const payload = buildPayload();
-              await MarkStudentAttendances(payload);
-              setMarkSuccess({
-                open: true,
-                msg: "Attendance marked successfully.",
-              });
-              if (typeof onSuccess === "function") onSuccess();
-              setConfirmOpen(false);
-            } catch (e) {
-              setMarkError({
-                open: true,
-                msg:
-                  e?.response?.data ||
-                  e?.message ||
-                  "Failed to mark attendance.",
-              });
-            } finally {
-              setBusyConfirm(false);
-              setSubmitting(false);
-            }
-          }}
-        />
-      )}
-
-      {markSuccess.open && (
-        <SuccessAlert
-          isOpen={markSuccess.open}
-          message={markSuccess.msg}
-          onClose={() => setMarkSuccess({ open: false, msg: "" })}
-        />
-      )}
-      {markError.open && (
-        <ErrorAlert
-          isOpen={markError.open}
-          message={markError.msg}
-          onClose={() => setMarkError({ open: false, msg: "" })}
-        />
-      )}
-    </>
   );
 }

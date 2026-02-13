@@ -219,5 +219,19 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [HttpGet("subject/{subjectId}/class/{classId}")]
+        public async Task<IActionResult> GetByClassAndSubject(int classId,int subjectId)
+        {
+            var res = await _assignSubjectService.GetByClassAndSubject(classId,subjectId);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
+
+        }
+
     }
 }

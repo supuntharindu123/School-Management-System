@@ -15,5 +15,7 @@ namespace Backend.Repositories.Interfaces
         public Task UpdateStudent();
 
         public Task<string> generateID();
+
+        public Task<List<Student>> GetStudentsByClass(int classId);
     }
 }

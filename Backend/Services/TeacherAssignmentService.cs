@@ -71,7 +71,7 @@ namespace Backend.Services
             var newTask = _mapper.Map<TeacherClassAssign>(task);
             newTask.IsActive = true;
             newTask.CreatedDate = DateTime.Now;
-            newTask.UpdatedDate = null;
+            //newTask.UpdatedDate = ;
             await _repo.CreateAssignment(newTask);
 
             return Result.Success();

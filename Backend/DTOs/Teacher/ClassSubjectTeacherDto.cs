@@ -7,5 +7,7 @@
         public int TeacherId { get; set; }
         public string? TeacherName { get; set; }
         public bool IsActive { get; set; }
+        public string? CreatedDate { get; set; }
+        public string? UpdatedDate { get; set; }
     }
 }

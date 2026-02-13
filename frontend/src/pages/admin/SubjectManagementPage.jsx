@@ -15,7 +15,6 @@ import ErrorAlert from "../../components/ErrorAlert";
 import ConfirmDialog from "../../components/ConfirmDialog";
 
 export default function SubjectManagementPage() {
-  // Helper to extract a user-friendly error message
   const errMsg = (err, fallback) => {
     const data = err?.response?.data;
     if (typeof data === "string") return data;
@@ -23,6 +22,7 @@ export default function SubjectManagementPage() {
       return data.message || data.title || fallback;
     return err?.message || fallback;
   };
+
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [addModal, setAddModal] = useState({ open: false });
@@ -32,7 +32,6 @@ export default function SubjectManagementPage() {
   });
   const [subjects, setSubjects] = useState([]);
   const [assignSubmitting, setAssignSubmitting] = useState(false);
-  const [deletingId, setDeletingId] = useState(null); // kept for UI disable if needed
   const [success, setSuccess] = useState({ open: false, msg: "" });
   const [errors, setErrors] = useState({ open: false, msg: "" });
   const [confirmDelete, setConfirmDelete] = useState({
@@ -42,7 +41,6 @@ export default function SubjectManagementPage() {
   const [busyConfirm, setBusyConfirm] = useState(false);
 
   const dispatch = useDispatch();
-
   const subjectsList = useSelector((state) => state.subjects);
   const gradesState = useSelector((state) => state.grades);
 
@@ -59,38 +57,34 @@ export default function SubjectManagementPage() {
     }
   }, [subjectsList.subjects]);
 
-  // Loaded grades from API
   const grades = useMemo(() => gradesState?.grades || [], [gradesState.grades]);
 
   const filtered = useMemo(() => {
-    return subjects.filter((s) => {
-      return query
-        ? [s.subjectName, s.moduleCode].some((f) =>
-            f.toLowerCase().includes(query.toLowerCase()),
-          )
-        : true;
-    });
+    const q = query.toLowerCase();
+    return subjects.filter(
+      (s) =>
+        !q ||
+        [s.subjectName, s.moduleCode].some((f) => f?.toLowerCase().includes(q)),
+    );
   }, [subjects, query]);
 
   const openAdd = () => setAddModal({ open: true });
   const closeAdd = () => setAddModal({ open: false });
+
   const saveAdd = async (payload) => {
     try {
-      const res = await addSubject(payload);
-      console.log("Added subject:", res);
-      // Refresh from API to ensure correct server IDs and data
+      await addSubject(payload);
       await dispatch(getAllSubjects());
       setSuccess({ open: true, msg: "Subject added successfully." });
-      setErrors({ open: false, msg: "" });
     } catch (err) {
       setErrors({ open: true, msg: errMsg(err, "Failed to add subject") });
-      setSuccess({ open: false, msg: "" });
     }
     closeAdd();
   };
 
   const openAssign = (row) => setAssignModal({ open: true, subjectId: row.id });
   const closeAssign = () => setAssignModal({ open: false, subjectId: null });
+
   const saveAssign = async (selectedGradeIds) => {
     if (assignSubmitting) return;
     try {
@@ -103,13 +97,11 @@ export default function SubjectManagementPage() {
       await dispatch(getAllSubjects());
       closeAssign();
       setSuccess({ open: true, msg: "Grades assigned successfully." });
-      setErrors({ open: false, msg: "" });
     } catch (err) {
       setErrors({
         open: true,
         msg: errMsg(err, "Failed to assign subject to grades"),
       });
-      setSuccess({ open: false, msg: "" });
     } finally {
       setAssignSubmitting(false);
     }
@@ -119,11 +111,6 @@ export default function SubjectManagementPage() {
     subjects.find((s) => s.id === assignModal.subjectId)?.grades || []
   ).map((g) => g.id);
 
-  const startDeleteSubject = (row) => {
-    if (!row?.id) return;
-    setConfirmDelete({ open: true, subject: row });
-  };
-
   const confirmDeleteSubject = async () => {
     const row = confirmDelete.subject;
     if (!row?.id) return;
@@ -132,124 +119,153 @@ export default function SubjectManagementPage() {
       await deleteSubject(row.id);
       await dispatch(getAllSubjects());
       setSuccess({ open: true, msg: "Subject deleted successfully." });
-      setErrors({ open: false, msg: "" });
       setConfirmDelete({ open: false, subject: null });
     } catch (err) {
       setErrors({ open: true, msg: errMsg(err, "Failed to delete subject") });
-      setSuccess({ open: false, msg: "" });
     } finally {
       setBusyConfirm(false);
     }
   };
 
   return (
-    <div>
-      {/* Header */}
-      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
-        <div>
-          <h1 className="text-3xl font-bold text-cyan-50">
-            Subject Management
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      {/* Enhanced dashboard header */}
+      <header className="relative flex flex-col md:flex-row items-center justify-between gap-4 bg-linear-to-r from-cyan-900 via-cyan-800 to-cyan-900 p-8 rounded-2xl shadow-xl overflow-hidden group">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white capitalize">
+            Subject management
           </h1>
-          <p className="text-sm text-cyan-50">
+          <p className="text-cyan-200/70 text-sm font-medium mt-1 capitalize">
             Manage subjects and assign them to grades
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <input
-            placeholder="Search by name or code"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-          <Button label="Add Subject" onClick={openAdd} />
+
+        <div className="relative z-10 flex flex-wrap gap-3 items-center">
+          <div className="relative">
+            <input
+              placeholder="Search subjects..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-64 rounded-2xl border-none bg-white/10 px-5 py-3 text-sm text-white placeholder:text-cyan-200/40 focus:bg-white focus:text-neutral-900 focus:ring-4 focus:ring-cyan-500/20 transition-all outline-none"
+            />
+          </div>
+          <button
+            onClick={openAdd}
+            className="rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-bold text-white hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-900/20 capitalize"
+          >
+            Add subject
+          </button>
         </div>
+
+        {/* Decorative background element */}
+        <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-cyan-500/10 rounded-full blur-3xl group-hover:bg-cyan-500/20 transition-colors duration-700"></div>
       </header>
 
-      {/* Table */}
-      {loading ? (
-        <p>Loading subjects...</p>
-      ) : (
-        <section className="rounded-xl border border-gray-200 bg-white">
+      {/* Main content table */}
+      <section className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        {loading ? (
+          <div className="py-20 flex flex-col items-center justify-center space-y-3">
+            <div className="h-8 w-8 border-4 border-cyan-100 border-t-cyan-600 rounded-full animate-spin"></div>
+            <p className="text-xs font-bold text-neutral-400 capitalize ">
+              Fetching subjects...
+            </p>
+          </div>
+        ) : (
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse text-sm">
+            <table className="w-full border-collapse">
               <thead>
-                <tr className="text-left text-neutral-800 bg-cyan-600 rounded-t-lg">
-                  <th className="border-b border-gray-200 py-2 px-3 rounded-tl-lg">
-                    Name
+                <tr className="bg-cyan-800">
+                  <th className="py-5 px-6 text-left text-sm font-bold text-cyan-50 capitalize ">
+                    Subject identity
                   </th>
-                  <th className="border-b border-gray-200 py-2 px-3">Code</th>
-                  <th className="border-b border-gray-200 py-2 px-3">
-                    Assigned Grades
+                  <th className="py-5 px-3 text-left text-sm font-bold text-cyan-50 capitalize ">
+                    Module code
                   </th>
-                  <th className="border-b border-gray-200 py-2 px-3 text-right rounded-tr-lg">
+                  <th className="py-5 px-3 text-left text-sm font-bold text-cyan-50 capitalize ">
+                    Assigned grades
+                  </th>
+                  <th className="py-5 px-6 text-right text-sm font-bold text-cyan-50 capitalize ">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="text-neutral-800">
+              <tbody className="divide-y divide-neutral-50">
                 {filtered.map((row) => (
-                  <tr key={row.id} className="hover:bg-gray-50">
-                    <td className="border-b border-gray-200 py-2 px-3 font-medium">
-                      {row.subjectName}
+                  <tr
+                    key={row.id}
+                    className="group hover:bg-cyan-50/30 transition-colors"
+                  >
+                    <td className="py-4 px-6">
+                      <p className="text-sm font-bold text-neutral-800 capitalize">
+                        {row.subjectName}
+                      </p>
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {row.moduleCode}
+                    <td className="py-4 px-3">
+                      <span className="text-sm font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-lg uppercase">
+                        {row.moduleCode || "No code"}
+                      </span>
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3 truncate max-w-[280px]">
-                      {row.grades.length
-                        ? row.grades.map((g) => g.gradeName).join(", ")
-                        : "-"}
+                    <td className="py-4 px-3">
+                      <div className="flex flex-wrap gap-1 max-w-[300px]">
+                        {row.grades.length > 0 ? (
+                          row.grades.map((g) => (
+                            <span
+                              key={g.id}
+                              className="text-sm font-bold text-neutral-500 bg-neutral-100 px-2 py-0.5 rounded-md capitalize"
+                            >
+                              {g.gradeName}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="text-xs text-neutral-300 italic">
+                            No grades assigned
+                          </span>
+                        )}
+                      </div>
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      <div className="flex items-center justify-end gap-2">
+                    <td className="py-4 px-6">
+                      <div className="flex items-center justify-end gap-3">
                         <button
                           onClick={() => openAssign(row)}
-                          className="rounded-lg border border-cyan-100 bg-white px-3 py-1.5 text-xs text-neutral-800 hover:border-cyan-600 hover:text-cyan-600"
+                          className=" bg-cyan-800 text-sm border border-cyan-800 rounded-lg p-1 px-2   font-bold text-cyan-50 hover:text-cyan-600 transition-colors capitalize"
                         >
-                          Assign to Grades
+                          Manage grades
                         </button>
                         {(row.grades?.length ?? 0) === 0 && (
                           <button
-                            onClick={() => startDeleteSubject(row)}
-                            className={`rounded-lg p-2 text-xs ${
-                              confirmDelete.open &&
-                              confirmDelete.subject?.id === row.id
-                                ? " text-rose-400 bg-white"
-                                : " bg-white text-rose-700 hover:border-rose-600 hover:text-rose-600"
-                            }`}
-                            aria-label="Delete subject"
-                            title="Delete subject"
-                            disabled={
-                              confirmDelete.open &&
-                              confirmDelete.subject?.id === row.id
+                            onClick={() =>
+                              setConfirmDelete({ open: true, subject: row })
                             }
+                            className="h-8 w-8 flex items-center justify-center rounded-xl bg-rose-50 text-rose-600 hover:bg-rose-600 hover:text-white transition-all"
+                            title="Delete subject"
                           >
-                            ✕
+                            <svg
+                              className="w-4 h-4"
+                              fill="none"
+                              viewBox="0 0 24 24"
+                              stroke="currentColor"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                              />
+                            </svg>
                           </button>
                         )}
                       </div>
                     </td>
                   </tr>
                 ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td
-                      className="py-10 text-center text-neutral-600"
-                      colSpan={4}
-                    >
-                      No subjects found.
-                    </td>
-                  </tr>
-                )}
               </tbody>
             </table>
           </div>
-        </section>
-      )}
+        )}
+      </section>
 
-      {/* Modals */}
+      {/* Logic Modals */}
       {addModal.open && <AddSubjectModal onClose={closeAdd} onSave={saveAdd} />}
-
       {assignModal.open && (
         <AssignGradesModal
           grades={grades}
@@ -260,34 +276,28 @@ export default function SubjectManagementPage() {
         />
       )}
 
-      {success.open && (
-        <SuccessAlert
-          isOpen={success.open}
-          message={success.msg}
-          onClose={() => setSuccess({ open: false, msg: "" })}
-        />
-      )}
-      {errors.open && (
-        <ErrorAlert
-          isOpen={errors.open}
-          message={errors.msg}
-          onClose={() => setErrors({ open: false, msg: "" })}
-        />
-      )}
+      {/* Feedback Alerts */}
+      <SuccessAlert
+        isOpen={success.open}
+        message={success.msg}
+        onClose={() => setSuccess({ ...success, open: false })}
+      />
+      <ErrorAlert
+        isOpen={errors.open}
+        message={errors.msg}
+        onClose={() => setErrors({ ...errors, open: false })}
+      />
 
       {confirmDelete.open && (
         <ConfirmDialog
           open={confirmDelete.open}
-          title="Delete Subject"
-          message={`Are you sure you want to delete subject "${confirmDelete.subject?.subjectName}"? This action cannot be undone.`}
-          cancelLabel="Cancel"
-          confirmLabel="Delete"
+          title="Delete subject"
+          message={`Are you sure you want to delete "${confirmDelete.subject?.subjectName}"? this action cannot be undone.`}
+          cancelLabel="Keep subject"
+          confirmLabel="Delete forever"
           busy={busyConfirm}
           onCancel={() => setConfirmDelete({ open: false, subject: null })}
-          onConfirm={() => {
-            confirmDeleteSubject();
-            setConfirmDelete({ open: false, subject: null });
-          }}
+          onConfirm={confirmDeleteSubject}
         />
       )}
     </div>

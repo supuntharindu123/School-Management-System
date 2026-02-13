@@ -19,5 +19,7 @@ namespace Backend.Services.Interfaces
         public Task<Result<AssignTeacherSubjectResDto?>> GetById(int id);
 
         public Task<Result> TerminateSubjectAssign(int id);
+
+        public Task<Result<List<AssignTeacherSubjectResDto>>> GetByClassAndSubject(int classId, int subjectId);
     }
 }

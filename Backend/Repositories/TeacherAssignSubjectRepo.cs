@@ -48,10 +48,15 @@ namespace Backend.Repositories
 
         public async Task<bool> IsExist(int teacherId, int classId, int subjectId)
         {
-            return await _context.TeacherSubjectClasses.AnyAsync(t =>
+            return await _context.TeacherSubjectClasses.Where(t=>t.IsActive==true).AnyAsync(t =>
                 (t.TeacherId == teacherId && t.ClassId == classId && t.SubjectId == subjectId)
                 || (t.ClassId == classId && t.SubjectId == subjectId)
             );
+        }
+
+        public async Task<List<TeacherSubjectClass>> GetByClassAndSubject(int classId, int subjectId)
+        {
+            return await _context.TeacherSubjectClasses.Where(t=>t.ClassId==classId && t.SubjectId==subjectId).Include(t=>t.Teacher).Include(t=>t.Subject).Include(t=>t.Class).ToListAsync();
         }
 
 

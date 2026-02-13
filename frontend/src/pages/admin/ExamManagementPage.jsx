@@ -16,7 +16,6 @@ export default function ExamManagementPage() {
   const [query, setQuery] = useState("");
   const [addOpen, setAddOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  // cleaned: removed unused assignment state and subjects/grades selectors
 
   useEffect(() => {
     dispatch(getAllExams());
@@ -34,28 +33,42 @@ export default function ExamManagementPage() {
   }, [exams, query]);
 
   return (
-    <div className="space-y-4">
-      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6">
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      <header className="flex flex-col md:flex-row md:items-center justify-between bg-linear-to-r from-cyan-900 via-cyan-800 to-cyan-900 py-8 px-8 rounded-2xl shadow-lg gap-6">
         <div>
-          <h1 className="text-3xl font-bold text-cyan-50 mb-2">Exams</h1>
-          <p className="text-sm text-cyan-50">Manage exam schedules</p>
+          <h1 className="text-3xl font-bold text-white capitalize mb-1">
+            Exams
+          </h1>
+          <p className="text-sm text-cyan-100 capitalize">
+            Manage and monitor exam schedules
+          </p>
         </div>
-        <div className="flex gap-2">
-          <input
-            placeholder="Search by title, grade, year"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-teal-600 focus:border-teal-600"
-          />
-          <Button label="Add Exam" onClick={() => setAddOpen(true)} />
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative">
+            <input
+              placeholder="Search exams..."
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="w-64 rounded-xl border border-white/20 bg-white/10 px-4 py-2 text-sm text-white placeholder:text-cyan-200/50 focus:outline-none focus:ring-2 focus:ring-white/40 backdrop-blur-md transition-all"
+            />
+          </div>
+          <button
+            onClick={() => setAddOpen(true)}
+            className="bg-white text-cyan-900 px-6 py-2 rounded-xl text-sm font-bold hover:bg-cyan-50 transition-colors shadow-sm capitalize"
+          >
+            Add exam
+          </button>
         </div>
       </header>
 
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
+      <main>
         {examsLoading ? (
-          <p className="text-sm text-neutral-700">Loading exams...</p>
+          <div className="p-20 text-center animate-pulse text-cyan-600 font-bold capitalize">
+            Loading exams...
+          </div>
         ) : filtered.length ? (
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {filtered.map((e) => (
               <ExamCard
                 key={e.id}
@@ -65,9 +78,13 @@ export default function ExamManagementPage() {
             ))}
           </div>
         ) : (
-          <p className="text-sm text-neutral-600">No exams found.</p>
+          <div className="text-center py-20 bg-white rounded-3xl border border-dashed border-neutral-200">
+            <p className="text-neutral-500 capitalize font-medium">
+              No exams found matching your search.
+            </p>
+          </div>
         )}
-      </section>
+      </main>
 
       {addOpen && (
         <AddExamModal
@@ -104,58 +121,56 @@ function ExamCard({ exam, onViewDetails }) {
     academicYearId,
     examType,
   } = exam;
-  const termMap = { 1: "Term 01", 2: "Term 02", 3: "Term 03" };
-  const termLabel = termMap[Number(examType)] || "Term";
+
+  const termLabel = examType;
+
   return (
     <div
       onClick={onViewDetails}
-      className="group relative overflow-hidden rounded-xl border-t-4 border-cyan-600 bg-white p-4 shadow-sm hover:shadow-md cursor-pointer"
+      className="group bg-white rounded-2xl p-6 shadow-sm border border-cyan-200 hover:shadow-xl hover:border-cyan-100 transition-all cursor-pointer flex flex-col justify-between h-full"
     >
-      <div className="absolute  bg-cyan-600" />
-      <div className="flex items-center justify-between">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="inline-flex items-center rounded-full bg-cyan-100 px-2 py-0.5 text-[10px] font-medium text-cyan-800 border border-cyan-200">
-              {termLabel}
-            </span>
-            <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-[10px] font-medium text-gray-800 border border-gray-200">
-              Year {academicYear ?? academicYearId}
-            </span>
-          </div>
-          <p className="mt-1 text-lg font-bold text-neutral-900 capitalize">
-            {title}
-          </p>
+      <div>
+        <div className="flex flex-wrap gap-2 mb-4 justify-between">
+          <span className="px-3 py-1 rounded-lg bg-cyan-50 text-cyan-700 text-[10px] font-bold capitalize">
+            {termLabel}
+          </span>
+          <span className="px-3 py-1 rounded-lg bg-neutral-50 text-neutral-500 text-[10px] font-bold capitalize">
+            Year {academicYear ?? academicYearId}
+          </span>
         </div>
+
+        <h3 className="text-2xl font-bold text-neutral-800 capitalize group-hover:text-cyan-700 transition-colors">
+          {title}
+        </h3>
+
+        <p className="mt-2 text-sm text-neutral-500 line-clamp-2 leading-relaxed">
+          {description || "No description provided for this exam schedule."}
+        </p>
       </div>
-      <p className="mt-2 line-clamp-3 text-sm text-neutral-800">
-        {description || "No description"}
-      </p>
-      <div className="mt-3 flex items-center gap-2 text-xs text-neutral-700 justify-between">
-        <span className="rounded bg-gray-100 px-2 py-1">
-          Start: {formatDate(startDate)}
-        </span>
-        <span className="rounded bg-gray-100 px-2 py-1">
-          End: {formatDate(endDate)}
-        </span>
+
+      <div className="mt-6 pt-4 border-t border-neutral-50 flex items-center justify-between text-xs font-bold">
+        <div className="text-neutral-400 capitalize">
+          Period:{" "}
+          <span className="text-neutral-700">
+            {formatDate(startDate)} — {formatDate(endDate)}
+          </span>
+        </div>
+        <div className="text-cyan-600 opacity-0 group-hover:opacity-100 transition-opacity">
+          View details
+        </div>
       </div>
     </div>
   );
 }
 
 function formatDate(d) {
-  // d may be a date string; show YYYY-MM-DD
   try {
-    const str = typeof d === "string" ? d : String(d);
-    // Accept ISO or DateOnly formatted strings
-    const date = new Date(str);
-    if (!isNaN(date.getTime())) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${dd}`;
-    }
-    // Fallback: return the raw value
-    return str;
+    const date = new Date(d);
+    if (isNaN(date.getTime())) return d;
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "short",
+    });
   } catch {
     return String(d);
   }

@@ -18,7 +18,7 @@ namespace Backend.DTOs.Exam
        
         public string? ExamType { get; set; }
 
-      
+        public List<ExamSubjectDto>? ExamGrades {  get; set; }
 
     }
 }

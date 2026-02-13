@@ -38,7 +38,7 @@ namespace Backend.Repositories
 
         public async Task<List<Exam>> GetExams()
         {
-            return await _context.Exams.Include(e => e.AcademicYear).ToListAsync();   
+            return await _context.Exams.Include(e => e.AcademicYear).Include(e=>e.ExamGrades).Include(e=>e.ExamGradeSubjects).ToListAsync();   
         }
 
         public async Task UpdateExam(Exam exam)
@@ -97,7 +97,7 @@ namespace Backend.Repositories
 
         public async Task<ExamDetailsResDto?> ExamDetails(int id)
         {
-            var exam = await _context.Exams.Where(e => e.Id == id).Include(e => e.ExamGrades).ThenInclude(g => g.Grade).ThenInclude(g=>g.Classes).Include(e => e.ExamGradeSubjects).ThenInclude(eg=>eg.Subject).FirstOrDefaultAsync();
+            var exam = await _context.Exams.Where(e => e.Id == id).Include(e => e.ExamGrades).ThenInclude(g => g.Grade).ThenInclude(g=>g.Classes).Include(e => e.ExamGradeSubjects).ThenInclude(eg=>eg.Subject).Include(e=>e.AcademicYear).FirstOrDefaultAsync();
 
             var map = _mapper.Map<ExamDetailsResDto>(exam);
 

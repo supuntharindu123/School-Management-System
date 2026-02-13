@@ -17,5 +17,7 @@ namespace Backend.Repositories.Interfaces
         public Task<TeacherSubjectClass?> GetById(int id);
 
         public Task<bool> IsExist(int teacherId, int classId, int subjectId);
+
+        public Task<List<TeacherSubjectClass>> GetByClassAndSubject(int classId, int subjectId);
     }
 }

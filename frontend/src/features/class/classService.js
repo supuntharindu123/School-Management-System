@@ -30,3 +30,13 @@ export async function getClassDetails(classId) {
     throw error;
   }
 }
+
+export async function GetClassStudents(classId) {
+  try {
+    const res = await api.get(`/student/class/${classId}`);
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching class students:", error);
+    throw error;
+  }
+}

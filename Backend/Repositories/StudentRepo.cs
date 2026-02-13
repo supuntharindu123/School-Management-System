@@ -60,5 +60,10 @@ namespace Backend.Repositories
             return $"STD{nextId:D6}";
         }
 
+        public async Task<List<Student>> GetStudentsByClass(int classId)
+        {
+            return await _context.Students.Where(s=>s.ClassId==classId && s.Status=="Active").ToListAsync();
+        }
+
     }
 }

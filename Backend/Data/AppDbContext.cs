@@ -234,6 +234,13 @@ namespace Backend.Data
                 .HasForeignKey(c => c.ClassId)
                 .OnDelete(DeleteBehavior.Restrict);
 
+
+            modelBuilder.Entity<Marks>()
+               .HasOne(s=>s.Subject)
+               .WithMany(m => m.Marks)
+               .HasForeignKey(c => c.SubjectId)
+               .OnDelete(DeleteBehavior.Restrict);
+
         }
     }
 }

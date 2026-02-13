@@ -21,15 +21,59 @@ namespace Backend.Services
             
         }
 
-        public async Task<Result> AddMarks(Marks marks)
+        public async Task<Result> AddMarks(List<Marks> marks)
         {
-            await _repo.AddMarks(marks);
-            return Result.Success();
+            using var Transaction = await _repo.BeginTransactionAsync();
+
+            try
+            {
+                foreach (var m in marks)
+                {
+                    var res = await _repo.GetMarksByExamClassSubjectStudent(m.ExamId, m.ClassId, m.SubjectId, m.StudentId);
+
+                    if (res != null)
+                    {
+                        res.ExamId = m.ExamId;
+                        res.StudentId = m.StudentId;
+                        res.ClassId = m.ClassId;
+                        res.SubjectId = m.SubjectId;
+                        res.GradeId=m.GradeId;
+                        res.Score = m.Score;
+                        res.IsPresent = m.IsPresent;
+                        res.Reason = m.Reason;
+                    }
+                    else
+                    {
+                        await _repo.AddMarks(m);
+                    }
+                       
+                }
+
+                await _repo.UpdateMarks();   
+                Transaction.Commit();
+                return Result.Success();
+
+            }
+            catch (Exception ex)
+            {
+                await Transaction.RollbackAsync();
+                return Result.Failure($"Failed to assign grade: {ex.Message} {ex.InnerException?.Message}");
+            }
+            
         }
 
-        public Task<Result<List<MarkResDto>>> GetMarksByClass(int examId, int classId)
+        public async Task<Result<List<MarkResDto>>> GetMarksByClass( int classId)
         {
-            throw new NotImplementedException();
+            var res = await _repo.GetMarksByClass(classId);
+
+            if (res == null)
+            {
+                return Result<List<MarkResDto>>.Failure("Marks Not Found!");
+            }
+
+            var map = _mapper.Map<List<MarkResDto>>(res);
+
+            return Result<List<MarkResDto>>.Success(map);
         }
 
         public async Task<Result<List<MarkResDto>>> GetMarksByGrade(int examId, int gradeId)
@@ -46,9 +90,34 @@ namespace Backend.Services
             return Result<List<MarkResDto>>.Success(map);
         }
 
-        public Task<Result<List<MarkResDto>>> GetMarksForStudent(int studentId)
+        public async Task<Result<List<MarkResDto>>> GetMarksForStudent(int studentId)
         {
-            throw new NotImplementedException();
+            var res=await _repo.GetMarksForStudent(studentId);
+
+            if(res == null)
+            {
+                return Result<List<MarkResDto>>.Failure("Marks Not Found!");
+            }
+
+            var map = _mapper.Map<List<MarkResDto>>(res);
+
+            return Result<List<MarkResDto>>.Success(map);
         }
+
+        public async Task<Result<List<MarkResDto>>> GetMarksByClassAndSubject(int classId, int subjectId)
+        {
+            var res = await _repo.GetMarksByClassAndSubject(classId,subjectId);
+
+            if (res == null)
+            {
+                return Result<List<MarkResDto>>.Failure("Marks Not Found!");
+            }
+
+            var map = _mapper.Map<List<MarkResDto>>(res);
+
+            return Result<List<MarkResDto>>.Success(map);
+        }
+
+
     }
 }

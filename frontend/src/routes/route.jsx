@@ -3,19 +3,16 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import LoginPage from "../pages/LoginPage";
 import AdminDashboard from "../pages/admin/AdminDashboard";
-import TeacherDashboardPage from "../pages/TeacherDashboardPage";
+
 import UnauthorizedPage from "../pages/UnauthorizedPage";
 import NotFoundPage from "../pages/NotFoundPage";
 import StudentListPage from "../pages/admin/StudentListPage";
 import StudentProfilePage from "../pages/admin/StudentProfilePage";
-import GradeManagementPage from "../pages/admin/GradeManagementPage";
 import ClassManagementPage from "../pages/admin/ClassManagementPage";
 import ClassDetailsPage from "../pages/admin/ClassDetailsPage";
 import SubjectManagementPage from "../pages/admin/SubjectManagementPage";
 import TeacherListPage from "../pages/admin/TeacherListPage";
 import TeacherProfilePage from "../pages/admin/TeacherProfilePage";
-// import AddStudentPage from "../pages/admin/AddStudentPage";
-import GradeSummaryPage from "../pages/admin/GradeSummaryPage";
 import StudentPromotionPage from "../pages/admin/StudentPromotionPage";
 import ExamManagementPage from "../pages/admin/ExamManagementPage";
 import ExamDetailsPage from "../pages/admin/ExamDetailsPage";
@@ -26,10 +23,11 @@ import AdminRoute from "../routes/AdminRoute";
 import AttendancePage from "../pages/admin/AttendancePage";
 import TeacherDashboard from "../pages/teacher/TeacherDashboard";
 import StudentDashboard from "../pages/student/StudentDashboard";
-import SubjectDetailsPage from "../pages/admin/SubjectDetailsPage";
+// import SubjectDetailsPage from "../pages/admin/SubjectDetailsPage";
 import GuestPage from "../pages/GuestPage";
 import ExamAssignPage from "../pages/admin/AssignGradeSubjectForExam";
 import ExamGradeDetailsPage from "../pages/admin/ExamGradeDetailsPage";
+import SubjectAssignmentDetailsPage from "../pages/teacher/SubjectAssignmentDetailsPage";
 
 export default function RouteConfig() {
   return (
@@ -43,12 +41,9 @@ export default function RouteConfig() {
         <Route element={<ProtectedRoute />}>
           {/* Teacher (and other roles) */}
           <Route element={<AppLayout />}>
-            <Route path="/teacher" element={<TeacherDashboardPage />} />
             <Route path="/students" element={<StudentListPage />} />
             {/* <Route path="/students/add" element={<AddStudentPage />} /> */}
             <Route path="/students/:id" element={<StudentProfilePage />} />
-            <Route path="/grades" element={<GradeManagementPage />} />
-            <Route path="/grade-summary" element={<GradeSummaryPage />} />
             <Route path="/promotions" element={<StudentPromotionPage />} />
             <Route path="/classes" element={<ClassManagementPage />} />
             <Route path="/classes/:id" element={<ClassDetailsPage />} />
@@ -58,11 +53,15 @@ export default function RouteConfig() {
             <Route path="/teachers" element={<TeacherListPage />} />
             <Route path="/teachers/:id" element={<TeacherProfilePage />} />
             <Route path="/attendance" element={<AttendancePage />} />
-            <Route path="/subject/:id" element={<SubjectDetailsPage />} />
+            {/* <Route path="/subject/:id" element={<SubjectDetailsPage />} /> */}
             <Route path="/exams/:id/assign" element={<ExamAssignPage />} />
             <Route
               path="/exams/:examId/grades/:gradeId"
               element={<ExamGradeDetailsPage />}
+            />
+            <Route
+              path="/teacher/subject-assignments/:id"
+              element={<SubjectAssignmentDetailsPage />}
             />
 
             {/* teacher only */}

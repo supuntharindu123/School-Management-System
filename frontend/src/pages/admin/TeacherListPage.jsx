@@ -11,24 +11,19 @@ export default function TeacherListPage() {
   const [addModal, setAddModal] = useState({ open: false });
 
   const dispatch = useDispatch();
-
   const teacherList = useSelector((state) => state.teachers);
-  const teachers = teacherList.teachers;
+  const teachers = teacherList.teachers || [];
 
   useEffect(() => {
     dispatch(getTeachers());
   }, [dispatch]);
 
   const filtered = useMemo(() => {
+    const q = query.toLowerCase();
     return teachers.filter((t) => {
       const name = t.fullName || "";
       const email = t.user?.email || "";
-      const matchesQuery = query
-        ? [name, email].some((f) =>
-            f.toLowerCase().includes(query.toLowerCase()),
-          )
-        : true;
-      return matchesQuery;
+      return !q || [name, email].some((f) => f.toLowerCase().includes(q));
     });
   }, [teachers, query]);
 
@@ -46,159 +41,143 @@ export default function TeacherListPage() {
   }, [filtered]);
 
   const getInitials = (name) => {
-    if (!name) return "T";
+    if (!name) return "t";
     const parts = String(name).trim().split(" ").filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (parts.length === 1) return parts[0].slice(0, 2).toLowerCase();
+    return (parts[0][0] + parts[1][0]).toLowerCase();
   };
 
-  const openAdd = () => setAddModal({ open: true });
-  const closeAdd = () => setAddModal({ open: false });
-
   return (
-    <div className="mx-auto max-w-7xl">
-      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
-        <div className="pointer-events-none absolute -top-10 -right-10 h-40 w-40 rounded-full bg-cyan-400/20 blur-2xl" />
-        <div>
-          <h1 className="text-3xl font-bold text-cyan-50">Teachers</h1>
-          <p className="text-sm text-cyan-50">
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      {/* Page header */}
+      <header className="relative flex flex-col md:flex-row items-center justify-between gap-4 bg-linear-to-r from-cyan-900 via-cyan-800 to-cyan-900 p-8 rounded-2xl shadow-xl overflow-hidden group">
+        <div className="relative z-10">
+          <h1 className="text-3xl font-bold text-white capitalize">Teachers</h1>
+          <p className="text-cyan-200/70 text-sm font-medium mt-1 capitalize">
             Manage teachers, assignments, and status
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        <div className="relative z-10 flex flex-wrap items-center gap-3">
           <div className="relative">
             <input
-              placeholder="Search by name or email"
+              placeholder="Search by name or email..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="rounded-lg border border-gray-300 bg-white pl-8 pr-8 py-2 text-sm text-neutral-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:border-cyan-600 min-w-64"
+              className="w-64 rounded-2xl border-none bg-white/10 px-5 py-3 text-sm text-white placeholder:text-cyan-200/40 focus:bg-white focus:text-neutral-900 focus:ring-4 focus:ring-cyan-500/20 transition-all outline-none"
             />
             {query && (
               <button
                 onClick={() => setQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 rounded px-1 text-xs text-neutral-500 hover:text-cyan-700"
-                aria-label="Clear search"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-cyan-400 hover:text-cyan-600 capitalize"
               >
                 Clear
               </button>
             )}
           </div>
-
-          <Button label="Add Teacher" onClick={openAdd} />
+          <button
+            onClick={() => setAddModal({ open: true })}
+            className="rounded-2xl bg-cyan-500 px-6 py-3 text-sm font-bold text-white hover:bg-cyan-400 transition-all shadow-lg shadow-cyan-900/20 capitalize"
+          >
+            Add teacher
+          </button>
         </div>
+        <div className="absolute -right-10 -bottom-10 h-40 w-40 bg-cyan-500/10 rounded-full blur-3xl" />
       </header>
 
-      <section className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
-            {stats.filteredCount}
-          </span>
-          <div>
-            <div className="text-sm font-semibold text-neutral-900">
-              All Teachers
-            </div>
-            <div className="text-xs text-neutral-600">
-              After current filters
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
-            {stats.activeClassesTotal}
-          </span>
-          <div>
-            <div className="text-sm font-semibold text-neutral-900">
-              Active Class Assignments
-            </div>
-            <div className="text-xs text-neutral-600">
-              Across visible teachers
-            </div>
-          </div>
-        </div>
-        <div className="rounded-xl border border-cyan-200 bg-white p-4 flex items-center gap-3">
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-lg bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-sm font-bold">
-            {stats.unassignedTeachers}
-          </span>
-          <div>
-            <div className="text-sm font-semibold text-neutral-900">
-              Unassigned Teachers
-            </div>
-            <div className="text-xs text-neutral-600">No active classes</div>
-          </div>
-        </div>
+      {/* Stats overview */}
+      <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <StatCard
+          label="Total teachers"
+          value={stats.filteredCount}
+          subtext="After current filters"
+        />
+        <StatCard
+          label="Active assignments"
+          value={stats.activeClassesTotal}
+          subtext="Across visible teachers"
+        />
+        <StatCard
+          label="Unassigned"
+          value={stats.unassignedTeachers}
+          subtext="No active classes"
+        />
       </section>
 
-      {/* Table */}
-      <section className="rounded-xl border border-gray-300 bg-white">
-        <div className="max-h-[60vh] overflow-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead className="bg-cyan-50 text-cyan-900 sticky top-0">
+      {/* Teachers table */}
+      <section className="rounded-2xl border border-neutral-100 bg-white shadow-sm overflow-hidden">
+        <div className="max-h-[60vh] overflow-auto custom-scrollbar">
+          <table className="w-full border-collapse">
+            <thead className="sticky top-0 z-20 bg-cyan-800 backdrop-blur-md">
               <tr className="text-left">
-                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0 font-semibold">
-                  Name
+                <th className="py-5 px-6 text-sm font-bold text-cyan-50 capitalize ">
+                  Teacher identity
                 </th>
-                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0 font-semibold">
-                  Email
+                <th className="py-5 px-3 text-sm font-bold text-cyan-50 capitalize ">
+                  Contact email
                 </th>
-                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0 font-semibold">
+                <th className="py-5 px-3 text-sm font-bold text-cyan-50 capitalize ">
                   Gender
                 </th>
-                <th className="border-b border-cyan-200 py-2 px-3 sticky top-0 font-semibold">
-                  Classes
+                <th className="py-5 px-6 text-sm font-bold text-cyan-50 capitalize ">
+                  Active classes
                 </th>
               </tr>
             </thead>
-            <tbody className="text-neutral-800">
+            <tbody className="divide-y divide-neutral-50">
               {filtered.map((row) => (
                 <tr
                   key={row.id}
-                  className="odd:bg-white even:bg-gray-50 hover:bg-cyan-50 transition-colors"
+                  className="group cursor-pointer hover:bg-cyan-50/30 transition-colors"
                   onClick={() => navigate(`/teachers/${row.id}`)}
                 >
-                  <td className="border-b border-cyan-200 py-2 px-3 font-medium">
-                    <div className="flex items-center gap-3">
-                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-xs font-semibold">
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-4">
+                      <div className="h-10 w-10 rounded-2xl bg-cyan-700 flex items-center justify-center text-white text-[10px] font-bold uppercase shadow-sm group-hover:scale-110 transition-transform">
                         {getInitials(row.fullName)}
+                      </div>
+                      <span className="text-sm font-bold text-neutral-800 capitalize">
+                        {row.fullName?.toLowerCase()}
                       </span>
-                      <span>{row.fullName}</span>
                     </div>
                   </td>
-                  <td className="border-b border-cyan-200 py-2 px-3">
+                  <td className="py-4 px-3 text-sm font-medium text-neutral-500">
                     {row.user?.email || "—"}
                   </td>
-                  <td className="border-b border-cyan-200 py-2 px-3">
-                    <span className="inline-flex items-center gap-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200 px-2 py-0.5 text-xs">
-                      {row.gender || "—"}
+                  <td className="py-4 px-3">
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-bold capitalize tracking-wider border border-neutral-100 bg-neutral-50 text-neutral-500">
+                      {row.gender?.toLowerCase() || "—"}
                     </span>
                   </td>
-                  <td className="border-b border-cyan-200 py-2 px-3">
-                    {row.classAssignments?.filter((ca) => ca.isActive)
-                      .length ? (
-                      <div className="flex flex-wrap gap-1.5">
-                        {row.classAssignments
+                  <td className="py-4 px-6">
+                    <div className="flex flex-wrap gap-1.5">
+                      {row.classAssignments?.filter((ca) => ca.isActive)
+                        .length > 0 ? (
+                        row.classAssignments
                           .filter((ca) => ca.isActive)
                           .map((ca, idx) => (
                             <span
                               key={idx}
-                              className="inline-flex items-center gap-1 rounded-sm bg-cyan-50 text-cyan-700 border border-cyan-200 px-2 py-0.5 text-xs"
+                              className="text-sm font-bold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-md capitalize"
                             >
-                              {ca.className}
+                              {ca.className?.toLowerCase()}
                             </span>
-                          ))}
-                      </div>
-                    ) : (
-                      <span className="text-xs text-neutral-500">N/A</span>
-                    )}
+                          ))
+                      ) : (
+                        <span className="text-[10px] font-bold text-neutral-300 capitalize italic">
+                          No active classes
+                        </span>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td
-                    className="py-10 text-center text-neutral-600"
-                    colSpan={4}
-                  >
-                    No teachers found.
+                  <td colSpan={4} className="py-20 text-center">
+                    <p className="text-sm font-bold text-neutral-400 capitalize">
+                      No teachers found matching your search
+                    </p>
                   </td>
                 </tr>
               )}
@@ -207,13 +186,29 @@ export default function TeacherListPage() {
         </div>
       </section>
 
-      {/* Add Modal */}
+      {/* Modals */}
       {addModal.open && (
         <AddTeacherForm
           isOpen={addModal.open}
           isClose={() => setAddModal({ open: false })}
         />
       )}
+    </div>
+  );
+}
+
+function StatCard({ label, value, subtext }) {
+  return (
+    <div className="rounded-2xl  border border-neutral-100 bg-white p-6 shadow-sm flex items-center gap-5 transition-all hover:shadow-md group">
+      <div className="h-12 w-12 rounded-2xl bg-cyan-800 flex items-center justify-center text-cyan-50 font-bold text-lg group-hover:bg-cyan-500 group-hover:text-white transition-colors">
+        {value}
+      </div>
+      <div>
+        <p className="text-sm font-bold text-neutral-800 capitalize">{label}</p>
+        <p className="text-[9px] font-bold text-neutral-400 capitalize tracking-tighter mt-0.5">
+          {subtext}
+        </p>
+      </div>
     </div>
   );
 }

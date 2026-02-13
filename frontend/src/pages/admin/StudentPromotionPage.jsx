@@ -42,6 +42,7 @@ export default function StudentPromotionPage() {
   const [success, setSuccess] = useState({ open: false, msg: "" });
   const [errors, setErrors] = useState({ open: false, msg: "" });
   const [confirmOpen, setConfirmOpen] = useState(false);
+
   const pendingCount = useMemo(
     () => Object.values(promotions).filter((p) => !!p?.status).length,
     [promotions],
@@ -73,7 +74,6 @@ export default function StudentPromotionPage() {
         const cls = await getClassesByGrade(g.id);
         map[g.id] = Array.isArray(cls) ? cls : [];
       }
-
       setClassesByGrade(map);
 
       const firstGrade = grades[0];
@@ -92,12 +92,12 @@ export default function StudentPromotionPage() {
 
   const classes = classesByGrade[context.gradeId] || [];
 
-  // Lookups for confirmation modal
   const gradesLookup = useMemo(() => {
     const m = {};
     grades.forEach((g) => (m[g.id] = g));
     return m;
   }, [grades]);
+
   const classesLookup = useMemo(() => {
     const m = {};
     Object.values(classesByGrade).forEach((arr) => {
@@ -110,7 +110,6 @@ export default function StudentPromotionPage() {
 
   const classStatuses = useMemo(() => {
     const map = {};
-
     classes.forEach((c) => {
       const classStudents = students.filter(
         (s) =>
@@ -118,37 +117,29 @@ export default function StudentPromotionPage() {
           s.academicYearId !== context.yearId &&
           !EXCLUDED_STATUSES.includes(s.status),
       );
-
       const processed = classStudents.filter(
         (s) => promotions[s.id]?.status,
       ).length;
-
       map[c.id] = {
         total: classStudents.length,
         processed,
         status: finalized[c.id]
           ? "Finalized"
           : processed === 0
-            ? "Not Started"
+            ? "Not started"
             : processed < classStudents.length
-              ? "In Progress"
+              ? "In progress"
               : "Completed",
       };
     });
-
     return map;
   }, [classes, students, promotions, finalized, context.yearId]);
 
-  /* ---------- Visible Students (FIXED) ---------- */
   const visibleStudents = useMemo(() => {
     return students
       .filter((s) => {
-        // already completed / leaving in DB
         if (EXCLUDED_STATUSES.includes(s.status)) return false;
-
-        // marked completed / leaving in UI
         if (EXCLUDED_STATUSES.includes(promotions[s.id]?.status)) return false;
-
         return (
           s.currentClass === context.classLabel &&
           s.academicYearId !== context.yearId
@@ -161,14 +152,9 @@ export default function StudentPromotionPage() {
 
   const saveAll = async () => {
     if (!context.yearId) return;
-
     const payload = Object.entries(promotions)
       .map(([studentId, p]) => {
         if (!p.status) return null;
-
-        const student = students.find((s) => s.id === Number(studentId));
-        if (!student) return null;
-
         return {
           studentId: Number(studentId),
           gradeId: p.gradeId ?? context.gradeId,
@@ -188,215 +174,206 @@ export default function StudentPromotionPage() {
       dispatch(GetAllStudents());
       setPromotions({});
       setSuccess({ open: true, msg: "Promotions saved successfully." });
-      setErrors({ open: false, msg: "" });
       setConfirmOpen(false);
     } catch (err) {
       setErrors({ open: true, msg: errMsg(err, "Failed to save promotions.") });
-      setSuccess({ open: false, msg: "" });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div>
-      <header className="mb-4 flex items-center justify-between bg-linear-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden shadow-md">
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      <header className="flex items-center justify-between bg-linear-to-r from-cyan-900 via-cyan-800 to-cyan-900 py-8 rounded-2xl px-8 shadow-lg">
         <div>
-          <h1 className="text-3xl font-bold text-cyan-50">Student Promotion</h1>
-          <p className="text-sm text-cyan-50">
-            Overview and class-by-class review
+          <h1 className="text-3xl font-bold text-white capitalize">
+            Student promotion
+          </h1>
+          <p className="text-sm text-cyan-100 opacity-80 capitalize">
+            Manage student progression for the upcoming academic year
           </p>
         </div>
       </header>
 
       <PromotionHeader {...context} />
 
-      {/* Controls */}
-      <section className="mb-4 rounded-xl border border-gray-200 bg-white p-3 shadow-md">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex flex-1 flex-wrap items-center gap-2">
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-neutral-600">Grade</span>
-              <select
-                value={context.gradeId ?? ""}
-                onChange={(e) => {
-                  const gid = Number(e.target.value);
-                  const cls = classesByGrade[gid] || [];
-                  const grade = grades.find((g) => g.id === gid);
+      {/* Control bar */}
+      <section className="bg-white p-4 rounded-2xl border border-neutral-100 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="space-y-1">
+            <label className="text-sm font-bold text-neutral-400 capitalize tracking-widest px-1">
+              Target grade
+            </label>
+            <select
+              value={context.gradeId ?? ""}
+              onChange={(e) => {
+                const gid = Number(e.target.value);
+                const cls = classesByGrade[gid] || [];
+                const grade = grades.find((g) => g.id === gid);
+                setContext((c) => ({
+                  ...c,
+                  gradeId: gid,
+                  gradeLabel: `Grade ${grade?.gradeName}`,
+                  classId: cls[0]?.id ?? null,
+                  classLabel: cls[0]?.name ?? "",
+                }));
+                setMode("overview");
+              }}
+              className="block w-48 rounded-xl border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold text-neutral-800 focus:border-cyan-500 focus:ring-cyan-500"
+            >
+              {grades.map((g) => (
+                <option key={g.id} value={g.id}>
+                  Grade {g.gradeName}
+                </option>
+              ))}
+            </select>
+          </div>
 
+          {mode === "class" && (
+            <div className="space-y-1 animate-in slide-in-from-left-2 duration-300">
+              <label className="text-sm font-bold text-neutral-400 capitalize tracking-widest px-1">
+                Specific class
+              </label>
+              <select
+                value={context.classId ?? ""}
+                onChange={(e) => {
+                  const cid = Number(e.target.value);
+                  const cls = classes.find(
+                    (c) => (c.classNameId ?? c.id) === cid,
+                  );
                   setContext((c) => ({
                     ...c,
-                    gradeId: gid,
-                    gradeLabel: `Grade ${grade?.gradeName}`,
-                    classId: cls[0]?.id ?? null,
-                    classLabel: cls[0]?.name ?? "",
+                    classId: cid,
+                    classLabel: cls?.name ?? "",
                   }));
-                  setMode("overview");
                 }}
-                className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                className="block w-48 rounded-xl border-neutral-200 bg-neutral-50 px-4 py-2 text-sm font-bold text-neutral-800"
               >
-                {grades.map((g) => (
-                  <option key={g.id} value={g.id}>
-                    Grade {g.gradeName}
+                {classes.map((c) => (
+                  <option
+                    key={c.classNameId ?? c.id}
+                    value={c.classNameId ?? c.id}
+                  >
+                    {c.name}
                   </option>
                 ))}
               </select>
             </div>
+          )}
+        </div>
 
-            {mode === "class" && (
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-neutral-600">Class</span>
-                <select
-                  value={context.classId ?? ""}
-                  onChange={(e) => {
-                    const cid = Number(e.target.value);
-                    const cls = classes.find(
-                      (c) => (c.classNameId ?? c.id) === cid,
-                    );
-                    setContext((c) => ({
-                      ...c,
-                      classId: cid,
-                      classLabel: cls?.name ?? "",
-                    }));
-                  }}
-                  className="rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-neutral-800 focus:outline-none focus:ring-2 focus:ring-cyan-400"
-                >
-                  {classes.map((c) => (
-                    <option
-                      key={c.classNameId ?? c.id}
-                      value={c.classNameId ?? c.id}
-                    >
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
-          </div>
-
-          <div className="inline-flex rounded-lg border border-gray-200 bg-white p-0.5">
+        <div className="bg-neutral-100 p-1 rounded-xl inline-flex">
+          {["overview", "class"].map((m) => (
             <button
-              onClick={() => setMode("overview")}
-              className={`px-3 py-1.5 text-sm ${
-                mode === "overview"
-                  ? "rounded-md bg-cyan-600 text-white"
-                  : "text-neutral-800 hover:text-cyan-700"
+              key={m}
+              onClick={() => setMode(m)}
+              className={`px-6 py-2 rounded-lg text-sm font-bold transition-all capitalize ${
+                mode === m
+                  ? "bg-white text-cyan-900 shadow-sm"
+                  : "text-neutral-500 hover:text-neutral-700"
               }`}
             >
-              Overview
+              {m}
             </button>
-            <button
-              onClick={() => setMode("class")}
-              className={`px-3 py-1.5 text-sm ${
-                mode === "class"
-                  ? "rounded-md bg-cyan-600 text-white"
-                  : "text-neutral-800 hover:text-cyan-700"
-              }`}
-            >
-              Class
-            </button>
-          </div>
+          ))}
         </div>
       </section>
 
-      {mode === "overview" ? (
-        <ClassOverview
-          classes={classes}
-          classStatuses={classStatuses}
-          onManage={(c) => {
-            setContext((ctx) => ({
-              ...ctx,
-              classId: c.id,
-              classLabel: c.name,
-            }));
-            setMode("class");
-          }}
-        />
-      ) : (
-        <>
-          {finalized[context.classId] && (
-            <div className="mb-3 rounded-lg border border-purple-200 bg-purple-50 px-3 py-2 text-sm text-purple-800">
-              This class is finalized and locked. Editing is disabled.
+      {/* Main content area */}
+      <main className="min-h-[400px]">
+        {mode === "overview" ? (
+          <ClassOverview
+            classes={classes}
+            classStatuses={classStatuses}
+            onManage={(c) => {
+              setContext((ctx) => ({
+                ...ctx,
+                classId: c.id,
+                classLabel: c.name,
+              }));
+              setMode("class");
+            }}
+          />
+        ) : (
+          <div className="space-y-4 animate-in fade-in duration-500">
+            {finalized[context.classId] && (
+              <div className="bg-amber-50 border border-amber-200 p-4 rounded-2xl text-sm font-bold text-amber-800 capitalize">
+                This class has been finalized and locked.
+              </div>
+            )}
+
+            <PromotionFilterTabs active={filter} onChange={setFilter} />
+
+            {visibleStudents.length === 0 ? (
+              <div className="bg-white border-2 border-dashed border-neutral-200 rounded-2xl p-20 text-center">
+                <p className="text-neutral-400 font-bold capitalize">
+                  No students match the current filter.
+                </p>
+              </div>
+            ) : (
+              <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm overflow-hidden">
+                <PromotionTable
+                  students={visibleStudents}
+                  grades={grades}
+                  classesByGrade={classesByGrade}
+                  promotions={promotions}
+                  onChangePromotion={(id, p) =>
+                    setPromotions((m) => ({ ...m, [id]: p }))
+                  }
+                  locked={finalized[context.classId]}
+                  academicYearId={context.yearId}
+                />
+              </div>
+            )}
+
+            {/* Actions footer */}
+            <div className="flex flex-col md:flex-row md:items-center justify-between bg-cyan-700 p-6 rounded-2xl text-white gap-4">
+              <div>
+                <p className="text-sm font-bold text-neutral-400 capitalize tracking-widest">
+                  Selection summary
+                </p>
+                <p className="text-sm font-bold capitalize">
+                  {visibleStudents.length} Students visible • {pendingCount}{" "}
+                  Pending changes
+                </p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setPromotions({})}
+                  disabled={pendingCount === 0 || saving}
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold border border-white/20 hover:bg-white/10 disabled:opacity-30 transition-all capitalize"
+                >
+                  Reset changes
+                </button>
+                <button
+                  onClick={() => setConfirmOpen(true)}
+                  disabled={
+                    saving || pendingCount === 0 || finalized[context.classId]
+                  }
+                  className="px-6 py-2.5 rounded-xl text-sm font-bold bg-cyan-600 hover:bg-cyan-500 disabled:bg-cyan-700 transition-all capitalize"
+                >
+                  {saving ? "Saving..." : "Save promotions"}
+                </button>
+              </div>
             </div>
-          )}
 
-          <PromotionFilterTabs active={filter} onChange={setFilter} />
-
-          {visibleStudents.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-gray-300 bg-white p-8 text-center text-sm text-neutral-600 shadow-md">
-              No students to display for this class and filter.
-            </div>
-          ) : (
-            <PromotionTable
-              students={visibleStudents}
-              grades={grades}
-              classesByGrade={classesByGrade}
-              promotions={promotions}
-              onChangePromotion={(id, p) =>
-                setPromotions((m) => ({ ...m, [id]: p }))
-              }
-              locked={finalized[context.classId]}
-              academicYearId={context.yearId}
-            />
-          )}
-
-          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            <p className="text-sm text-neutral-700">
-              Showing {visibleStudents.length} student
-              {visibleStudents.length === 1 ? "" : "s"}. Changes pending:{" "}
-              {pendingCount}
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setPromotions({})}
-                disabled={pendingCount === 0 || saving}
-                className={`rounded-lg border px-4 py-2 text-sm ${
-                  pendingCount === 0 || saving
-                    ? "cursor-not-allowed border-gray-200 bg-white text-neutral-400"
-                    : "border-gray-200 bg-white text-neutral-700 hover:bg-gray-50"
-                }`}
-              >
-                Reset Changes
-              </button>
-              <button
-                onClick={() => setConfirmOpen(true)}
-                disabled={
-                  saving || pendingCount === 0 || finalized[context.classId]
-                }
-                className={`rounded-lg px-4 py-2 text-sm ${
-                  saving || pendingCount === 0 || finalized[context.classId]
-                    ? "cursor-not-allowed bg-cyan-300 text-white"
-                    : "bg-cyan-600 text-white hover:bg-cyan-700"
-                }`}
-              >
-                {saving ? "Saving..." : "Save Promotions"}
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4">
             <PromotionSummary promotions={Object.values(promotions)} />
           </div>
-        </>
-      )}
-      {/* Alerts */}
-      {success.open && (
-        <SuccessAlert
-          isOpen={success.open}
-          message={success.msg}
-          onClose={() => setSuccess({ open: false, msg: "" })}
-        />
-      )}
-      {errors.open && (
-        <ErrorAlert
-          isOpen={errors.open}
-          message={errors.msg}
-          onClose={() => setErrors({ open: false, msg: "" })}
-        />
-      )}
+        )}
+      </main>
 
-      {/* Confirmation */}
+      {/* Modals & alerts */}
+      <SuccessAlert
+        isOpen={success.open}
+        message={success.msg}
+        onClose={() => setSuccess({ open: false, msg: "" })}
+      />
+      <ErrorAlert
+        isOpen={errors.open}
+        message={errors.msg}
+        onClose={() => setErrors({ open: false, msg: "" })}
+      />
+
       {confirmOpen && (
         <ConfirmationModal
           open={confirmOpen}
@@ -405,10 +382,7 @@ export default function StudentPromotionPage() {
           promotions={promotions}
           gradesLookup={gradesLookup}
           classesLookup={classesLookup}
-          onConfirm={() => {
-            saveAll();
-            setConfirmOpen(false);
-          }}
+          onConfirm={() => saveAll()}
         />
       )}
     </div>

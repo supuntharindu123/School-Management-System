@@ -127,6 +127,19 @@ export const deleteTeacher = async (id) => {
   }
 };
 
+export const getAssignmentsByClassAndSubject = async (classId, subjectId) => {
+  try {
+    const res = await api.get(`/teacher/subject/${subjectId}/class/${classId}`);
+    return res.data;
+  } catch (error) {
+    console.error(
+      "Error fetching subject assignments for class and subject:",
+      error,
+    );
+    throw error;
+  }
+};
+
 function formatDateOnly(value) {
   if (!value) return undefined;
   if (value instanceof Date) {

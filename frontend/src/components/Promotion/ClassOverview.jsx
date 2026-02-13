@@ -26,38 +26,48 @@ export default function ClassOverview({
     : 0;
 
   const badgeClass = (status) => {
+    const base =
+      "px-2.5 py-1 rounded-full text-[10px] font-bold border capitalize ";
     if (status === "Finalized")
-      return "bg-purple-100 text-purple-700 border border-purple-200";
+      return base + "bg-purple-50 text-purple-700 border-purple-200";
     if (status === "Completed")
-      return "bg-green-100 text-green-700 border border-green-200";
-    if (status === "In Progress")
-      return "bg-yellow-100 text-yellow-700 border border-yellow-200";
-    return "bg-gray-100 text-neutral-700 border border-gray-200";
+      return base + "bg-emerald-50 text-emerald-700 border-emerald-200";
+    if (status === "In progress")
+      return base + "bg-amber-50 text-amber-700 border-amber-200";
+    return base + "bg-neutral-50 text-neutral-600 border-neutral-200";
   };
 
   return (
-    <section className="space-y-4">
-      <div className="grid gap-3 sm:grid-cols-5">
-        <Stat label="Total Classes" value={totals} />
+    <section className="space-y-6">
+      {/* Metrics grid */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-5">
+        <Stat label="Total classes" value={totals} />
         <Stat label="Finalized" value={countByStatus("Finalized")} />
         <Stat label="Completed" value={countByStatus("Completed")} />
-        <Stat label="In Progress" value={countByStatus("In Progress")} />
+        <Stat label="In progress" value={countByStatus("In progress")} />
 
-        <div className="rounded-xl border border-cyan-200 bg-white p-4 shadow-md">
-          <p className="text-xs text-neutral-600">Overall Progress</p>
-          <div className="mt-1 h-2 rounded bg-gray-100">
-            <div
-              className="h-2 rounded bg-cyan-600"
-              style={{ width: `${overallPct}%` }}
-            />
-          </div>
-          <p className="mt-1 text-sm font-semibold text-neutral-900">
-            {overallPct}%
+        <div className="col-span-2 md:col-span-1 rounded-2xl border border-cyan-100 bg-white p-5 shadow-sm">
+          <p className="text-sm font-bold text-neutral-400 capitalize tracking-wider">
+            Overall progress
           </p>
+          <div className="mt-3">
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-lg font-bold text-neutral-800">
+                {overallPct}%
+              </span>
+            </div>
+            <div className="h-1.5 w-full rounded-full bg-neutral-100 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-cyan-500 transition-all duration-1000"
+                style={{ width: `${overallPct}%` }}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Class cards grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 ">
         {classes.map((c) => {
           const key = c.classNameId ?? c.id;
           const st = classStatuses[key] || {};
@@ -68,38 +78,47 @@ export default function ClassOverview({
           return (
             <div
               key={key}
-              className="rounded-xl border-t-4 border-cyan-600 bg-white p-4 shadow-md"
+              className="group rounded-2xl border border-neutral-100 bg-white p-6 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-neutral-900">
-                  {c.name}
-                </p>
-                <span
-                  className={`rounded px-2 py-0.5 text-xs ${badgeClass(
-                    st.status,
-                  )}`}
-                >
-                  {st.status}
-                </span>
+              <div>
+                <div className="flex items-start justify-between mb-4">
+                  <h3 className="text-lg font-bold text-neutral-800 capitalize">
+                    {c.name}
+                  </h3>
+                  <span className={badgeClass(st.status)}>
+                    {st.status || "Not started"}
+                  </span>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="flex justify-between text-sm font-medium text-neutral-500">
+                    <span>Students</span>
+                    <span className="text-neutral-900">{st.total || 0}</span>
+                  </div>
+                  <div className="flex justify-between text-sm font-medium text-neutral-500">
+                    <span>Processed</span>
+                    <span className="text-neutral-900">
+                      {st.processed || 0}
+                    </span>
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="h-1 w-full rounded-full bg-neutral-50 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-cyan-500 transition-all duration-500"
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <p className="mt-1 text-[11px] text-neutral-600">
-                Students: {st.total} • Processed: {st.processed}
-              </p>
-
-              <div className="mt-2 h-2 rounded bg-gray-100">
-                <div
-                  className="h-2 rounded bg-cyan-600"
-                  style={{ width: `${pct}%` }}
-                />
-              </div>
-
-              <div className="mt-3 flex justify-end">
+              <div className="mt-6">
                 <button
                   onClick={() => onManage(c)}
-                  className="rounded-lg border border-gray-200 bg-cyan-600 px-3 py-1.5 text-sm text-white hover:bg-cyan-500"
+                  className="w-full rounded-xl bg-cyan-800 py-2.5 text-sm font-bold text-white hover:bg-cyan-600 transition-colors capitalize shadow-sm"
                 >
-                  Manage
+                  Manage class
                 </button>
               </div>
             </div>
@@ -111,8 +130,10 @@ export default function ClassOverview({
 }
 
 const Stat = ({ label, value }) => (
-  <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
-    <p className="text-xs text-neutral-600">{label}</p>
-    <p className="text-xl font-semibold text-neutral-900">{value}</p>
+  <div className="rounded-2xl border border-neutral-100 bg-white p-5 shadow-sm">
+    <p className="text-sm font-bold text-neutral-400 capitalize tracking-wider mb-1">
+      {label}
+    </p>
+    <p className="text-2xl font-bold text-neutral-800">{value}</p>
   </div>
 );

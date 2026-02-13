@@ -1,4 +1,5 @@
 ﻿using Backend.DTOs.Student;
+using Backend.Models;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -88,6 +89,19 @@ namespace Backend.Controllers
                 "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 "Students.xlsx"
                 );
+        }
+
+        [HttpGet("class/{classId}")]
+        public async Task<IActionResult> GetStudentsByClass(int classId)
+        {
+            var res=await _service.GetStudentsByClass(classId);
+
+            if (!res.IsSuccess)
+            {
+                return NotFound(res.Error);
+            }
+
+            return Ok(res.Data);
         }
     }
 }

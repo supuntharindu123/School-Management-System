@@ -1,36 +1,27 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
-import { getTeacherById } from "../../features/adminFeatures/teachers/teacherService";
 import { useNavigate } from "react-router-dom";
+import { getTeacherById } from "../../features/adminFeatures/teachers/teacherService";
 import { GetClassAttendanceByDate } from "../../features/attendances/attendanceService";
 
 export default function TeacherDashboard() {
   const [teacherInfo, setTeacherInfo] = useState(null);
-
   const [classes, setClasses] = useState([]);
   const [subjects, setSubjects] = useState([]);
   const [exams, setExams] = useState([]);
   const [classView, setClassView] = useState("active");
   const [subjectView, setSubjectView] = useState("active");
-
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Attendance reminder state
+  // attendance reminder state
   const [attendanceCheckLoading, setAttendanceCheckLoading] = useState(false);
   const [attendanceMissing, setAttendanceMissing] = useState([]);
 
   const { user } = useSelector((s) => s.auth);
-
-  console.log("user", user);
-
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user || user.role !== 1) {
-      console.warn("User is not a teacher or not logged in");
-    }
-
     const fetchTeacherData = async () => {
       try {
         setLoading(true);
@@ -38,441 +29,322 @@ export default function TeacherDashboard() {
         setTeacherInfo(data);
         setClasses(data.classAssignments || []);
         setSubjects(data.subjectClasses || []);
-        setLoading(false);
       } catch (err) {
-        console.error("Error fetching teacher details:", err);
-        setError("Failed to load teacher data");
+        setError("Failed To Load Teacher Data");
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchTeacherData();
+    if (user?.teacherId) fetchTeacherData();
   }, [user]);
 
   const getInitials = (name) => {
-    if (!name) return "T";
-    const parts = String(name).trim().split(" ").filter(Boolean);
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[1][0]).toUpperCase();
+    if (!name) return "TR";
+    const parts = name.trim().split(" ").filter(Boolean);
+    return parts.length === 1
+      ? parts[0].slice(0, 2).toUpperCase()
+      : (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   };
 
-  // Helper: today's date in local YYYY-MM-DD
   const getTodayLocalISO = () => {
     const d = new Date();
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, "0");
-    const da = String(d.getDate()).padStart(2, "0");
-    return `${y}-${m}-${da}`;
+    return d.toISOString().split("T")[0];
   };
 
-  // Check today's attendance for all assigned classes and build reminder list
   useEffect(() => {
-    const list = classes || [];
-    if (!user?.teacherId || !list.length) {
-      setAttendanceMissing([]);
-      return;
-    }
-    let alive = true;
+    if (!user?.teacherId || !classes.length) return;
+
+    let isMounted = true;
     const today = getTodayLocalISO();
+
     const checkAttendance = async () => {
       setAttendanceCheckLoading(true);
-      try {
-        const results = [];
-        for (const c of list) {
-          try {
-            const data = await GetClassAttendanceByDate(c.classId, today);
-            results.push({
-              classId: c.classId,
-              className: c.className || `Class #${c.classId}`,
-              hasToday: data ? data.length > 0 : !!data,
-              isActive: !!c.isActive,
-            });
-          } catch (err) {
-            // Treat per-class error as missing attendance for reminder purposes
-            results.push({
-              classId: c.classId,
-              className: c.className || `Class #${c.classId}`,
-              hasToday: false,
-              isActive: !!c.isActive,
-            });
-          }
+      const results = [];
+      for (const c of classes) {
+        try {
+          const data = await GetClassAttendanceByDate(c.classId, today);
+          results.push({
+            classId: c.classId,
+            className: c.className || `Class ${c.classId}`,
+            hasToday: data && data.length > 0,
+            isActive: !!c.isActive,
+          });
+        } catch {
+          results.push({
+            classId: c.classId,
+            className: c.className,
+            hasToday: false,
+            isActive: !!c.isActive,
+          });
         }
-        if (alive) {
-          const missing = results.filter((r) => r.isActive && !r.hasToday);
-          setAttendanceMissing(missing);
-        }
-      } catch (err) {
-        // Unexpected failure in reminder workflow; show no reminder list
-        if (alive) setAttendanceMissing([]);
-      } finally {
-        if (alive) setAttendanceCheckLoading(false);
+      }
+      if (isMounted) {
+        setAttendanceMissing(results.filter((r) => r.isActive && !r.hasToday));
+        setAttendanceCheckLoading(false);
       }
     };
+
     checkAttendance();
     return () => {
-      alive = false;
+      isMounted = false;
     };
   }, [classes, user?.teacherId]);
 
-  const classDetails = (id) => {
-    navigate(`/classes/${id}`);
-  };
-
-  console.log("teacherInfo", teacherInfo);
-
   const upcomingExams = useMemo(() => {
     const now = new Date();
-    return (exams || []).filter((e) => {
-      const end = new Date(e?.endDate);
-      return !isNaN(end) && now < end;
-    });
+    return (exams || []).filter((e) => new Date(e?.endDate) > now);
   }, [exams]);
 
   const filteredClasses = useMemo(() => {
-    const list = classes || [];
-    if (classView === "active") return list.filter((c) => c?.isActive);
-    if (classView === "history") return list.filter((c) => !c?.isActive);
-    return list;
+    if (classView === "active") return classes.filter((c) => c?.isActive);
+    if (classView === "history") return classes.filter((c) => !c?.isActive);
+    return classes;
   }, [classes, classView]);
 
   const filteredSubjects = useMemo(() => {
-    const list = subjects || [];
-    if (subjectView === "active") return list.filter((s) => s?.isActive);
-    if (subjectView === "history") return list.filter((s) => !s?.isActive);
-    return list;
+    if (subjectView === "active") return subjects.filter((s) => s?.isActive);
+    if (subjectView === "history") return subjects.filter((s) => !s?.isActive);
+    return subjects;
   }, [subjects, subjectView]);
 
   return (
-    <div className="space-y-6">
-      {/* Attendance Reminder Banner */}
+    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+      {/* ================= header banner ================= */}
+      <header className="relative bg-linear-to-r from-cyan-800 to-cyan-600 rounded-2xl p-8 text-white shadow-2xl overflow-hidden">
+        {/* decorative glow */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-3xl -mr-20 -mt-20"></div>
 
-      <div className="mb-4 flex items-center justify-between bg-gradient-to-r from-cyan-800 via-cyan-700 to-cyan-800 py-6 rounded-2xl px-6 relative overflow-hidden">
-        <div>
-          <h1 className="text-3xl font-bold text-cyan-50">
-            Teacher Dashboard
-            {teacherInfo?.fullName ? ` — ${teacherInfo.fullName}` : ""}
-          </h1>
-          <p className="text-sm text-cyan-50">
-            Overview of assigned classes, subjects, and upcoming exams
-          </p>
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
+          <div className="text-center md:text-left">
+            <h1 className="text-4xl  font-bold ">Teacher Dashboard</h1>
+            <p className="text-cyan-100 mt-2 font-medium opacity-90">
+              Welcome Back, {teacherInfo?.fullName || "Professor"}
+            </p>
+          </div>
+          <div className="h-20 w-20 flex items-center justify-center rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-3xl font-black shadow-inner">
+            {getInitials(teacherInfo?.fullName)}
+          </div>
         </div>
-        <span className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-linear-to-br from-cyan-500 to-cyan-700 text-white text-xl font-semibold mr-2">
-          {getInitials(teacherInfo?.fullName)}
-        </span>
+      </header>
+
+      {/* ================= quick metrics ================= */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <MetricCard
+          label="Email Address"
+          value={teacherInfo?.user?.email || "N/A"}
+          icon="📧"
+        />
+        <MetricCard
+          label="Teacher Identification"
+          value={`${String(user?.teacherId).padStart(4, "0")}`}
+          icon="🆔"
+        />
+        <MetricCard
+          label="Total Active Roles"
+          value={
+            classes.filter((c) => c.isActive).length +
+            subjects.filter((s) => s.isActive).length
+          }
+          icon="📊"
+        />
       </div>
 
-      {/* Teacher Info */}
-      <section className="rounded-xl  bg-white p-4 shadow-md">
-        <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 text-md text-neutral-800">
-          <div>
-            <span className="text-neutral-600 font-semibold">Email:</span>{" "}
-            {teacherInfo?.user.email ?? "-"}
-          </div>
-          <div>
-            <span className="text-neutral-600 font-semibold">Teacher ID:</span>{" "}
-            {user?.teacherId ?? teacherInfo?.id ?? "-"}
-          </div>
-          <div>
-            <span className="text-neutral-600 font-semibold">
-              Total Assignments:
-            </span>{" "}
-            {(classes?.length ?? 0) + (subjects?.length ?? 0)}
-          </div>
-          <div>
-            <span className="text-neutral-600 font-semibold">
-              Active Assignments:
-            </span>{" "}
-            {(classes || []).filter((c) => c?.isActive).length +
-              (subjects || []).filter((s) => s?.isActive).length}
-          </div>
-        </div>
-      </section>
-
-      {(attendanceMissing?.length || 0) > 0 && (
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-          <div className="flex items-center justify-between">
+      {/* ================= attendance reminder ================= */}
+      {attendanceMissing.length > 0 && (
+        <div className="bg-linear-to-r from-amber-50 to-white border-l-8 border-amber-400 p-6 rounded-2xl shadow-xl flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="h-12 w-12 bg-amber-400 rounded-full flex items-center justify-center text-white text-xl">
+              ⚠️
+            </div>
             <div>
-              <p className="text-sm font-semibold text-amber-900">
-                Attendance reminder
-              </p>
-              <p className="text-xs text-amber-900/80">
-                You haven't marked today's attendance for the following active
-                classes:
+              <h3 className="font-black text-amber-900 text-lg capitalize ">
+                Daily Attendance Missing
+              </h3>
+              <p className="text-amber-700 text-sm font-medium">
+                Please Mark Today's Attendance For The Following Classes:
               </p>
             </div>
-            {attendanceCheckLoading && (
-              <span className="text-xs text-amber-800">Checking…</span>
-            )}
           </div>
-          <ul className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <div className="flex flex-wrap gap-2">
             {attendanceMissing.map((c) => (
-              <li
+              <button
                 key={c.classId}
-                className="flex items-center justify-between rounded-lg border border-amber-200 bg-white p-3"
+                onClick={() => navigate(`/classes/${c.classId}`)}
+                className="bg-white border-2 border-amber-200 px-4 py-2 rounded-xl text-sm font-bold text-amber-900 hover:bg-amber-400 hover:text-white hover:border-amber-400 transition-all shadow-sm"
               >
-                <span className="text-sm text-neutral-900">{c.className}</span>
-                <button
-                  type="button"
-                  className="text-xs rounded bg-cyan-600 text-white px-2 py-1 hover:bg-cyan-700"
-                  onClick={() => navigate(`/classes/${c.classId}`)}
-                >
-                  Mark now
-                </button>
-              </li>
+                Mark {c.className}
+              </button>
             ))}
-          </ul>
+          </div>
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <SummaryCard
-          title="Assigned Classes"
-          value={teacherInfo?.classAssignments?.length ?? 0}
-        />
-        <SummaryCard
-          title="Assigned Subjects"
-          value={teacherInfo?.subjectClasses?.length ?? 0}
-        />
-        <SummaryCard
-          title="Total Assignments"
-          value={
-            (teacherInfo?.classAssignments?.length ?? 0) +
-            (teacherInfo?.subjectClasses?.length ?? 0)
-          }
-        />
-      </div>
-
-      {/* Assigned Classes */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-neutral-900">
-            Assigned Classes
-          </p>
-          <div className="flex items-center gap-2">
-            {loading && (
-              <span className="text-xs text-neutral-600">Loading...</span>
-            )}
-            <div className="flex items-center shadow-md">
-              <button
-                type="button"
-                onClick={() => setClassView("active")}
-                className={` rounded-l-md border px-3 py-2 text-xs font-medium transition-colors ${
-                  classView === "active"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={classView === "active"}
-              >
-                Active ({(classes || []).filter((c) => c?.isActive).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setClassView("history")}
-                className={` border px-3 py-2 text-xs font-medium transition-colors ${
-                  classView === "history"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={classView === "history"}
-              >
-                History ({(classes || []).filter((c) => !c?.isActive).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setClassView("all")}
-                className={`rounded-r-md border px-3 py-2 text-xs font-medium transition-colors ${
-                  classView === "all"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={classView === "all"}
-              >
-                All ({classes?.length ?? 0})
-              </button>
+      {/* ================= main content tables ================= */}
+      <div className="grid grid-cols-1 gap-10">
+        {/* classes management */}
+        <section className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+          <div className="p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-6">
+            <h2 className=" font-black text-2xl text-cyan-950">
+              Your Class Assignments
+            </h2>
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+              {["active", "history", "all"].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setClassView(view)}
+                  className={`px-6 py-2 text-xs font-black rounded-xl transition-all capitalize tracking-widest ${
+                    classView === view
+                      ? "bg-white text-cyan-700 shadow-md scale-105"
+                      : "text-slate-500 hover:text-cyan-600"
+                  }`}
+                >
+                  {view}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left bg-cyan-600 text-cyan-50 rounded-xl border-2">
-                <th className="border-b border-cyan-200 py-2 px-3">Class</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Role</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Active</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Assigned</th>
-              </tr>
-            </thead>
-            <tbody className="text-neutral-800">
-              {filteredClasses
-                .slice()
-                .sort((a, b) => (b.isActive === true) - (a.isActive === true))
-                .map((c) => (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-cyan-800 text-cyan-50 text-sm capitalize  font-black">
+                  <th className="px-8 py-5">Class Name</th>
+                  <th className="px-8 py-5">Designation</th>
+                  <th className="px-8 py-5 text-center">Current Status</th>
+                  <th className="px-8 py-5 text-right">Date Created</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredClasses.map((c) => (
                   <tr
                     key={c.id}
-                    className="hover:bg-gray-50"
-                    onClick={() => {
-                      classDetails(c.classId);
-                    }}
+                    onClick={() => navigate(`/classes/${c.classId}`)}
+                    className="hover:bg-cyan-50/40 cursor-pointer transition-colors group"
                   >
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {c.className || `Class #${c.classId}`}
+                    <td className="px-8 py-6 font-bold text-cyan-900 text-lg group-hover:translate-x-1 transition-transform">
+                      {c.className || "Unnamed Class"}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {c.role || "-"}
+                    <td className="px-8 py-6 font-medium text-slate-600">
+                      {c.role || "Primary Teacher"}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {c.isActive ? statusBadge(true) : statusBadge(false)}
+                    <td className="px-8 py-6 text-center">
+                      {StatusBadge(c.isActive)}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {formatDateTime(c.createdDate)}
+                    <td className="px-8 py-6 text-right font-mono text-slate-400 text-sm">
+                      {formatDate(c.createdDate)}
                     </td>
                   </tr>
                 ))}
-              {!filteredClasses?.length && (
-                <tr>
-                  <td className="py-8 text-center text-neutral-600" colSpan={4}>
-                    No class assignments found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      {/* Assigned Subjects */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold text-neutral-900">
-            Assigned Subjects
-          </p>
-          <div className="flex items-center gap-2">
-            {loading && (
-              <span className="text-xs text-neutral-600">Loading...</span>
-            )}
-            <div className="flex items-center shadow-md ">
-              <button
-                type="button"
-                onClick={() => setSubjectView("active")}
-                className={`rounded-l-md border px-3 py-2 text-xs font-medium transition-colors ${
-                  subjectView === "active"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={subjectView === "active"}
-              >
-                Active ({(subjects || []).filter((s) => s?.isActive).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubjectView("history")}
-                className={` border px-3 py-2 text-xs font-medium transition-colors ${
-                  subjectView === "history"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={subjectView === "history"}
-              >
-                History ({(subjects || []).filter((s) => !s?.isActive).length})
-              </button>
-              <button
-                type="button"
-                onClick={() => setSubjectView("all")}
-                className={`rounded-r-md border px-3 py-2 text-xs font-medium transition-colors ${
-                  subjectView === "all"
-                    ? "border-cyan-600 bg-cyan-600 text-white"
-                    : "border-cyan-200 bg-cyan-50 text-cyan-800 hover:bg-cyan-100"
-                }`}
-                aria-pressed={subjectView === "all"}
-              >
-                All ({subjects?.length ?? 0})
-              </button>
+        {/* subjects section */}
+        <section className="bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden">
+          {/* ... header similar to classes ... */}
+          <div className="p-8 border-b border-slate-50 flex flex-col sm:flex-row justify-between items-center gap-6">
+            <h2 className=" font-black text-2xl text-cyan-950">
+              Subject Assignments
+            </h2>
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl">
+              {["active", "history", "all"].map((view) => (
+                <button
+                  key={view}
+                  onClick={() => setSubjectView(view)}
+                  className={`px-6 py-2 text-xs font-black rounded-xl transition-all capitalize tracking-widest ${
+                    subjectView === view
+                      ? "bg-white text-cyan-700 shadow-md scale-105"
+                      : "text-slate-500 hover:text-cyan-600"
+                  }`}
+                >
+                  {view}
+                </button>
+              ))}
             </div>
           </div>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse text-sm">
-            <thead>
-              <tr className="text-left bg-cyan-600 text-cyan-50 ">
-                <th className="border-b border-cyan-200 py-2 px-3">Subject</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Class</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Active</th>
-                <th className="border-b border-cyan-200 py-2 px-3">Assigned</th>
-              </tr>
-            </thead>
-            <tbody className="text-neutral-800">
-              {filteredSubjects
-                .slice()
-                .sort((a, b) => (b.isActive === true) - (a.isActive === true))
-                .map((s) => (
-                  <tr key={s.id} className="hover:bg-gray-50">
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {s.subjectName || "-"}
+          <div className="overflow-x-auto">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-cyan-800 text-cyan-50 text-sm capitalize  font-black">
+                  <th className="px-8 py-5">Subject Name</th>
+                  <th className="px-8 py-5">Target Class</th>
+                  <th className="px-8 py-5 text-center">Status</th>
+                  <th className="px-8 py-5 text-right">Start Date</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-50">
+                {filteredSubjects.map((s) => (
+                  <tr
+                    key={s.id}
+                    className="hover:bg-cyan-50/40 cursor-pointer transition-colors"
+                  >
+                    <td className="px-8 py-6 font-bold text-cyan-900 text-lg">
+                      {s.subjectName}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {s.className || "-"}
+                    <td className="px-8 py-6 font-medium text-slate-600">
+                      {s.className}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {s.isActive ? statusBadge(true) : statusBadge(false)}
+                    <td className="px-8 py-6 text-center">
+                      {StatusBadge(s.isActive)}
                     </td>
-                    <td className="border-b border-gray-200 py-2 px-3">
-                      {formatDateTime(s?.startDate)}
+                    <td className="px-8 py-6 text-right font-mono text-slate-400 text-sm">
+                      {formatDate(s.startDate)}
                     </td>
                   </tr>
                 ))}
-              {!filteredSubjects?.length && (
-                <tr>
-                  <td className="py-8 text-center text-neutral-600" colSpan={4}>
-                    No subject assignments found.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </section>
+              </tbody>
+            </table>
+          </div>
+        </section>
 
-      {/* Upcoming Exams */}
-      <section className="rounded-xl border border-gray-200 bg-white p-4">
-        <div className="mb-3">
-          <p className="text-sm font-semibold text-neutral-900">
-            Upcoming Exams
-          </p>
-          <p className="text-xs text-neutral-600">
-            Based on assigned classes/grades
-          </p>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {(upcomingExams || []).map((e) => (
-            <div
-              key={e.id}
-              className="rounded-lg border border-gray-200 bg-white p-3"
-            >
-              <p className="text-sm font-semibold text-neutral-900">
-                {e.title}
-              </p>
-              <p className="text-xs text-neutral-700">
-                Year {e.academicYear} · Grade {e.gradeName}
-              </p>
-              <div className="mt-2 text-xs text-neutral-700">
-                <span className="rounded bg-gray-100 px-2 py-1">
-                  Start: {formatDate(e.startDate)}
-                </span>
-                <span className="ml-2 rounded bg-gray-100 px-2 py-1">
-                  End: {formatDate(e.endDate)}
-                </span>
+        {/* exams board */}
+        <section className="bg-cyan-950 rounded-[2.5rem] p-10 text-white shadow-2xl relative overflow-hidden">
+          <div className="absolute bottom-0 right-0 w-64 h-64 bg-cyan-900 rounded-full blur-3xl opacity-20 -mb-20 -mr-20"></div>
+          <div className="mb-10">
+            <h2 className="text-3xl  font-black">Upcoming Examinations</h2>
+            <p className="text-cyan-300 mt-2 font-medium">
+              Review Scheduled Sessions For Your Assigned Grades
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative z-10">
+            {upcomingExams.length > 0 ? (
+              upcomingExams.map((e) => (
+                <div
+                  key={e.id}
+                  className="bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[1.5rem] hover:bg-white/10 transition-all group"
+                >
+                  <h4 className="font-black text-cyan-400 text-lg mb-2 group-hover:text-white transition-colors capitalize">
+                    {e.title}
+                  </h4>
+                  <p className="text-sm text-cyan-100/70 font-bold capitalize tracking-widest">
+                    Grade {e.gradeName} • {e.academicYear}
+                  </p>
+                  <div className="mt-6 space-y-2">
+                    <div className="flex justify-between text-[11px] font-black capitalize er">
+                      <span className="text-cyan-500">Starts:</span>
+                      <span>{formatDate(e.startDate)}</span>
+                    </div>
+                    <div className="flex justify-between text-[11px] font-black capitalize er">
+                      <span className="text-rose-400">Ends:</span>
+                      <span>{formatDate(e.endDate)}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full py-10 text-center border-2 border-dashed border-white/10 rounded-3xl">
+                <p className="text-cyan-100/40 italic font-medium">
+                  No Scheduled Exams Found At This Time
+                </p>
               </div>
-            </div>
-          ))}
-          {!upcomingExams?.length && (
-            <p className="text-sm text-neutral-600">No upcoming exams.</p>
-          )}
-        </div>
-      </section>
+            )}
+          </div>
+        </section>
+      </div>
 
       {error && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <div className="fixed bottom-10 right-10 bg-rose-600 text-white px-8 py-4 rounded-2xl shadow-2xl font-bold animate-bounce z-50">
           {error}
         </div>
       )}
@@ -480,74 +352,38 @@ export default function TeacherDashboard() {
   );
 }
 
-function SummaryCard({ title, value }) {
+/* ================= reusable sub-components ================= */
+
+function MetricCard({ label, value, icon }) {
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-4 shadow-md">
-      <p className="text-xs text-neutral-600">{title}</p>
-      <p className="text-2xl font-semibold text-neutral-900">{value}</p>
+    <div className="bg-white rounded-3xl border border-slate-100 p-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all group">
+      <div className="text-3xl mb-4 grayscale group-hover:grayscale-0 transition-all">
+        {icon}
+      </div>
+      <p className="text-slate-400 text-sm font-black capitalize  mb-2">
+        {label}
+      </p>
+      <p className="text-cyan-950 font-black text-xl truncate">{value}</p>
     </div>
   );
 }
 
-function statusBadge(active) {
+function StatusBadge(active) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded border px-2 py-1 text-xs ${
+      className={`text-sm font-black capitalize tracking-widest px-4 py-1.5 rounded-full border ${
         active
-          ? "border-cyan-200 bg-cyan-100 text-cyan-800"
-          : "border-gray-200 bg-gray-100 text-gray-700"
+          ? "bg-cyan-50 text-cyan-700 border-cyan-200"
+          : "bg-slate-100 text-slate-500 border-slate-200"
       }`}
     >
-      {active ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-3 w-3"
-        >
-          <path d="M9 16.5 4.5 12l1.5-1.5L9 13.5l9-9L19.5 6l-9 10.5Z" />
-        </svg>
-      ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-          fill="currentColor"
-          className="h-3 w-3"
-        >
-          <path d="M6 12.75h12v-1.5H6v1.5Z" />
-        </svg>
-      )}
-      {active ? "Active" : "Inactive"}
+      {active ? "Active Role" : "History"}
     </span>
   );
 }
 
 function formatDate(d) {
-  try {
-    const str = typeof d === "string" ? d : String(d);
-    const date = new Date(str);
-    if (!isNaN(date.getTime())) {
-      const y = date.getFullYear();
-      const m = String(date.getMonth() + 1).padStart(2, "0");
-      const dd = String(date.getDate()).padStart(2, "0");
-      return `${y}-${m}-${dd}`;
-    }
-    return str;
-  } catch {
-    return String(d);
-  }
-}
-
-function formatDateTime(d) {
-  try {
-    const date = new Date(d);
-    if (!isNaN(date.getTime())) return date.toLocaleString();
-    return String(d);
-  } catch {
-    return String(d);
-  }
-}
-
-function formatRange(s, e) {
-  return `${formatDate(s)} — ${formatDate(e)}`;
+  if (!d) return "Not Set";
+  const date = new Date(d);
+  return isNaN(date) ? String(d) : date.toLocaleDateString("en-CA"); // YYYY-MM-DD
 }

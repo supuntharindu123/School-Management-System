@@ -142,5 +142,21 @@ namespace Backend.Services
 
             return Result.Success();
         }
+
+        public async Task<Result<List<AssignTeacherSubjectResDto>>> GetByClassAndSubject(int classId, int subjectId)
+        {
+            var res = await _repo.GetByClassAndSubject(classId,subjectId);
+
+            if (res == null)
+            {
+                return Result<List<AssignTeacherSubjectResDto>>.Failure("Assignments not found!");
+            }
+
+
+            var map = _mapper.Map<List<AssignTeacherSubjectResDto>>(res);
+
+            return Result<List<AssignTeacherSubjectResDto>>.Success(map);
+        }
+
     }
 }

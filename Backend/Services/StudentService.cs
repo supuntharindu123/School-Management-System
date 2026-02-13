@@ -160,5 +160,22 @@ namespace Backend.Services
 
             return package.GetAsByteArray();
         }
+
+
+        public async Task<Result<List<StudentBasicDto>>> GetStudentsByClass(int classId)
+        {
+            var res=await _repo.GetStudentsByClass(classId);
+
+            if(res == null)
+            {
+                return Result<List<StudentBasicDto>>.Failure("Students Not Found");
+            }
+
+            var map = _mapper.Map<List<StudentBasicDto>>(res);
+
+            return Result<List<StudentBasicDto>>.Success(map);
+
+
+        }
     }
 }

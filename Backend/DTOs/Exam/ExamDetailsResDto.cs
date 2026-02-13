@@ -17,11 +17,17 @@ namespace Backend.DTOs.Exam
 
         public int AcademicYearId { get; set; }
 
-        public ExamType ExamType { get; set; }
+        public string? AcademicYear {  get; set; }
+
+        public string? ExamType { get; set; }
 
         public int TotalGrades {  get; set; }
 
         public int TotalStudents {  get; set; }
+
+        public int examDurationDays {  get; set; }
+
+        public int TotalSubjects { get; set; }
 
         public List<GradeExamResDto>? Grades { get; set; }
 

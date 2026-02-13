@@ -5,7 +5,6 @@ export default function ConfirmationModal({
   onClose,
   context,
   promotions,
-  gradesLookup,
   classesLookup,
   onConfirm,
 }) {
@@ -13,6 +12,7 @@ export default function ConfirmationModal({
 
   const counts = { Promoted: 0, Repeated: 0, Completed: 0, Leaving: 0 };
   const promotedByClass = {};
+
   Object.values(promotions).forEach((p) => {
     if (!p?.status) return;
     counts[p.status] = (counts[p.status] || 0) + 1;
@@ -23,100 +23,120 @@ export default function ConfirmationModal({
   });
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/30 p-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-sm border border-cyan-200">
-        <div className="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-cyan-600 to-cyan-700 rounded-t-xl">
-          <p className="text-sm font-semibold text-white">
-            Confirm Promotion Changes
-          </p>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-neutral-900/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
+      <div className="w-full max-w-xl rounded-[2.5rem] bg-white shadow-2xl overflow-hidden border border-neutral-100 flex flex-col animate-in zoom-in-95 duration-300">
+        {/* Header */}
+        <header className="px-8 pt-8 pb-4 flex items-center justify-between bg-white">
+          <div>
+            <h2 className="text-2xl font-bold text-neutral-800 capitalize">
+              Confirm promotions
+            </h2>
+            <p className="text-sm font-bold text-neutral-400 capitalize tracking-widest mt-1">
+              Review changes before saving
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="rounded px-2 py-1 text-xs text-white/90 hover:bg-cyan-800"
+            className="p-2 hover:bg-neutral-100 rounded-full transition-colors"
           >
-            Close
+            <svg
+              className="w-5 h-5 text-neutral-400"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
           </button>
-        </div>
-        <div className="p-4 space-y-4">
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-lg border border-cyan-200 bg-white p-3">
-              <p className="text-[11px] text-neutral-600">Academic Year</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {context.yearLabel}
-              </p>
-            </div>
-            <div className="rounded-lg border border-cyan-200 bg-white p-3">
-              <p className="text-[11px] text-neutral-600">Source Grade</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {context.gradeLabel}
-              </p>
-            </div>
-            <div className="rounded-lg border border-cyan-200 bg-white p-3">
-              <p className="text-[11px] text-neutral-600">Source Class</p>
-              <p className="text-sm font-semibold text-neutral-900">
-                {context.classLabel}
-              </p>
-            </div>
+        </header>
+
+        <div className="px-8 pb-8 space-y-6 overflow-y-auto max-h-[70vh]">
+          {/* Source info cards */}
+          <div className="grid gap-3 grid-cols-3">
+            <InfoBox label="Target year" value={context.yearLabel} />
+            <InfoBox label="Source grade" value={context.gradeLabel} />
+            <InfoBox label="Source class" value={context.classLabel} />
           </div>
 
-          <div>
-            <p className="mb-2 text-sm font-semibold text-neutral-900">
-              Counts by status
-            </p>
-            <div className="grid gap-3 sm:grid-cols-4">
-              {Object.entries(counts).map(([k, v]) => (
+          {/* Status counts */}
+          <section>
+            <h3 className="text-sm font-bold text-neutral-400 capitalize tracking-widest mb-3 px-1">
+              Summary by status
+            </h3>
+            <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+              {Object.entries(counts).map(([status, count]) => (
                 <div
-                  key={k}
-                  className="rounded-lg bg-cyan-50 px-3 py-2 border border-cyan-100"
+                  key={status}
+                  className="bg-neutral-50 rounded-2xl p-4 border border-neutral-100"
                 >
-                  <p className="text-[11px] text-neutral-600">{k}</p>
-                  <p className="text-lg font-semibold text-neutral-900">{v}</p>
+                  <p className="text-xl font-bold text-neutral-800">{count}</p>
+                  <p className="text-[10px] font-bold text-neutral-400 capitalize">
+                    {status}
+                  </p>
                 </div>
               ))}
             </div>
-          </div>
+          </section>
 
-          <div>
-            <p className="mb-2 text-sm text-neutral-700">
-              Promoted target distribution
-            </p>
-            <div className="space-y-1">
+          {/* Target distribution */}
+          <section className="bg-cyan-50/50 rounded-3xl p-6 border border-cyan-100/50">
+            <h3 className="text-sm font-bold text-cyan-700/60 capitalize tracking-widest mb-4">
+              Promoted distribution
+            </h3>
+            <div className="space-y-2">
               {Object.keys(promotedByClass).length === 0 ? (
-                <p className="text-sm text-neutral-600">
+                <p className="text-sm font-medium text-cyan-800/50 italic capitalize">
                   No promoted students selected
                 </p>
               ) : (
                 Object.entries(promotedByClass).map(([classId, total]) => (
                   <div
                     key={classId}
-                    className="flex items-center justify-between rounded-lg border border-cyan-200 bg-white px-3 py-2"
+                    className="flex items-center justify-between bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 shadow-sm border border-cyan-100"
                   >
-                    <p className="text-sm text-neutral-800">
-                      {classesLookup[classId]?.name || `Class ID: ${classId}`}
-                    </p>
-                    <p className="text-sm font-semibold text-neutral-900">
-                      {total}
-                    </p>
+                    <span className="text-sm font-bold text-neutral-700 capitalize">
+                      {classesLookup[classId]?.name || `Class ${classId}`}
+                    </span>
+                    <span className="bg-cyan-600 text-white text-[11px] font-bold px-3 py-1 rounded-full">
+                      {total} Students
+                    </span>
                   </div>
                 ))
               )}
             </div>
-          </div>
+          </section>
         </div>
-        <div className="border-t border-cyan-200 px-4 py-3 flex justify-end gap-2 rounded-b-xl bg-white">
+
+        {/* Footer actions */}
+        <footer className="p-6 bg-neutral-50 border-t border-neutral-100 flex gap-3">
           <button
             onClick={onClose}
-            className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-neutral-700 hover:bg-gray-50"
+            className="flex-1 py-3 rounded-2xl text-sm font-bold text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 transition-all capitalize"
           >
-            Cancel
+            Go back
           </button>
           <button
             onClick={onConfirm}
-            className="rounded-lg bg-cyan-600 px-3 py-2 text-sm text-white hover:bg-cyan-700"
+            className="flex-1 py-3 rounded-2xl text-sm font-bold bg-cyan-800 text-white hover:bg-cyan-600 shadow-lg shadow-neutral-200 transition-all capitalize"
           >
-            Confirm & Save
+            Confirm and save
           </button>
-        </div>
+        </footer>
       </div>
     </div>
   );
 }
+
+const InfoBox = ({ label, value }) => (
+  <div className="rounded-2xl border border-neutral-100 bg-white p-4 shadow-sm">
+    <p className="text-[9px] font-bold text-neutral-400 capitalize tracking-tighter mb-1">
+      {label}
+    </p>
+    <p className="text-sm font-bold text-neutral-800 truncate">{value}</p>
+  </div>
+);

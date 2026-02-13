@@ -12,47 +12,55 @@ export default function CreativeStatCard({
       viewBox="0 0 24 24"
       fill="currentColor"
       className="h-5 w-5"
-      aria-hidden="true"
     >
-      <path d="M3 6.75A1.75 1.75 0 0 1 4.75 5h9.5A1.75 1.75 0 0 1 16 6.75v.5c0 .966-.784 1.75-1.75 1.75H6.5v6.25c0 .69.56 1.25 1.25 1.25h8.75A1.75 1.75 0 0 0 18.75 14V7.75A2.75 2.75 0 0 0 16 5H4.75C3.784 5 3 5.784 3 6.75v.5C3 8.216 3.784 9 4.75 9H6v8.25A2.75 2.75 0 0 0 8.75 20h9.5A2.75 2.75 0 0 0 21 17.25V9.5a.75.75 0 0 0-1.5 0v7.75c0 .69-.56 1.25-1.25 1.25h-9.5A1.25 1.25 0 0 1 7.5 17.25V9H4.75C3.784 9 3 8.216 3 7.25v-.5Z" />
+      <path d="M11.584 2.25a.75.75 0 0 1 .732 0l9 5.25a.75.75 0 0 1 0 1.299l-9 5.25a.75.75 0 0 1-.732 0l-9-5.25a.75.75 0 0 1 0-1.299l9-5.25ZM2.458 11.25l1.042.608 7.25 4.23 7.25-4.23 1.042-.608a.75.75 0 0 1 .75 1.299l-8.625 5.031a.75.75 0 0 1-.75 0l-8.625-5.031a.75.75 0 0 1 .75-1.299Zm0 4.5l1.042.608 7.25 4.23 7.25-4.23 1.042-.608a.75.75 0 0 1 .75 1.299l-8.625 5.031a.75.75 0 0 1-.75 0l-8.625-5.031a.75.75 0 0 1 .75-1.299Z" />
     </svg>
   );
-  return (
-    <div className="relative overflow-hidden rounded-2xl bg-linear-to-br from-teal-500 via-emerald-500 to-cyan-600 p-1 shadow-[0_10px_25px_-10px_rgba(13,148,136,0.5)]">
-      <div className="relative rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-        {/* Decorative blobs */}
-        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full bg-white/15 blur-2xl" />
-        <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/10 blur-3xl" />
 
-        <div className="relative">
-          <div className="mb-3 flex items-center gap-3">
-            <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 text-white shadow-inner">
+  return (
+    <div className="group relative overflow-hidden rounded-3xl bg-gradient-to-br from-cyan-600 to-teal-700 p-[1px] shadow-xl shadow-cyan-900/20">
+      {/* internal glow and glass layer */}
+      <div className="relative rounded-[23px] bg-slate-900/10 p-5 backdrop-blur-xl transition-all group-hover:bg-slate-900/5">
+        {/* decorative glass blobs */}
+        <div className="pointer-events-none absolute -right-4 -top-4 h-24 w-24 rounded-full bg-white/10 blur-2xl transition-transform group-hover:scale-150" />
+        <div className="pointer-events-none absolute -bottom-8 -left-8 h-32 w-32 rounded-full bg-cyan-400/10 blur-3xl" />
+
+        <div className="relative z-10">
+          <header className="mb-6 flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15 text-white shadow-[inset_0_1px_1px_rgba(255,255,255,0.3)] backdrop-blur-md">
               {icon || <DefaultIcon />}
-            </span>
+            </div>
             <div>
-              <p className="text-sm font-semibold text-white drop-shadow-sm">
+              <h3 className="text-sm font-bold text-white tracking-tight drop-shadow-sm">
                 {title}
-              </p>
-              {subtitle ? (
-                <p className="text-xs text-white/80 drop-shadow-sm">
+              </h3>
+              {subtitle && (
+                <p className="text-[11px] font-medium text-cyan-50/70">
                   {subtitle}
                 </p>
-              ) : null}
+              )}
             </div>
-          </div>
+          </header>
 
           <div className="grid grid-cols-2 gap-3">
             {stats.map((s, idx) => (
               <div
                 key={idx}
-                className="rounded-xl border border-white/20 bg-white/10 px-3 py-2 text-white shadow-inner"
+                className="rounded-2xl border border-white/10 bg-white/5 p-3 text-white shadow-sm transition-all hover:bg-white/10"
               >
-                <p className="text-[11px] text-white/80">{s.label}</p>
-                <p className="text-xl font-semibold leading-6">{s.value}</p>
+                <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-100/60">
+                  {s.label}
+                </p>
+                <p className="mt-1 text-xl font-bold leading-none tracking-tight">
+                  {s.value}
+                </p>
               </div>
             ))}
           </div>
         </div>
+
+        {/* glass shine effect */}
+        <div className="absolute inset-0 z-0 rounded-[23px] bg-gradient-to-tr from-transparent via-white/5 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
       </div>
     </div>
   );
