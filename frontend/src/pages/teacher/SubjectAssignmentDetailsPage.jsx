@@ -44,6 +44,8 @@ export default function SubjectAssignmentDetailsPage() {
   }, [dispatch]);
 
   const groupMarksByExam = (marks, examsList) => {
+    if (!marks || !Array.isArray(marks)) return [];
+
     const byExam = marks.reduce((acc, m) => {
       const key = m.examId;
       if (!key) return acc;
@@ -53,11 +55,15 @@ export default function SubjectAssignmentDetailsPage() {
     }, {});
 
     return Object.entries(byExam).map(([examIdStr, arr]) => {
-      const ex = examsList.find((e) => e.id == examIdStr);
-      const scores = arr.map((m) => m.score).filter((n) => !isNaN(n));
+      const ex = examsList.find((e) => Number(e.id) === Number(examIdStr));
+      // Parsing string scores from backend to numbers for math
+      const scores = arr
+        .map((m) => parseFloat(m.score))
+        .filter((n) => !isNaN(n));
+
       return {
         id: Number(examIdStr),
-        title: ex?.title,
+        title: ex?.title || "Unknown Exam",
         date: ex?.endDate,
         stats: {
           average: scores.length
@@ -70,7 +76,7 @@ export default function SubjectAssignmentDetailsPage() {
           studentId: m.studentId,
           studentIDNumber: m.studentIDNumber,
           name: m.studentName,
-          score: m.score,
+          score: m.score, // Keeps as string
           isPresent: m.isPresent,
           reason: m.reason,
         })),
@@ -102,7 +108,9 @@ export default function SubjectAssignmentDetailsPage() {
         );
         setExamOptions(filteredExams);
       } catch (err) {
-        setLoadError(err?.message || "Failed to load data");
+        const msg =
+          err?.response?.data?.title || err?.message || "Failed to load data";
+        setLoadError(msg);
       } finally {
         setLoading(false);
       }
@@ -116,11 +124,10 @@ export default function SubjectAssignmentDetailsPage() {
   };
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 pb-12">
-      {/* Header Area */}
+    <div className="max-w-full mx-auto space-y-6 pb-12">
       <header className="bg-gradient-to-r from-cyan-900 via-cyan-700 to-cyan-800 rounded-2xl p-8 text-white shadow-xl flex flex-col md:flex-row justify-between items-center gap-6">
         <div>
-          <span className="text-cyan-200 text-xs font-bold capitalize tracking-widest">
+          <span className="text-cyan-200 text-sm font-bold capitalize tracking-widest">
             Portal Access
           </span>
           <h1 className="text-4xl font-extrabold tracking-tight mt-1">
@@ -132,14 +139,13 @@ export default function SubjectAssignmentDetailsPage() {
         </div>
       </header>
 
-      {/* FULL WIDTH OVERVIEW */}
       <section className="bg-white rounded-2xl border border-neutral-200 p-6 shadow-sm ring-1 ring-neutral-100">
         <div className="flex items-center justify-between mb-6 border-b border-neutral-100 pb-4">
           <h2 className="text-lg font-bold text-neutral-800">
             Assignment Overview
           </h2>
           <span
-            className={`px-4 py-1 rounded-full text-[10px] font-bold capitalize tracking-widest border ${
+            className={`px-4 py-1 rounded-full text-sm font-bold capitalize tracking-widest border ${
               state.isActive !== false
                 ? "bg-cyan-50 border-cyan-200 text-cyan-700"
                 : "bg-neutral-50 border-neutral-200 text-neutral-500"
@@ -157,14 +163,16 @@ export default function SubjectAssignmentDetailsPage() {
         </div>
       </section>
 
-      {/* CONTENT GRID */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Main Marks Entry Area (8/12 width) */}
         <div className="lg:col-span-8 space-y-6">
           {loadError && (
             <ErrorAlert
               isOpen={true}
-              message={loadError}
+              message={
+                typeof loadError === "object"
+                  ? "An error occurred while loading."
+                  : loadError
+              }
               onClose={() => setLoadError("")}
             />
           )}
@@ -172,7 +180,7 @@ export default function SubjectAssignmentDetailsPage() {
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
             <div className="p-6 bg-neutral-50/50 border-b border-neutral-100 flex justify-between items-center">
               <h3 className="font-bold text-neutral-800">Marks Entry Sheet</h3>
-              <p className="text-xs text-neutral-500">
+              <p className="text-sm text-neutral-500">
                 Academic Year: {currentYear}
               </p>
             </div>
@@ -194,9 +202,7 @@ export default function SubjectAssignmentDetailsPage() {
           </div>
         </div>
 
-        {/* Side History Area (4/12 width) */}
         <div className="lg:col-span-4 space-y-6">
-          {/* Assignment History Toggle */}
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
             <button
               onClick={() => setShowAssignHistory(!showAssignHistory)}
@@ -205,7 +211,7 @@ export default function SubjectAssignmentDetailsPage() {
               <span className="text-sm font-bold text-neutral-800 capitalize tracking-tighter">
                 History Log
               </span>
-              <span className="text-xs text-cyan-600 font-bold">
+              <span className="text-sm text-cyan-600 font-bold">
                 {showAssignHistory ? "Hide" : "Show"}
               </span>
             </button>
@@ -215,34 +221,37 @@ export default function SubjectAssignmentDetailsPage() {
                   assignHistory.map((a) => (
                     <div
                       key={a.id}
-                      className="p-4 bg-neutral-50 rounded-xl text-xs border border-neutral-100"
+                      className="p-4 bg-neutral-50 rounded-xl text-sm border border-neutral-100"
                     >
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-bold text-neutral-800 leading-tight">
                           {a.teacherName}
                         </span>
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded ${a.isActive ? "bg-cyan-100 text-cyan-700" : "bg-neutral-200 text-neutral-500"}`}
+                          className={`text-sm font-bold px-2 py-0.5 rounded ${
+                            a.isActive
+                              ? "bg-cyan-100 text-cyan-700"
+                              : "bg-neutral-200 text-neutral-500"
+                          }`}
                         >
                           {a.isActive ? "Active" : "Inactive"}
                         </span>
                       </div>
-                      <div className="flex justify-between items-start mb-2">
-                        <span className="font-semibold text-neutral-600 leading-tight">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-semibold text-neutral-600">
                           {a.subjectName}
                         </span>
-                        <p className="text-neutral-500">
-                          Start Date:{" "}
-                          {new Date(a.startDate).toLocaleDateString()}
+                        <p className="text-neutral-500 text-xs">
+                          Start: {new Date(a.startDate).toLocaleDateString()}
                         </p>
-                        <p className="text-neutral-500">
-                          End Date: {new Date(a.endDate).toLocaleDateString()}
+                        <p className="text-neutral-500 text-xs">
+                          End: {new Date(a.endDate).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <p className="text-xs text-neutral-400 text-center py-4 italic">
+                  <p className="text-sm text-neutral-400 text-center py-4 italic">
                     No previous logs found
                   </p>
                 )}
@@ -250,7 +259,6 @@ export default function SubjectAssignmentDetailsPage() {
             )}
           </div>
 
-          {/* Previous Exams Toggle */}
           <div className="bg-white rounded-2xl border border-neutral-200 shadow-sm overflow-hidden">
             <button
               onClick={() => setShowExamHistory(!showExamHistory)}
@@ -259,7 +267,7 @@ export default function SubjectAssignmentDetailsPage() {
               <span className="text-sm font-bold text-neutral-800 capitalize tracking-tighter">
                 Exam Analytics
               </span>
-              <span className="text-xs text-cyan-600 font-bold">
+              <span className="text-sm text-cyan-600 font-bold">
                 {showExamHistory ? "Hide" : "Show"}
               </span>
             </button>
@@ -275,11 +283,9 @@ export default function SubjectAssignmentDetailsPage() {
   );
 }
 
-/* Sub-components for cleaner structure */
-
 const OverviewItem = ({ label, value }) => (
   <div>
-    <p className="text-[10px] font-bold text-neutral-400 capitalize tracking-widest mb-1">
+    <p className="text-sm font-bold text-neutral-400 capitalize tracking-widest mb-1">
       {label}
     </p>
     <p className="text-base font-semibold text-neutral-800">{value || "—"}</p>
@@ -303,40 +309,53 @@ function MarksEntry({
   onMarksSaved,
   context,
 }) {
-  const [examId, setExamId] = useState(examOptions?.[0]?.id || null);
+  const [examId, setExamId] = useState(null);
   const [rows, setRows] = useState({});
   const [saving, setSaving] = useState(false);
   const [alerts, setAlerts] = useState({ success: "", error: "" });
   const navigate = useNavigate();
 
   useEffect(() => {
-    const group = existingMarks?.find((g) => g.id === examId);
+    if (examOptions.length > 0 && !examId) {
+      setExamId(examOptions[0].id);
+    }
+  }, [examOptions]);
+
+  useEffect(() => {
+    if (!examId) return;
+
+    const group = existingMarks?.find((g) => Number(g.id) === Number(examId));
+
     const next = {};
     students.forEach((s) => {
       const existing = group?.marks?.find((m) => m.studentId === s.id);
+
       next[s.id] = {
         score: existing?.score ?? "",
         isPresent: existing ? !!existing.isPresent : true,
         reason: existing?.reason ?? "",
       };
     });
+
     setRows(next);
-  }, [examId, existingMarks, students]);
+  }, [examId, students, existingMarks]);
 
   const onSave = async () => {
     if (!examId)
       return setAlerts({ ...alerts, error: "Please select an exam." });
 
+    // Important: Matching your Backend.Models.Marks structure
     const payload = students.map((s) => ({
-      score: rows[s.id]?.score || null,
+      score: rows[s.id]?.score?.toString() || "", // Must be string? per your model
       isPresent: !!rows[s.id]?.isPresent,
       reason: rows[s.id]?.isPresent ? null : rows[s.id]?.reason || null,
-      studentId: s.id,
-      gradeId: context.gradeId,
-      classId: context.classId,
-      examId: examId,
-      teacherId: context.teacherId,
-      subjectId: context.subjectId,
+      studentId: Number(s.id),
+      gradeId: Number(context.gradeId),
+      classId: Number(context.classId),
+      examId: Number(examId),
+      teacherId: Number(context.teacherId),
+      subjectId: Number(context.subjectId),
+      // Do NOT include navigation properties (Student, Exam, etc)
     }));
 
     try {
@@ -345,36 +364,48 @@ function MarksEntry({
       if (onMarksSaved) await onMarksSaved();
       setAlerts({ error: "", success: "Marks recorded successfully." });
     } catch (e) {
-      setAlerts({
-        success: "",
-        error: e?.response?.data || "Failed to save marks",
-      });
+      const errorData = e?.response?.data;
+      let errorMessage = "Failed to save marks";
+
+      if (typeof errorData === "object" && errorData !== null) {
+        // Handle ASP.NET Core Validation Problem details
+        errorMessage =
+          errorData.title || errorData.message || JSON.stringify(errorData);
+      } else if (typeof errorData === "string") {
+        errorMessage = errorData;
+      }
+
+      setAlerts({ success: "", error: errorMessage });
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <div className="max-w-full mx-auto space-y-8 pb-16 animate-fade-in px-4">
+    <div className="max-w-full mx-auto space-y-8 pb-16 px-4">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="w-full md:w-72">
-          <label className="text-[10px] font-bold text-neutral-500 capitalize mb-1 block">
+          <label className="text-sm font-bold text-neutral-500 capitalize mb-1 block">
             Select Exam
           </label>
           <select
             className="w-full rounded-xl border border-neutral-200 bg-white px-4 py-2 text-sm focus:ring-2 focus:ring-cyan-500 outline-none transition-shadow"
-            value={examId || ""}
+            value={examId ?? ""}
             onChange={(e) => setExamId(Number(e.target.value))}
           >
-            {examOptions.map((e) => (
-              <option key={e.id} value={e.id}>
-                {e.title} ({e.endDate})
-              </option>
-            ))}
+            {examOptions.length === 0 ? (
+              <option value="">No Exams Available</option>
+            ) : (
+              examOptions.map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.title} ({new Date(e.endDate).toLocaleDateString()})
+                </option>
+              ))
+            )}
           </select>
         </div>
-        {existingMarks?.find((g) => g.id === examId) && (
-          <span className="text-[10px] bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-bold border border-emerald-100">
+        {existingMarks?.find((g) => Number(g.id) === Number(examId)) && (
+          <span className="text-sm bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full font-bold border border-emerald-100">
             RECORDED DATA LOADED
           </span>
         )}
@@ -384,15 +415,11 @@ function MarksEntry({
         <table className="w-full text-left text-sm">
           <thead className="bg-neutral-50 text-neutral-500">
             <tr>
-              <th className="p-4 font-bold capitalize text-[10px]">
-                Student Info
-              </th>
-              <th className="p-4 font-bold capitalize text-[10px] text-center">
-                Presence
-              </th>
-              <th className="p-4 font-bold capitalize text-[10px]">Score</th>
-              <th className="p-4 font-bold capitalize text-[10px]">Grade</th>
-              <th className="p-4 font-bold capitalize text-[10px]">Remarks</th>
+              <th className="p-4 font-bold capitalize">Student Info</th>
+              <th className="p-4 font-bold capitalize text-center">Presence</th>
+              <th className="p-4 font-bold capitalize">Score</th>
+              <th className="p-4 font-bold capitalize">Grade</th>
+              <th className="p-4 font-bold capitalize">Remarks</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-neutral-50">
@@ -414,7 +441,7 @@ function MarksEntry({
                     >
                       {s.fullName}
                     </button>
-                    <span className="text-[10px] text-neutral-400 font-mono">
+                    <span className="text-sm text-neutral-400 font-mono">
                       {s.studentIDNumber}
                     </span>
                   </td>
@@ -445,7 +472,7 @@ function MarksEntry({
                       }
                     />
                   </td>
-                  <td className="p-4 font-black text-neutral-600 text-center md:text-left">
+                  <td className="p-4 font-black text-neutral-600">
                     {getGrade(r.score)}
                   </td>
                   <td className="p-4">
@@ -499,7 +526,7 @@ function MarksEntry({
 function PreviousExams({ exams }) {
   if (!exams?.length)
     return (
-      <p className="text-xs text-neutral-400 py-6 text-center italic">
+      <p className="text-sm text-neutral-400 py-6 text-center italic">
         No datasets available
       </p>
     );
@@ -520,7 +547,7 @@ function PreviousExams({ exams }) {
             </div>
           </div>
           <div className="p-2 overflow-x-auto">
-            <table className="w-full text-[10px] text-left">
+            <table className="w-full text-sm text-left">
               <thead>
                 <tr className="text-neutral-400">
                   <th className="px-2 py-1">Student</th>
@@ -528,9 +555,9 @@ function PreviousExams({ exams }) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-50">
-                {e.marks.slice(0, 5).map((m) => (
+                {e.marks.map((m) => (
                   <tr key={m.studentId}>
-                    <td className="px-2 py-1 text-neutral-600 truncate max-w-[100px]">
+                    <td className="px-2 py-1 text-neutral-600 truncate max-w-[150px]">
                       {m.name}
                     </td>
                     <td className="px-2 py-1 font-bold text-neutral-800">
@@ -540,11 +567,6 @@ function PreviousExams({ exams }) {
                 ))}
               </tbody>
             </table>
-            {e.marks.length > 5 && (
-              <p className="text-[9px] text-center text-neutral-400 mt-1">
-                +{e.marks.length - 5} more students
-              </p>
-            )}
           </div>
         </div>
       ))}

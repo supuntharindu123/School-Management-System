@@ -11,7 +11,11 @@ namespace Backend.DTOs.Teacher
 
         public string? SubjectName { get; set; }
 
+        public int subjectId {  get; set; }
+
         public string? ClassName { get; set; }
+
+        public int ClassId {  get; set; }
 
         public DateTime StartDate { get; set; }
 

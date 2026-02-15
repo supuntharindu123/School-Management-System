@@ -1,4 +1,5 @@
 import React, { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 
 export default function ClassExamMarksTab({
   marks = [],
@@ -199,10 +200,13 @@ export default function ClassExamMarksTab({
                                       className="hover:bg-cyan-50/20 transition-colors"
                                     >
                                       <td className="py-4 px-6">
-                                        <p className="text-sm font-bold text-neutral-800">
+                                        <Link
+                                          to={`/students/${m.studentId}`}
+                                          className="text-sm font-bold text-neutral-800 hover:text-cyan-700"
+                                        >
                                           {m.studentName ||
                                             studentNameById[m.studentId]}
-                                        </p>
+                                        </Link>
                                         <p className="text-[10px] text-neutral-400 font-mono">
                                           {m.studentIDNumber}
                                         </p>

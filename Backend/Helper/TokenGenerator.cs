@@ -12,18 +12,29 @@ namespace Backend.Helper
 
         public TokenGenerator(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _configuration = configuration; 
         }
 
         public string GenerateToken(User user) {
 
-            var claims = new[]
+            var claims = new List<Claim>
             {
                 new Claim(ClaimTypes.NameIdentifier,user.Id.ToString()),
                 new Claim(ClaimTypes.Email,user.Email!),
-                new Claim("role", user.Role.ToString()),
+                new Claim(ClaimTypes.Role, user.Role.ToString()),
                 new Claim("userId", user.Id.ToString()),
+                
             };
+
+            if (user.Role.ToString() == "Student" && user.Student != null)
+            {
+                claims.Add(new Claim("studentId", user.Student.Id.ToString()));
+            }
+
+            if (user.Role.ToString() == "Teacher" && user.Teacher != null)
+            {
+                claims.Add(new Claim("teacherId", user.Teacher.Id.ToString()));
+            }
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
 

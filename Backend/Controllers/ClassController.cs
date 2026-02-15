@@ -1,5 +1,6 @@
 ﻿using Backend.Models;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Backend.Controllers
@@ -9,15 +10,36 @@ namespace Backend.Controllers
     public class ClassController:ControllerBase
     {
         private readonly IClassService _classService;
+        private readonly IAuthorizationService _authorizationService;
 
-        public ClassController(IClassService classService)
+        public ClassController(IClassService classService, IAuthorizationService authorizationService)
         {
             _classService = classService;
+            _authorizationService = authorizationService;
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetClass(int id)
         {
+
+            if (User.IsInRole("Admin"))
+            {
+                var adminRes = await _classService.GetClassById(id);
+
+                if (!adminRes.IsSuccess)
+                    return NotFound(adminRes.Error);
+
+                return Ok(adminRes.Data);
+            }
+
+            var authResult = await _authorizationService.AuthorizeAsync(User, id, "AssignClassesOnly");
+
+            if (!authResult.Succeeded)
+            {
+                return Forbid();
+            }
+
            var clz=await _classService.GetClassById(id);
 
             if (!clz.IsSuccess)
@@ -28,6 +50,7 @@ namespace Backend.Controllers
             return Ok(clz.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateClass(Class clz)
         {
@@ -35,6 +58,7 @@ namespace Backend.Controllers
             return Ok("Class Creation Successfully!");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("grade/{id}")]
         public async Task<IActionResult> GetClassByGrade(int id) {
             var clz = await _classService.GetClassByGrade(id);
@@ -45,6 +69,7 @@ namespace Backend.Controllers
             return Ok(clz.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteClass(int id)
         {
@@ -58,6 +83,7 @@ namespace Backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetClasses()
         {

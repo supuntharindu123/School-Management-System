@@ -1,10 +1,13 @@
-﻿using Backend.DTOs.Teacher;
+﻿using Backend.DTOs.AuthResources;
+using Backend.DTOs.Teacher;
 using Backend.Helper;
 using Backend.Models;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Threading.Tasks;
 
 namespace Backend.Controllers
 {
@@ -15,13 +18,16 @@ namespace Backend.Controllers
         private readonly ITeacherService _service;
         private readonly ITeacherAssignmentService _assignmentService;
         private readonly ITeacherAssignSubjectService _assignSubjectService;
-        public TeacherController(ITeacherService service, ITeacherAssignmentService assignmentService, ITeacherAssignSubjectService assignSubjectService = null)
+        private readonly IAuthorizationService _authorizationService;
+        public TeacherController(ITeacherService service, ITeacherAssignmentService assignmentService, ITeacherAssignSubjectService assignSubjectService, IAuthorizationService authorizationService)
         {
             _service = service;
             _assignmentService = assignmentService;
             _assignSubjectService = assignSubjectService;
+            _authorizationService = authorizationService;
         }
 
+        [Authorize(Roles ="Admin")]
         [HttpPost("add")]
         public async Task<IActionResult> CreateTeacher(TeacherCreateDto dto)
         {
@@ -36,6 +42,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetTeacherAll()
         {
@@ -48,10 +55,23 @@ namespace Backend.Controllers
             return Ok(results.Data);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("{id}")]
         public async Task<IActionResult> TeacherById(int id)
         {
             var res = await _service.GetTeacher(id);
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, id, "TeacherOwnDataPolicy");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(res.Data);
+            }
+
+
             if (!res.IsSuccess)
             {
                 return NotFound(res.Error);
@@ -59,6 +79,7 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteTeacher(int id)
         {
@@ -70,6 +91,8 @@ namespace Backend.Controllers
             return Ok("Teacher Delete Successfully !");
         }
 
+
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateTeacher(int id, TeacherUpdateDto dto)
         {
@@ -82,7 +105,7 @@ namespace Backend.Controllers
             return Ok("Teacher Update Successfully !");
         }
 
-
+        [Authorize(Roles = "Admin")]
         [HttpPost("class/assign")]
         public async Task<IActionResult> AssignAssessments(TeacherClassAssignDto dto)
         {
@@ -96,10 +119,22 @@ namespace Backend.Controllers
             return Ok("Assign Successfully!");
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("class/assign/{id}")]
         public async Task<IActionResult> AssignmentById(int id)
         {
             var task=await _assignmentService.AssignmentById(id);
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, task.Data!.TeacherId, "TeacherOwnDataPolicy");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(task.Data);
+            }
+
             if (!task.IsSuccess)
             {
                 return NotFound(task.Error);
@@ -107,6 +142,7 @@ namespace Backend.Controllers
             return Ok(task.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("class/assign/{id}")]
         public async Task<IActionResult> AssignmentTerminate(int id)
         {
@@ -118,10 +154,22 @@ namespace Backend.Controllers
             return Ok("Assignment is Terminated!");
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("class/teacher/{id}")]
         public async Task<IActionResult> AssignmentByTeacher(int id)
         {
             var tasks=await _assignmentService.AssignmentBYTeacher(id);
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, id, "TeacherOwnDataPolicy");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(tasks.Data);
+            }
+
             if (!tasks.IsSuccess)
             {
                 return NotFound(tasks.Error);
@@ -129,10 +177,22 @@ namespace Backend.Controllers
             return Ok(tasks.Data);   
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("class/{id}")]
         public async Task<IActionResult> AssignmentByClass(int id)
         {
             var tasks = await _assignmentService.AssignmentByClass(id);
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, id, "AssignClassesOnly");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(tasks.Data);
+            }
+
             if (!tasks.IsSuccess)
             {
                 return NotFound(tasks.Error);
@@ -140,6 +200,7 @@ namespace Backend.Controllers
             return Ok(tasks.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("subject/assign")]
         public async Task<IActionResult> AssignSubject(AssignTeacherSubjectDto teacherSubjectClass)
         {
@@ -152,6 +213,7 @@ namespace Backend.Controllers
             return Ok("Teacher assign subject is successfully!");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("subject/assign")]
         public async Task<IActionResult> GetAll()
         {
@@ -165,10 +227,21 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("subject/teacher/{id}")]
         public async Task<IActionResult> GetByTeacher(int id)
         {
             var res = await _assignSubjectService.GetByTeacher(id);
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User,id, "TeacherOwnDataPolicy");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(res.Data);
+            }
 
             if (!res.IsSuccess)
             {
@@ -179,6 +252,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("subject/assign/{id}")]
         public async Task<IActionResult> RemovePermission(int id)
         {
@@ -193,6 +267,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("subject/assign/{id}")]
         public async Task<IActionResult> Update(int id)
         {
@@ -206,10 +281,26 @@ namespace Backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("subject/assign/{id}")]
         public async Task<IActionResult> GetById(int id)
         {
             var res = await _assignSubjectService.GetById(id);
+
+            var req = new AssignSubjectResourceDto();
+
+            req.ClassId = res.Data!.ClassId;
+            req.SubjectId = res.Data.subjectId;
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, req, "AssignSubjectsOnly");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(res.Data);
+            }
 
             if (!res.IsSuccess)
             {
@@ -219,10 +310,26 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("subject/{subjectId}/class/{classId}")]
         public async Task<IActionResult> GetByClassAndSubject(int classId,int subjectId)
         {
             var res = await _assignSubjectService.GetByClassAndSubject(classId,subjectId);
+
+            var req = new AssignSubjectResourceDto();
+
+            req.ClassId = classId;
+            req.SubjectId = subjectId;
+
+            if (User.IsInRole("Teacher"))
+            {
+                var authRes = await _authorizationService.AuthorizeAsync(User, req, "AssignSubjectsOnly");
+
+                if (!authRes.Succeeded)
+                    return Forbid();
+
+                return Ok(res.Data);
+            }
 
             if (!res.IsSuccess)
             {

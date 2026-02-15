@@ -35,8 +35,8 @@ export default function UnauthorizedPage() {
             Back to home
           </LinkComponent>
 
-          <LinkComponent to="/support" variant="secondary">
-            Contact support
+          <LinkComponent to="/login" variant="secondary">
+            Login
           </LinkComponent>
         </div>
 

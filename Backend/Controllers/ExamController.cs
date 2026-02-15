@@ -2,6 +2,7 @@
 using Backend.Helper;
 using Backend.Models;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace Backend.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> CreateExam(Exam exam)
         {
@@ -27,6 +29,7 @@ namespace Backend.Controllers
             return Ok("Exam Creation Successfully!");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteExam(int id )
         {
@@ -40,6 +43,7 @@ namespace Backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateExam(int id,ExamUpdateDto exam)
         {
@@ -53,6 +57,7 @@ namespace Backend.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetExamById(int id)
         {
@@ -66,7 +71,7 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
-
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet]
         public async Task<IActionResult> GetExams()
         {
@@ -80,6 +85,7 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("assign/grade")]
         public async Task<IActionResult> AssignGradesForExam( [FromBody] AssignExamGradeReqDto dto)
         {
@@ -93,6 +99,7 @@ namespace Backend.Controllers
             return Ok("Success assign grades for exam!");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("assign/subject")]
         public async Task<IActionResult> AssignSubjectsForExam(AssignExamGradeSubjectReqDto dto)
         {
@@ -106,6 +113,7 @@ namespace Backend.Controllers
             return Ok("Success assign subject for exam!");
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("detailed/{id}")]
         public async Task<IActionResult> ExamDetails(int id)
         {

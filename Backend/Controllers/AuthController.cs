@@ -19,6 +19,7 @@ namespace Backend.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("register")]
         public async Task<IActionResult> Register(RegisterDto dto)
         {
@@ -29,6 +30,7 @@ namespace Backend.Controllers
             }
             return Ok(res.Data);
         }
+
 
         [HttpPost("login")]
         public async Task<IActionResult> Login(LoginDto dto)

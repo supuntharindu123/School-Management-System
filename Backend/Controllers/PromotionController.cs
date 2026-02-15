@@ -1,5 +1,6 @@
 ﻿using Backend.DTOs.Promotion;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,6 +15,7 @@ namespace Backend.Controllers
             _promotionServices = promotionServices;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> Promotion([FromBody] List<PromotionDto> dto)
         {

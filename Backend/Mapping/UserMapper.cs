@@ -38,6 +38,7 @@ namespace Backend.Mapping
                 .ForMember(destination => destination.PhoneNumber, option => option.MapFrom(src => src.User!.PhoneNumber))
                 .ForMember(destination => destination.Role, option => option.MapFrom(src => src.User!.Role))
                 .ForMember(destination => destination.CurrentClass, option => option.MapFrom(src => src.Class!.Name))
+                .ForMember(destination => destination.ClassId, option => option.MapFrom(src => src.ClassId))
                 .ForMember(destination => destination.CurrentGrade, option => option.MapFrom(src => src.Class!.Grade!.GradeName))
                 .ForMember(destination => destination.AcademicYearId, option => option.MapFrom(src => src.AcademicYearId));
 
@@ -93,7 +94,9 @@ namespace Backend.Mapping
             CreateMap<TeacherSubjectClass, AssignTeacherSubjectResDto>()
                 .ForMember(destination => destination.TeacherName, opt => opt.MapFrom(src => src.Teacher!.FullName))
                 .ForMember(destination => destination.SubjectName, opt => opt.MapFrom(src => src.Subject!.SubjectName))
-                .ForMember(destination => destination.ClassName, opt => opt.MapFrom(src => src.Class!.Name));
+                .ForMember(destination => destination.ClassName, opt => opt.MapFrom(src => src.Class!.Name))
+                .ForMember(destination => destination.ClassId, opt => opt.MapFrom(src => src.ClassId))
+                .ForMember(destination => destination.subjectId, opt => opt.MapFrom(src => src.SubjectId));
 
 
             CreateMap<StudentAttendances, StudentAttendanceResDto>()

@@ -15,6 +15,7 @@ namespace Backend.Controllers
             _service = service;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetGrade(int id)
         {
@@ -26,6 +27,7 @@ namespace Backend.Controllers
             return Ok(grade.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         public async Task<IActionResult> GetGrades()
         {
@@ -37,6 +39,7 @@ namespace Backend.Controllers
             return Ok(grades.Data);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("summary")]
         public async Task<IActionResult> GetGradeSummaries()
         {

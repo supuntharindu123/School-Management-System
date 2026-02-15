@@ -8,6 +8,7 @@ import { MarkStudentAttendances } from "../../features/attendances/attendanceSer
 export default function TeacherAttendanceSection({
   students = [],
   teacherId,
+  classId,
   onSuccess,
 }) {
   const getToday = () => new Date().toISOString().split("T")[0];
@@ -59,6 +60,12 @@ export default function TeacherAttendanceSection({
       return;
     }
 
+    const resolvedClassId = classId;
+    if (!resolvedClassId) {
+      setAlert({ type: "error", msg: "Missing class identity." });
+      return;
+    }
+
     setUiState((s) => ({ ...s, busy: true }));
     try {
       const payload = students.map((s) => ({
@@ -67,6 +74,7 @@ export default function TeacherAttendanceSection({
         date,
         studentId: s.id,
         teacherId,
+        classId: resolvedClassId,
       }));
 
       await MarkStudentAttendances(payload);

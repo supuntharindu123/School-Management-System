@@ -28,6 +28,8 @@ import GuestPage from "../pages/GuestPage";
 import ExamAssignPage from "../pages/admin/AssignGradeSubjectForExam";
 import ExamGradeDetailsPage from "../pages/admin/ExamGradeDetailsPage";
 import SubjectAssignmentDetailsPage from "../pages/teacher/SubjectAssignmentDetailsPage";
+import TeacherRoute from "./TeacherRoute";
+import StudentRoute from "./StudentRoute";
 
 export default function RouteConfig() {
   return (
@@ -39,41 +41,41 @@ export default function RouteConfig() {
 
         {/* Protected */}
         <Route element={<ProtectedRoute />}>
-          {/* Teacher (and other roles) */}
           <Route element={<AppLayout />}>
-            <Route path="/students" element={<StudentListPage />} />
-            {/* <Route path="/students/add" element={<AddStudentPage />} /> */}
             <Route path="/students/:id" element={<StudentProfilePage />} />
-            <Route path="/promotions" element={<StudentPromotionPage />} />
-            <Route path="/classes" element={<ClassManagementPage />} />
             <Route path="/classes/:id" element={<ClassDetailsPage />} />
-            <Route path="/subjects" element={<SubjectManagementPage />} />
-            <Route path="/exams" element={<ExamManagementPage />} />
-            <Route path="/exams/:id" element={<ExamDetailsPage />} />
-            <Route path="/teachers" element={<TeacherListPage />} />
-            <Route path="/teachers/:id" element={<TeacherProfilePage />} />
-            <Route path="/attendance" element={<AttendancePage />} />
-            {/* <Route path="/subject/:id" element={<SubjectDetailsPage />} /> */}
-            <Route path="/exams/:id/assign" element={<ExamAssignPage />} />
-            <Route
-              path="/exams/:examId/grades/:gradeId"
-              element={<ExamGradeDetailsPage />}
-            />
-            <Route
-              path="/teacher/subject-assignments/:id"
-              element={<SubjectAssignmentDetailsPage />}
-            />
 
-            {/* teacher only */}
+            <Route element={<StudentRoute />}>
+              {/* student only */}
+              <Route path="/student/dashboard" element={<StudentDashboard />} />
+            </Route>
 
-            <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
-            <Route path="/student/dashboard" element={<StudentDashboard />} />
-          </Route>
+            <Route element={<TeacherRoute />}>
+              {/* teacher only */}
+              <Route path="/teacher/dashboard" element={<TeacherDashboard />} />
+              <Route
+                path="/teacher/subject-assignments/:id"
+                element={<SubjectAssignmentDetailsPage />}
+              />
+            </Route>
 
-          {/* Admin only */}
-          <Route element={<AdminRoute />}>
-            <Route element={<AppLayout />}>
+            {/* Admin only */}
+            <Route element={<AdminRoute />}>
               <Route path="/admin" element={<AdminDashboard />} />
+              <Route path="/students" element={<StudentListPage />} />
+              <Route path="/promotions" element={<StudentPromotionPage />} />
+              <Route path="/classes" element={<ClassManagementPage />} />
+              <Route path="/subjects" element={<SubjectManagementPage />} />
+              <Route path="/exams" element={<ExamManagementPage />} />
+              <Route path="/exams/:id" element={<ExamDetailsPage />} />
+              <Route path="/teachers" element={<TeacherListPage />} />
+              <Route path="/teachers/:id" element={<TeacherProfilePage />} />
+              <Route path="/attendance" element={<AttendancePage />} />
+              <Route path="/exams/:id/assign" element={<ExamAssignPage />} />
+              <Route
+                path="/exams/:examId/grades/:gradeId"
+                element={<ExamGradeDetailsPage />}
+              />
             </Route>
           </Route>
         </Route>

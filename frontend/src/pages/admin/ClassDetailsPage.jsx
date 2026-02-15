@@ -296,12 +296,12 @@ export default function ClassDetailsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
-          <Link
-            to="/classes"
+          <button
+            onClick={() => navigate(-1)}
             className="rounded-2xl border border-white/20 bg-white/10 px-6 py-2.5 text-sm font-bold text-white hover:bg-white hover:text-cyan-900 transition-colors"
           >
             Back to list
-          </Link>
+          </button>
           {user.role === 0 && (
             <>
               {classTeachers.filter((t) => t.isActive).length < 2 && (
@@ -549,6 +549,7 @@ export default function ClassDetailsPage() {
                 isPresent,
                 reason,
                 date: String(dateVal),
+                classId: id,
               });
               setSuccess({ open: true, msg: "Attendance updated." });
               setEditingId(null);

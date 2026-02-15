@@ -1,38 +1,47 @@
 import React, { useState } from "react";
 import { Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
 import NavBar from "../components/NavBar";
 import Sidebar from "../components/Sidebar";
 import Footer from "../components/Footer";
 
 export default function AppLayout() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const { user } = useSelector((state) => state.auth);
+
+  // Sidebar only exists for Admin (Role 0)
+  const isAdmin = user?.role === 0;
+
+  // Set initial state: Admin starts with sidebar open, others have no sidebar
+  const [isSidebarOpen, setIsSidebarOpen] = useState(isAdmin);
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* top navigation bar */}
+      {/* Top navigation bar */}
       <NavBar onToggleSidebar={() => setIsSidebarOpen((v) => !v)} />
 
       <div className="flex flex-1">
-        {/* navigation sidebar */}
-        <Sidebar
-          isOpen={isSidebarOpen}
-          onClose={() => setIsSidebarOpen(false)}
-        />
+        {/* Navigation sidebar - Only renders for Admin */}
+        {isAdmin && (
+          <Sidebar
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
+          />
+        )}
 
-        {/* main content container */}
+        {/* Main content container */}
         <main
           className={`flex-1 flex flex-col pt-16 transition-all duration-300 ${
-            isSidebarOpen ? "md:ml-64" : "ml-0"
+            isAdmin && isSidebarOpen ? "md:ml-64" : "ml-0"
           }`}
         >
-          {/* page content section */}
+          {/* Page content section */}
           <div className="p-6 flex-1">
             <div className="mx-auto max-w-full">
               <Outlet />
             </div>
           </div>
 
-          {/* footer positioned at the bottom of the content area */}
+          {/* Footer at the bottom */}
           <Footer />
         </main>
       </div>

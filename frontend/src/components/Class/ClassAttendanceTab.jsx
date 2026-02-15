@@ -1,4 +1,5 @@
 import React from "react";
+import { useParams } from "react-router-dom";
 
 export default function ClassAttendanceTab({
   viewDate,
@@ -19,6 +20,8 @@ export default function ClassAttendanceTab({
   todayAttendanceExists,
   onTeacherAttendanceSuccess,
 }) {
+  const classId = useParams().id;
+  console.log(`students`, editValues);
   return (
     <div className="space-y-6 p-6 animate-in fade-in duration-500">
       {/* 1. Date Selection and Historical View */}
@@ -200,6 +203,7 @@ export default function ClassAttendanceTab({
                                       dateVal: a.date ?? a.Date,
                                       studentName:
                                         a.studentName ?? a.StudentName,
+                                      classId: Number(classId),
                                     })
                                   }
                                   className="text-xs font-bold text-cyan-600 hover:text-cyan-800"
@@ -210,7 +214,7 @@ export default function ClassAttendanceTab({
                                   onClick={() => setEditingId(null)}
                                   className="text-xs font-bold text-neutral-400 hover:text-neutral-600"
                                 >
-                                  Cancle
+                                  Cancel
                                 </button>
                               </div>
                             ) : (
@@ -304,6 +308,7 @@ export default function ClassAttendanceTab({
                   <TeacherAttendanceSection
                     students={students}
                     teacherId={teacherId}
+                    classId={classId}
                     onSuccess={onTeacherAttendanceSuccess}
                   />
                 </div>

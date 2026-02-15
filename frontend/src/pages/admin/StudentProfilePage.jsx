@@ -9,7 +9,6 @@ import { getMarksByStudent } from "../../features/Marks/markServices";
 import { getAllSubjects } from "../../features/subject/subjectSlice";
 import { getAllExams } from "../../features/exam/examSlice";
 import { getAllYears } from "../../features/year/yearSlice";
-import { getClasses } from "../../features/class/classSlice";
 
 export default function StudentProfilePage() {
   const { id } = useParams();
@@ -21,11 +20,7 @@ export default function StudentProfilePage() {
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [openDelete, setOpenDelete] = useState(false);
   const [attRecords, setAttRecords] = useState([]);
-  const [attLoading, setAttLoading] = useState(false);
-  const [attError, setAttError] = useState(null);
   const [marks, setMarks] = useState([]);
-  const [marksLoading, setMarksLoading] = useState(false);
-  const [marksError, setMarksError] = useState(null);
 
   const tabs = [
     { key: "personal", label: "Personal information" },
@@ -35,7 +30,6 @@ export default function StudentProfilePage() {
 
   const { user } = useSelector((state) => state.auth);
   const { subjects } = useSelector((state) => state.subjects);
-  const { classes } = useSelector((state) => state.classes);
   const { years } = useSelector((state) => state.years);
   const { exams } = useSelector((state) => state.exams);
 
@@ -53,19 +47,15 @@ export default function StudentProfilePage() {
     dispatch(getAllSubjects());
     dispatch(getAllExams());
     dispatch(getAllYears());
-    dispatch(getClasses());
   }, [id, dispatch]);
 
   useEffect(() => {
     const fetchAttendance = async () => {
       try {
-        setAttLoading(true);
         const res = await GetAttendanceByStudent(id);
         setAttRecords(res || []);
       } catch (err) {
-        setAttError("Failed to load attendance");
-      } finally {
-        setAttLoading(false);
+        console.log("Failed to load attendance");
       }
     };
     fetchAttendance();
@@ -74,13 +64,10 @@ export default function StudentProfilePage() {
   useEffect(() => {
     const fetchMarks = async () => {
       try {
-        setMarksLoading(true);
         const res = await getMarksByStudent(id);
         setMarks(res || []);
       } catch (err) {
-        setMarksError("Failed to load marks");
-      } finally {
-        setMarksLoading(false);
+        console.log("Failed to load marks");
       }
     };
     fetchMarks();

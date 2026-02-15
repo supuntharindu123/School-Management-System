@@ -1,3 +1,5 @@
+using Backend.Authorization.Handlers;
+using Backend.Authorization.Requirements;
 using Backend.Data;
 using Backend.Helper;
 using Backend.Repositories;
@@ -5,6 +7,7 @@ using Backend.Repositories.Interfaces;
 using Backend.Services;
 using Backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -61,6 +64,37 @@ builder.Services.AddScoped<IExamRepo,ExamRepo>();
 builder.Services.AddScoped<IExamServices,ExamServices>();
 builder.Services.AddScoped<IMarksRepo,MarksRepo>();
 builder.Services.AddScoped<IMarksService,MarksService>();
+
+
+//handler
+builder.Services.AddScoped<IAuthorizationHandler, StudentOwnDataHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AssignSubjectsOnlyHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, AssignClassesOnlyHandler>();
+builder.Services.AddScoped<IAuthorizationHandler, TeacherOwnDataHandler>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("StudentOwnDataPolicy",
+        policy => policy.Requirements.Add(new StudentOwnDataRequirements()));
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("TeacherOwnDataPolicy",
+        policy => policy.Requirements.Add(new TeacherOwnDataRequirements()));
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AssignSubjectsOnly",
+        policy => policy.Requirements.Add(new AssignSubjectsOnlyRequirements()));
+});
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AssignClassesOnly",
+        policy => policy.Requirements.Add(new AssignClassesOnlyRequirements()));
+});
 
 
 //authentications

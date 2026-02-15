@@ -14,6 +14,8 @@ namespace Backend.Models
         [Required]
         public DateOnly Date {  get; set; }
 
+        public int ClassId {  get; set; }
+
         [Required]
         public int StudentId {  get; set; }
 

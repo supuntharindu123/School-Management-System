@@ -39,8 +39,8 @@ export default function NotFoundPage() {
             Back to dashboard
           </LinkComponent>
 
-          <LinkComponent to="/support" variant="secondary">
-            Report a bug
+          <LinkComponent to="/login" variant="secondary">
+            Login
           </LinkComponent>
         </div>
 

@@ -1,6 +1,7 @@
 ﻿using Backend.DTOs.Subject;
 using Backend.Models;
 using Backend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -19,6 +20,7 @@ namespace Backend.Controllers
             _subjectGradeService = subjectGradeService;
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<IActionResult> AddSubject(Subject subject)
         {
@@ -31,6 +33,7 @@ namespace Backend.Controllers
             return Ok("Subject Adding Successfully!");
         }
 
+        [Authorize(Roles = "Admin,Teacher,Student")]
         [HttpGet]
         public async Task<IActionResult> GetSubjects()
         {
@@ -45,6 +48,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         public async Task<IActionResult> GetSubjectById(int id)
         {
@@ -59,6 +63,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateSubject(int id,Subject subject)
         {
@@ -73,6 +78,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Remove(int id)
         {
@@ -87,6 +93,7 @@ namespace Backend.Controllers
 
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("grade")]
         public async Task<IActionResult> AddSubjectGrade(List<SubjectGradeCreateDto> subjectGrade)
         {
@@ -100,6 +107,7 @@ namespace Backend.Controllers
             return Ok("Subject assigned to grade successfully");
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("grade/{id}")]
         public async Task<IActionResult> GetSubjectGradeById(int id)
         {
@@ -113,6 +121,7 @@ namespace Backend.Controllers
             return Ok(res.Data);
         }
 
+        [Authorize(Roles = "Admin,Teacher")]
         [HttpGet("grade/grade/{id}")]
         public async Task<IActionResult> GetSubjectGradeByGradeId(int id)
         {
@@ -127,6 +136,7 @@ namespace Backend.Controllers
         }
 
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("grade/{id}")]
         public async Task<IActionResult> RemoveSubjectGrade(int id)
         {
